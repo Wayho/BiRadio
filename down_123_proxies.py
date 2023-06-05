@@ -446,6 +446,7 @@ def download_by_ShareKey(MAX_DOWNLOAD,ShareKey,SharePwd,floder,sleep=120):
                 continue
             info_json = get_info(ShareKey,info,url)
             if 0==info_json.get('code'):
+                time.sleep(2+int(random.random()*3))
                 DownloadURL = info_json.get('data').get('DownloadURL')
                 #DownloadURL = 'https://web-pro2.cjjd18.com/download-v2/?params=aHR0cHM6Ly9kb3dubG9hZC1jZG4uMTIzcGFuLmNuLzEyMy04MC8zNGZhNzdhZi8xODE1MTgxNTI0LTAvMzRmYTc3YWY0MzY3OTY5OTA5NmM3NjA2YTdmNDYwNTAvYy1tMj92PTUmdD0xNjg0OTE4NjkzJnM9MTY4NDkxODY5M2M3YzAwOGIzNTJkYjAxNjgyZjU2NzA1NzQxYzFkODc2JnI9NFdXWDdMJmZpbGVuYW1lPXJlcXVpcmVtZW50cy50eHQmeC1tZi1iaXotY2lkPWQ0YmIxZWVlLWE0MDYtNDI5Yi1hYTNiLWVjNzg1MmJmNDllNS01ODQwMDAmYXV0b19yZWRpcmVjdD0w&is_s3=0'
                 #DownloadURL = 'https://web-pro2.cjjd18.com/download-v2/?params=aHR0cHM6Ly9kb3dubG9hZC1jZG4uMTIzcGFuLmNuLzEyMy04MC8zNGZhNzdhZi8xODE1MTgxNTI0LTAvMzRmYTc3YWY0MzY3OTY5OTA5NmM3NjA2YTdmNDYwNTAvYy1tMj92PTUmdD0xNjg0OTczMjYxJnM9MTY4NDk3MzI2MWY0MmEzY2NiZDI4NTQ4Y2UxODNiNTFkNzFlYmZiMTQ1JnI9U09RWEc0JmZpbGVuYW1lPXJlcXVpcmVtZW50cy50eHQmeC1tZi1iaXotY2lkPWRmYTNhYTU0LWU4YmItNGE4MC05OTY0LWQxYmQzNzM2MGNkMS02ZWFhNzcmYXV0b19yZWRpcmVjdD0w&is_s3=0'
@@ -454,9 +455,11 @@ def download_by_ShareKey(MAX_DOWNLOAD,ShareKey,SharePwd,floder,sleep=120):
                 #print(type(params_bytes),params_bytes)
                 decode_url = base64.b64decode(params_bytes)
                 #print(decode_url)
+                time.sleep(2+int(random.random()*3))
                 redirect_url_json = get_redirect_url(decode_url,DownloadURL)
                 if 'ok'==redirect_url_json.get('message'):
                     download_url = redirect_url_json.get('data').get('redirect_url')
+                    time.sleep(2+int(random.random()*3))
                     isok = download(download_url,DownloadURL)
                     if isok:
                         unzip_cache(floder,filename)

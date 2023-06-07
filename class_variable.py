@@ -75,10 +75,11 @@ def set_today_sitename(sitename):
     site_list = variable.get('week')
     new_v = VClass.create_without_data(OBJECT_ID)
     weekday = datetime.now().weekday()
+    old = site_list[weekday]
     site_list[weekday] = sitename
     new_v.set('week', site_list)
     new_v.save()
-    print('DB week has update',sitename)
+    print('DB week', old,'has update to',sitename)
 
 def getCookies():
     with open(COOKIES_PATH,'r',encoding='utf-8') as fp :

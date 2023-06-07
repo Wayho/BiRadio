@@ -47,6 +47,7 @@ MAX_DOWNLOAD = 10
 ###########################################################
 RTMP_URL_STR = '"rtmp://"'
 
+Global_Can_RestartRadio = True
 Global_Danmu_Retry_Times = 0
 Global_Retry_Times = 0
 Global_minutes = 0
@@ -107,6 +108,7 @@ def cmd_download(key,**params):
 
 @engine.define( 'download_all_key' )
 def cmd_download_all_key(**params):
+    Setup()
     key_list = class_sharekey.ShareKeyArray(SITENAME)
     for k in key_list:
         if k.get('download'):
@@ -183,8 +185,10 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
         except:
             print('play_floder::getRoomBaseInfo::error')
     print_v()
+    cmd_memory()
     ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
     print('FFMPEG::return:',ret)
+    cmd_memory()
     return ret
 
 # 18 */1 7-23 * * ?
@@ -232,7 +236,11 @@ def cmd_restart_radio( **params ):
                 playret = play_play()
             if -9 == playret:
                 return False
-            if 0 != playret:
+            elif 1== playret:
+                Global_Retry_Times += 1
+                startlive.tryStartLive()
+                return True
+            elif 0 != playret:
                     Global_Retry_Times += 1
             print('*************** END *******************')
             Global_Sleeping = True
@@ -266,7 +274,7 @@ def StartLive(**params):
     res = startlive.tryStartLive()
     cmd_reset_retry()
     if res.get('code')==0 or 1==res.get('code'):
-        time.sleep(3)
+        time.sleep(1)
         cmd_restart_radio()
     return True
 
@@ -381,6 +389,9 @@ def cmd_ffmpeg_kill( **params ):
 @engine.define( 'heart' )
 def cmd_heart( **params ):
     requests.get( "http://localhost:3000" )
+    today_sitename = class_variable.get_today_sitename()
+    print('Today site name is',today_sitename,',This site is',SITENAME)
+    return True
 
 # # 待升级
 @engine.define( 'curl' )
@@ -420,10 +431,10 @@ def cmd_ps( **params ):
 @engine.define( 'memory' )
 def cmd_memory( **params ):
     mem_r = 2**20
-    total, used, free = shutil.disk_usage("/")
-    print("Disk total: %d GiB" % (total // (2**30)))
-    print("Disk used: %d GiB" % (used // (2**30)))
-    print("Disk free: %d GiB" % (free // (2**30)))
+    # total, used, free = shutil.disk_usage("/")
+    # print("Disk total: %d GiB" % (total // (2**30)))
+    # print("Disk used: %d GiB" % (used // (2**30)))
+    # print("Disk free: %d GiB" % (free // (2**30)))
     mem = psutil.virtual_memory()
     print('Memory total:',mem.total//mem_r)
     print('Memory available:',mem.available//mem_r)

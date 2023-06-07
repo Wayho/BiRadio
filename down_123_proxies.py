@@ -427,6 +427,7 @@ def download_by_ShareKey(MAX_DOWNLOAD,ShareKey,SharePwd,floder,sleep=120):
         res_json = get_g_initialProps(ShareKey)
     if 0==res_json.get('code'):
         InfoList = res_json.get('data').get('InfoList')
+        len_Info = len(InfoList)
         for info in InfoList:
             cmd_mem()
             if total_download > MAX_DOWNLOAD:
@@ -438,7 +439,7 @@ def download_by_ShareKey(MAX_DOWNLOAD,ShareKey,SharePwd,floder,sleep=120):
                 print('Download disabled, please set enable',total_download)
                 return total_download
             filename = info.get('FileName')
-            print(ShareKey, filename)
+            print(total_download,'/',len_Info,ShareKey, floder, filename)
             if 'zip'!=filename[-3:len(filename)]:
                 if 'jpg'!=filename[-3:len(filename)]:
                     continue

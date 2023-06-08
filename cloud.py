@@ -152,7 +152,7 @@ def play_artist():
         if floder_add:
             radioname = theartist.get('radioname')
             class_artist.rank(theartist.get('objectId'))
-        break
+            break
     return play_floder(floder_list, artist,radioname)
 
 @engine.define( 'play_root' )
@@ -167,10 +167,11 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
     """
     global Global_Mp3_Info
     global Global_Time_Rtmp_Start
-    today_sitename = class_variable.get_today_sitename()
-    if today_sitename != SITENAME:
-        print('Today site name is',today_sitename,',This site is',SITENAME)
-        return 0
+    print('play_floder:',floder_list, artist,radioname)
+    # today_sitename = class_variable.get_today_sitename()
+    # if today_sitename != SITENAME:
+    #     print('Today site name is',today_sitename,',This site is',SITENAME)
+    #     return 0
     concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist)
     cmd = concat.get('cmd')
     Global_Mp3_Info = concat.get('info')
@@ -197,11 +198,12 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
 @engine.define( 'do_one_minute' )
 def do_one_minute( **params ):
     global Global_minutes
-    Global_minutes += 1
     if not BILIBILI_CLMY:
         Setup()
-    cmd_restart_radio()
+    if Global_minutes % 3 == 0:
+        cmd_restart_radio()
     id3_send()
+    Global_minutes += 1
     return True
 
 # 28 */5 7-23 * * ?
@@ -212,7 +214,7 @@ def cmd_restart_radio( **params ):
     global Global_Retry_Times
     today_sitename = class_variable.get_today_sitename()
     if today_sitename != SITENAME:
-        if Global_minutes % 60 == 1:
+        if Global_minutes % 60 == 0:
             print('Today site name is',today_sitename,',This site is',SITENAME)
         return False
     requests.get( "http://localhost:3000" )
@@ -335,7 +337,7 @@ def id3_send(**params):
          return False
     procs = shell.procs_info("ffmpeg")
     if not procs:
-         if Global_minutes % 30 == 1:
+         if Global_minutes % 30 == 0:
             print('ffmpeg not start')
          return False
     now = int(time.time())
@@ -390,7 +392,7 @@ def cmd_ffmpeg_kill( **params ):
 def cmd_heart( **params ):
     requests.get( "http://localhost:3000" )
     today_sitename = class_variable.get_today_sitename()
-    print('Today site name is',today_sitename,',This site is',SITENAME)
+    print('Today site name is',today_sitename,',This site is',SITENAME,Global_minutes)
     return True
 
 # # 待升级

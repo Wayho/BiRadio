@@ -220,7 +220,7 @@ def cmd_restart_radio( **params ):
     requests.get( "http://localhost:3000" )
     procs = shell.procs_info("ffmpeg")
     if procs:
-        if Global_minutes % 10 == 1:
+        if Global_minutes % 9 == 0:
             print('restart_radio:',Global_Retry_Times,procs)
         return False
     else:

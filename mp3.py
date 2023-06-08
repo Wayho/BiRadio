@@ -98,6 +98,7 @@ def cmdconcat_by_list(str_rtmp,mp3_list,artist=None):
     str_contac += 'concat=n={}:v=0:a=1[outa]'
     str_contac = str_contac.format(len(mp3_list))
     img_list = mp3list(MP3_ROOT + '/' +IMG_FLODER)
+    random.shuffle(img_list)
     str_img = img_list[0]
     if artist:
         # 查找文件名里有artist

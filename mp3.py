@@ -29,7 +29,7 @@ IMG_FLODER = 'img'
 # FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。
 ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -f flv {}'
 
-def cmdconcat_floder(str_rtmp,floder_list,total=200,artist=None):
+def cmdconcat_floder(str_rtmp,floder_list,total=30,artist=None):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
     :param str_rtmp:'"rtmp://"'

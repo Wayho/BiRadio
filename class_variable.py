@@ -79,7 +79,25 @@ def set_today_sitename(sitename):
     site_list[weekday] = sitename
     new_v.set('week', site_list)
     new_v.save()
-    print('DB week', old,'has update to',sitename)
+    print('DB week today', old,'has update to',sitename)
+
+def set_tomorrow_sitename(sitename):
+    """
+    设置明天哪个台起作用
+    :param sitename:
+    :return :今天是哪个台==sitename
+    """
+    VClass = leancloud.Object.extend( "variable" )
+    query = VClass.query
+    variable = query.get(OBJECT_ID)
+    site_list = variable.get('week')
+    new_v = VClass.create_without_data(OBJECT_ID)
+    tomorrow = datetime.now().weekday() + 1
+    old = site_list[tomorrow%6]
+    site_list[tomorrow] = sitename
+    new_v.set('week', site_list)
+    new_v.save()
+    print('DB week tomorrow', old,'has update to',sitename)
 
 def getCookies():
     with open(COOKIES_PATH,'r',encoding='utf-8') as fp :

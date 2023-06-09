@@ -311,6 +311,11 @@ def today_mine(**params):
     class_variable.set_today_sitename(SITENAME)
     return True
 
+@engine.define( 'tomorrow_mine' )
+def tomorrow_mine(**params):
+    class_variable.set_tomorrow_sitename(SITENAME)
+    return True
+
 # before restart_radio
 # once a week
 # 8 58 6 * * ?

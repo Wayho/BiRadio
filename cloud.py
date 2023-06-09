@@ -181,8 +181,12 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
             res = startlive.getRoomBaseInfo()
             if res.get('code')==0:
                 title = res.get('data').get('by_room_ids').get('27791346').get('title')
-            if title!=radioname:
-                startlive.update_RadioName(radioname)
+                if artist:
+                    if title!=radioname:
+                        startlive.update_RadioName(radioname)
+                else:
+                    if title!=RADIO_NAME:
+                        startlive.update_RadioName(RADIO_NAME)
         except:
             print('play_floder::getRoomBaseInfo::error')
     print_v()

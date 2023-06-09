@@ -31,9 +31,9 @@ RADIO_NAME = '欧美流行歌曲 | 极其音乐'
 CHANGE_RADIO_NAME = False
 PLAY_ARTIST = False
 FFMPEG_MESSAGE_OUT = False
-MP3_TOTAL_PLAY = 50
+MP3_TOTAL_PLAY = 30
 SLEEP = 120
-ERROR_RETRY = 5
+ERROR_RETRY = 6
 MAX_DOWNLOAD = 10
 
 ###########################################################
@@ -138,7 +138,7 @@ def play_artist():
     radioname=RADIO_NAME
     artist = None
     floder_list = []
-    artist_list = class_artist.artist_array()
+    artist_list = class_artist.artist_array(SITENAME)
     key_list = class_sharekey.ShareKeyArray(SITENAME)
     
     for theartist in artist_list:

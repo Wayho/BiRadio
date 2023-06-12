@@ -32,10 +32,11 @@ import json
 ###########################################################
 MP3_ROOT = 'mp3'
 IMG_FLODER = 'img'
+MAX_MEMORY = int(os.environ['MAX_MEMORY']) or 450
 
 # ffmpeg -re -ss 0 -t 431 -f lavfi -i color=c=0x000000:s=640x360:r=30 -i mp3/img/1.jpg -i mp3/100/01.aac -i mp3/100/02.aac -filter_complex  "[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];[2:0][3:0]concat=n=2:v=0:a=1[outa]"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 192k -f flv test.flv
 
-# FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。
+# FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。但是下载的还在
 
 ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -f flv {}'
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
@@ -78,7 +79,15 @@ def cmdconcat_floder(str_rtmp,floder_list,total=30,artist=None):
                 if len(mp3_list) >=total:
                     break
                 mp3_list.append(item)
-
+    mp3_512M = []
+    total_size = 0
+    CONST_MB = float(1024 * 1024)
+    for file_path in mp3_list:
+        fsize = os.path.getsize(file_path) / CONST_MB
+        if total_size + fsize > MAX_MEMORY:
+            break
+        mp3_512M.append(file_path)
+        total_size += fsize
 
     return cmdconcat_by_list(str_rtmp,mp3_list,artist)
 

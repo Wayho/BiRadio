@@ -89,8 +89,8 @@ def cmdconcat_floder(str_rtmp,floder_list,total=30,artist=None):
             break
         mp3_512M.append(file_path)
         total_size += fsize
-
-    return cmdconcat_by_list(str_rtmp,mp3_list,artist)
+    print('Total files:',len(mp3_512M),',Total size:',total_size)
+    return cmdconcat_by_list(str_rtmp,mp3_512M,artist)
 
 def cmdconcat_by_list(str_rtmp,mp3_list,artist=None):
     """

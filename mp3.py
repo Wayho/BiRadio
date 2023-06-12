@@ -6,10 +6,19 @@ import ffmpeg
 import json
 
 ###### 直播间播放器 ########
+# Mime Type: video/mp4;codecs="avc1.640028,mp4a.40.2"
 # Player Core: Hls7Player(sisterFetcher)
-# Video Video Info:854x480,30FPS
-# Audio Info: 48KHz,Stereo,93Kbps
-# Encoder: BVC-SRT LiveHime/4.42.0
+# Video Video Info:1920x1080,30FPS
+# Audio Info: 48KHz,Stereo,256Kbps
+# Encoder: BVC-SRT LiveHime/4.45.0
+# Stream Host: cn-jssz-cm-02-19.bilivideo.com
+
+# Mime Type: video/mp4;codecs="mp4a.40.2,avc1.64001e"
+# Player Core: fMp4Player(Fetch)
+# Video Video Info:640x36030FPS
+# Audio Info: 44.1KHz,Stereo,125Kbps
+# Encoder: Lavf58.29.100
+# Stream Host: cn-jxnc-cm-01-11.bilivideo.com
 ###########################################################
 ## 记得修改为通过参数带来BILIBILI_RTMP+BILIBILI_CLMY
 ###########################################################
@@ -27,8 +36,10 @@ IMG_FLODER = 'img'
 # ffmpeg -re -ss 0 -t 431 -f lavfi -i color=c=0x000000:s=640x360:r=30 -i mp3/img/1.jpg -i mp3/100/01.aac -i mp3/100/02.aac -filter_complex  "[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];[2:0][3:0]concat=n=2:v=0:a=1[outa]"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 192k -f flv test.flv
 
 # FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。
-#ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -f flv {}'
-ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
+
+ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -f flv {}'
+#ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
+# last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
 def cmdconcat_floder(str_rtmp,floder_list,total=30,artist=None):
     """

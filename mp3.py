@@ -32,8 +32,6 @@ import json
 ###########################################################
 MP3_ROOT = 'mp3'
 IMG_FLODER = 'img'
-MAX_MEMORY = int(os.environ.get('MAX_MEMORY')) or 350
-print('MAX_MEMORY:',MAX_MEMORY)
 
 # ffmpeg -re -ss 0 -t 431 -f lavfi -i color=c=0x000000:s=640x360:r=30 -i mp3/img/1.jpg -i mp3/100/01.aac -i mp3/100/02.aac -filter_complex  "[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];[2:0][3:0]concat=n=2:v=0:a=1[outa]"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 192k -f flv test.flv
 
@@ -43,7 +41,7 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
-def cmdconcat_floder(str_rtmp,floder_list,total=30,artist=None):
+def cmdconcat_floder(str_rtmp,floder_list,total=30,artist=None,max_memory=300):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
     :param str_rtmp:'"rtmp://"'
@@ -85,14 +83,14 @@ def cmdconcat_floder(str_rtmp,floder_list,total=30,artist=None):
     CONST_MB = float(1024 * 1024)
     for file_path in mp3_list:
         fsize = os.path.getsize(file_path) / CONST_MB
-        if total_size + fsize > MAX_MEMORY:
+        if total_size + fsize > max_memory:
             break
         mp3_512M.append(file_path)
         total_size += fsize
     print('Total files:',len(mp3_512M),',Total size:',total_size)
     return cmdconcat_by_list(str_rtmp,mp3_512M,artist)
 
-def cmdconcat_by_list(str_rtmp,mp3_list,artist=None):
+def cmdconcat_by_list(str_rtmp,mp3_list,artist=None,max_memory=200):
     """
     根据mp3_list的串接cmd
     :param str_rtmp:'"rtmp://"'

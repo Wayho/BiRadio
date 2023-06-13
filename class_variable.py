@@ -18,6 +18,7 @@ OBJECT_ID = '63ec4afc14f21573cb450921'
 #   "MP3_TOTAL_PLAY": 200,
 #   "SLEEP": 60,
 #   "MAX_DOWNLOAD": 30,
+#   "MAX_MEMORY": 200,
 #   "ERROR_RETRY": 5
 # }
 

@@ -35,6 +35,7 @@ MP3_TOTAL_PLAY = 30
 SLEEP = 120
 ERROR_RETRY = 6
 MAX_DOWNLOAD = 10
+MAX_MEMORY = 200
 
 ###########################################################
 # rtmp://live-push.bilivideo.com/live-bvc/
@@ -73,6 +74,7 @@ def Setup(**params):
     global SLEEP
     global ERROR_RETRY
     global MAX_DOWNLOAD
+    global MAX_MEMORY
     config = class_variable.get_config()
     print(config)
     if config:
@@ -87,6 +89,7 @@ def Setup(**params):
         SLEEP = config.get('SLEEP')
         ERROR_RETRY = config.get('ERROR_RETRY')
         MAX_DOWNLOAD = config.get('MAX_DOWNLOAD')
+        MAX_MEMORY = config.get('MAX_MEMORY')
         if BILIBILI_CLMY:
             RTMP_URL_STR = '\"' + BILIBILI_RTMP + BILIBILI_CLMY + '\"'
     else:
@@ -172,7 +175,7 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
     # if today_sitename != SITENAME:
     #     print('Today site name is',today_sitename,',This site is',SITENAME)
     #     return 0
-    concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist)
+    concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
     cmd = concat.get('cmd')
     Global_Mp3_Info = concat.get('info')
     Global_Time_Rtmp_Start = int(time.time())
@@ -463,5 +466,5 @@ def cmd_memory( **params ):
 
 @engine.define( 'print_v' )
 def print_v( **params ):
-    print(BILIBILI_CLMY,'RADIO_NAME:',RADIO_NAME,'CHANGE_RADIO_NAME:',CHANGE_RADIO_NAME,'PLAY_ARTIST:',PLAY_ARTIST,'FFMPEG_MESSAGE_OUT:',FFMPEG_MESSAGE_OUT,'MP3_TOTAL_PLAY:',MP3_TOTAL_PLAY,'SLEEP:',SLEEP,'ERROR_RETRY:',ERROR_RETRY,'MAX_DOWNLOAD:',MAX_DOWNLOAD,'Global_minutes:',Global_minutes)
+    print(BILIBILI_CLMY,'RADIO_NAME:',RADIO_NAME,'CHANGE_RADIO_NAME:',CHANGE_RADIO_NAME,'PLAY_ARTIST:',PLAY_ARTIST,'FFMPEG_MESSAGE_OUT:',FFMPEG_MESSAGE_OUT,'MP3_TOTAL_PLAY:',MP3_TOTAL_PLAY,'SLEEP:',SLEEP,'ERROR_RETRY:',ERROR_RETRY,'MAX_DOWNLOAD:',MAX_DOWNLOAD,'MAX_MEMORY:',MAX_MEMORY,'Global_minutes:',Global_minutes)
     return True

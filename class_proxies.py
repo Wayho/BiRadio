@@ -36,6 +36,7 @@ def get_response(url,headers,allow_redirects=True,timeout=None):
     :return: requests.get
     """
     best_obj = Global_Best_Proxies
+    headers['User-Agent'] = USER_AGENT
     ipport = best_obj.get('ip') + ":" + best_obj.get('port')
     proxies_type = best_obj.get('type')
     if 'http' == proxies_type:
@@ -46,7 +47,7 @@ def get_response(url,headers,allow_redirects=True,timeout=None):
         print('Unknow Type', proxies_type,ipport)
         proxies = {"http": "http://0.0.0.0:8888"  }
     #proxies = {"http": "http://114.231.45.51:8888"  }
-    print('proxies:',proxies,best_obj.get('bad'))
+    
     if None == timeout:
         timeout = class_variable.get_timeout()
     starttime = time.time()
@@ -55,7 +56,7 @@ def get_response(url,headers,allow_redirects=True,timeout=None):
     else:
         response = requests.get(url,headers=headers,proxies=proxies, timeout=timeout, allow_redirects=False)
     endtime = time.time()
-    print(starttime,endtime,(endtime-starttime)*1000)
+    print('proxies:',proxies,best_obj.get('bad'),'end-start time=',(endtime-starttime)*1000)
     if 'OK'==response.reason:
         bad(best_obj.get('objectId'),10)
     elif 'Moved Temporarily'==response.reason:
@@ -76,6 +77,7 @@ def post_response(url,headers,data):
     :return: requests.get
     """
     best_obj = Global_Best_Proxies
+    headers['User-Agent'] = USER_AGENT
     ipport = best_obj.get('ip') + ":" + best_obj.get('port')
     proxies_type = best_obj.get('type')
     if 'http' == proxies_type:
@@ -86,12 +88,11 @@ def post_response(url,headers,data):
         print('Unknow Type', proxies_type,ipport)
         proxies = {"http": "http://0.0.0.0:8888"  }
     #proxies = {"http": "http://114.231.45.51:8888"  }
-    print('proxies:',proxies,best_obj.get('bad'))
     timeout = class_variable.get_timeout()
     starttime = time.time()
     response = requests.post(url,data=data,headers=headers)
     endtime = time.time()
-    print(starttime,endtime,(endtime-starttime)*1000)
+    print('proxies:',proxies,best_obj.get('bad'),'end-start time=',(endtime-starttime)*1000)
     if 'OK'==response.reason:
         bad(best_obj.get('objectId'),10)
     elif 'Moved Temporarily'==response.reason:
@@ -115,6 +116,7 @@ def best_proxies():
     query = DBClass.query
     query.ascending('bad')
     Global_Best_Proxies = query.first()
+    set_USER_AGENT()
     return Global_Best_Proxies
 
 def bad(objectId,bad):
@@ -127,6 +129,19 @@ def update():
     # 待升级
     DBClass = leancloud.Object.extend( "proxies" )
     return 0
+
+def set_USER_AGENT():
+    global USER_AGENT
+    with open("./user_agent.txt", "r") as ftext:
+        txtlines = ftext.readlines()
+        ftext.close()
+        agentlist = []
+        for line in txtlines:
+            line = line.strip( '\n' )
+            agentlist.append(line)
+        random.shuffle(agentlist)
+        USER_AGENT = agentlist[0]
+        #print( "USER_AGENT:",USER_AGENT)
 
 ###########################################################
 def test(): 

@@ -359,14 +359,18 @@ def file_in_floder(filename,folder,mainfolder=MP3_ROOT):
     :param path:
     :return:
     """
-    mp3_path = mainfolder + '/' + folder + '/' +filename[0:-4] + '.mp3'
-    if os.path.exists(mp3_path):
+    name = mainfolder + '/' + folder + '/' +filename[0:-4]
+    file_path = name + '.mp3'
+    if os.path.exists(file_path):
         return True
-    mp3_path = mainfolder + '/' + folder + '/' +filename[0:-4] + '.m4a'
-    if os.path.exists(mp3_path):
+    file_path = name + '.m4a'
+    if os.path.exists(file_path):
         return True
-    mp3_path = mainfolder + '/' + folder + '/' +filename[0:-4] + '.aac'
-    if os.path.exists(mp3_path):
+    file_path = name + '.aac'
+    if os.path.exists(file_path):
+        return True
+    file_path = name + '.jpg'
+    if os.path.exists(file_path):
         return True
     return False
 ###########################################################

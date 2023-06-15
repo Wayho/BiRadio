@@ -87,6 +87,7 @@ def post_response(url,headers,data):
     else:
         print('Unknow Type', proxies_type,ipport)
         proxies = {"http": "http://0.0.0.0:8888"  }
+        bad(best_obj.get('objectId'),999999)
     #proxies = {"http": "http://114.231.45.51:8888"  }
     timeout = class_variable.get_timeout()
     starttime = time.time()

@@ -403,8 +403,8 @@ def cmd_ffmpeg_kill( **params ):
 @engine.define( 'heart' )
 def cmd_heart( **params ):
     requests.get( "http://localhost:3000" )
-    today_sitename = class_variable.get_today_sitename()
-    print('Today site name is',today_sitename,',This site is',SITENAME,Global_minutes)
+    (today,tomorrow) = class_variable.get_today_sitename()
+    print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
     return True
 
 # # 待升级

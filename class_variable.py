@@ -61,8 +61,11 @@ def get_today_sitename():
     query = VClass.query
     variable = query.get(OBJECT_ID)
     sitename = variable.get('week')
-    weekday = datetime.now().weekday()
-    return sitename[weekday]
+    today = datetime.now().weekday()
+    tomorrow = today+1
+    if tomorrow > 6:
+        tomorrow = 0
+    return (sitename[today],sitename[tomorrow])
 
 def set_today_sitename(sitename):
     """

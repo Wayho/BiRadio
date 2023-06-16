@@ -19,6 +19,7 @@ OBJECT_ID = '63ec4afc14f21573cb450921'
 #   "SLEEP": 60,
 #   "MAX_DOWNLOAD": 30,
 #   "MAX_MEMORY": 200,
+#   "MAX_MEMORY_PY": 400,
 #   "ERROR_RETRY": 5
 # }
 

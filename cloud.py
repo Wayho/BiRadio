@@ -89,7 +89,10 @@ def Setup(**params):
         SLEEP = config.get('SLEEP')
         ERROR_RETRY = config.get('ERROR_RETRY')
         MAX_DOWNLOAD = config.get('MAX_DOWNLOAD')
-        MAX_MEMORY = config.get('MAX_MEMORY')
+        if 'BiliRadio_py' == SITENAME:
+            MAX_MEMORY = config.get('MAX_MEMORY_PY')
+        else:
+            MAX_MEMORY = config.get('MAX_MEMORY')
         if BILIBILI_CLMY:
             RTMP_URL_STR = '\"' + BILIBILI_RTMP + BILIBILI_CLMY + '\"'
     else:

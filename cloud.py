@@ -219,10 +219,10 @@ def do_one_minute( **params ):
 def cmd_restart_radio( **params ):
     global Global_Sleeping
     global Global_Retry_Times
-    today_sitename = class_variable.get_today_sitename()
-    if today_sitename != SITENAME:
+    (today,tomorrow) = class_variable.get_today_sitename()
+    if today != SITENAME:
         if Global_minutes % 60 == 0:
-            print('Today site name is',today_sitename,',This site is',SITENAME)
+            print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
     requests.get( "http://localhost:3000" )
     procs = shell.procs_info("ffmpeg")
@@ -276,9 +276,9 @@ def cmd_reset_retry( **params ):
 @engine.define( 'startLive' )
 def StartLive(**params):
     Setup()
-    today_sitename = class_variable.get_today_sitename()
-    if today_sitename != SITENAME:
-        print('Today site name is',today_sitename,',This site is',SITENAME)
+    (today,tomorrow) = class_variable.get_today_sitename()
+    if today != SITENAME:
+        print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
     res = startlive.tryStartLive()
     cmd_reset_retry()
@@ -296,9 +296,9 @@ def startLive_update_rtmp(**params):
     global BILIBILI_RTMP
     global BILIBILI_CLMY
     Setup()
-    today_sitename = class_variable.get_today_sitename()
-    if today_sitename != SITENAME:
-        print('Today site name is',today_sitename,',This site is',SITENAME)
+    (today,tomorrow) = class_variable.get_today_sitename()
+    if today != SITENAME:
+        print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
     res = startlive.tryStartLive()
     if res.get('code')==0:

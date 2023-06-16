@@ -122,9 +122,17 @@ def cmdconcat_by_list(str_rtmp,mp3_list,artist=None,max_memory=200):
     str_img = img_list[0]
     if artist:
         # 查找文件名里有artist
+        finded = False
         for item in img_list:
             if -1!=item.find(artist):
+                finded = True
                 str_img = item
+        if not finded:
+            # 如果没有，就不要把有 art_的图播出来
+            # 查找文件名里没有art_
+            for item in img_list:
+                if -1==item.find('art_'):
+                    str_img = item
     else:
         # 保证不出有 art_的图
         # 查找文件名里没有art_

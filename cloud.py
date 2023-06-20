@@ -23,7 +23,8 @@ import gc
 ###########################################################
 MP3_ROOT = 'mp3'
 SITENAME = os.environ.get('SITENAME') or 'none'
-print('SITENAME:',SITENAME)
+MEMORY = os.environ.get('MEMORY') or 'none'
+print('SITENAME:',SITENAME,'MEMORY:',MEMORY)
 ################# LOAD CONFIG ##############################
 BILIBILI_RTMP = "rtmp://"
 BILIBILI_CLMY = None
@@ -91,7 +92,8 @@ def Setup(**params):
         SLEEP = config.get('SLEEP')
         ERROR_RETRY = config.get('ERROR_RETRY')
         MAX_DOWNLOAD = config.get('MAX_DOWNLOAD')
-        if 'BiliRadio_py' == SITENAME:
+        #if 'BiliRadio_py' == SITENAME:
+        if '512' == MEMORY:
             MAX_MEMORY = config.get('MAX_MEMORY_PY')
         else:
             MAX_MEMORY = config.get('MAX_MEMORY')
@@ -108,12 +110,6 @@ def Setup(**params):
 @engine.define( 'remove' )
 def cmd_remove(floder,**params):
     download.remove_by_floder(floder)
-    return True
-
-@engine.define( 'download' )
-def cmd_download(key,**params):
-    download.download_by_ShareKey(MAX_DOWNLOAD,key,'9945','temp',SLEEP)
-    shell.OutputShell('ls mp3 -R -l')
     return True
 
 @engine.define( 'download_all_key' )

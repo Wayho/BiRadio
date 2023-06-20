@@ -92,7 +92,7 @@ def Setup(**params):
         ERROR_RETRY = config.get('ERROR_RETRY')
         MAX_DOWNLOAD = config.get('MAX_DOWNLOAD')
         #if 'BiliRadio_py' == SITENAME:
-        if '512' == MEMORY:
+        if '512' == MEMORY[0:3]:
             MAX_MEMORY = config.get('MAX_MEMORY_PY')
         else:
             MAX_MEMORY = config.get('MAX_MEMORY')

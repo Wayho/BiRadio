@@ -54,7 +54,6 @@ Global_Danmu_Retry_Times = 0
 Global_Retry_Times = 0
 Global_minutes = 0
 
-Global_Sleeping = False
 Global_Mp3_Info = []
 Global_Time_Rtmp_Start = 0      #seconds
 Global_Today = ''
@@ -231,33 +230,27 @@ def do_one_minute( **params ):
     return True
 
 def cmd_restart_radio():
-    global Global_Sleeping
     global Global_Retry_Times
-    if Global_Sleeping:
-        print('Sleeping,Not do restart')
+    print('Restart Radio')
+    if Global_Retry_Times >= ERROR_RETRY:
+        print('Global_Retry_Times >= ERROR_RETRY')
+        return False
+    playret = 0
+    if PLAY_ARTIST:
+        playret = play_artist()
     else:
-        print('Restart Radio')
-        if Global_Retry_Times >= ERROR_RETRY:
-            print('Global_Retry_Times >= ERROR_RETRY')
-            return False
-        playret = 0
-        if PLAY_ARTIST:
-            playret = play_artist()
-        else:
-            playret = play_play()
-        if -9 == playret:
-            return False
-        elif 1== playret:
-            Global_Retry_Times += 1
-            startlive.tryStartLive()
-            return True
-        elif 0 != playret:
-                Global_Retry_Times += 1
-        print('*************** END *******************')
-        Global_Sleeping = True
-        time.sleep(5)
-        Global_Sleeping = False
+        playret = play_play()
+    if -9 == playret:
+        return False
+    elif 1== playret:
+        Global_Retry_Times += 1
+        startlive.tryStartLive()
         return True
+    elif 0 != playret:
+            Global_Retry_Times += 1
+    print('*************** END *******************')
+    return True
+        
         
 
 # 0 0 2-16 * * ?     
@@ -381,15 +374,6 @@ def id3_send():
                 return True
     return False
 
-# 15 */5 2-16 * * ?
-#@engine.define( 'ffmpeg_procs' )
-def cmd_ffmpeg_procs( **params ):
-    procs = shell.procs_info("ffmpeg")
-    if procs:
-        print(procs)
-    else:
-         print('ffmpeg_procs:sleep',Global_Sleeping)
-    return True
 
 # 到时运行免费时长
 # 58 59 23 * * ?

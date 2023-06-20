@@ -56,6 +56,7 @@ Global_minutes = 0
 Global_Sleeping = False
 Global_Mp3_Info = []
 Global_Time_Rtmp_Start = 0      #seconds
+Global_Today = ''
 
 
 engine = Engine()
@@ -75,6 +76,7 @@ def Setup(**params):
     global ERROR_RETRY
     global MAX_DOWNLOAD
     global MAX_MEMORY
+    global Global_Today
     config = class_variable.get_config()
     print(config)
     if config:
@@ -97,6 +99,8 @@ def Setup(**params):
             RTMP_URL_STR = '\"' + BILIBILI_RTMP + BILIBILI_CLMY + '\"'
     else:
         print('############## ERROR IN LOAD CONFIG ##################')
+    (today,tomorrow) = class_variable.get_today_sitename()
+    Global_Today = today
     print_v()
     class_variable.SaveCookiesFromDB()
     return True
@@ -208,58 +212,57 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
 @engine.define( 'do_one_minute' )
 def do_one_minute( **params ):
     global Global_minutes
+    global Global_Today
     if not BILIBILI_CLMY:
         Setup()
-    if Global_minutes % 3 == 0:
-        cmd_restart_radio()
-    id3_send()
+    if Global_Today == SITENAME:
+        procs = shell.procs_info("ffmpeg")
+        if procs:
+            id3_send()
+            if Global_minutes % 9 == 0:
+                print('do_one_minute:',Global_Retry_Times,procs)
+                requests.get( "http://localhost:3000" )
+        else:
+            cmd_restart_radio()
+    else:
+        if Global_minutes % 5 == 0:
+            (today,tomorrow) = class_variable.get_today_sitename()
+            Global_Today = today
+            if Global_minutes % 60 == 0:
+                print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
+    
     Global_minutes += 1
     return True
 
-# 28 */5 7-23 * * ?
-# 需要停止restart_radio任务才能kill_ffmpeg，否则又会启动
-@engine.define( 'restart_radio' )
-def cmd_restart_radio( **params ):
+def cmd_restart_radio():
     global Global_Sleeping
     global Global_Retry_Times
-    (today,tomorrow) = class_variable.get_today_sitename()
-    if today != SITENAME:
-        if Global_minutes % 60 == 0:
-            print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
-        return False
-    requests.get( "http://localhost:3000" )
-    procs = shell.procs_info("ffmpeg")
-    if procs:
-        if Global_minutes % 9 == 0:
-            print('restart_radio:',Global_Retry_Times,procs)
-        return False
+    if Global_Sleeping:
+        print('Sleeping,Not do restart')
     else:
-        if Global_Sleeping:
-             print('Sleeping,Not do restart')
+        print('Restart Radio')
+        if Global_Retry_Times >= ERROR_RETRY:
+            print('Global_Retry_Times >= ERROR_RETRY')
+            return False
+        playret = 0
+        if PLAY_ARTIST:
+            playret = play_artist()
         else:
-            print('Restart Radio')
-            if Global_Retry_Times >= ERROR_RETRY:
-                print('Global_Retry_Times >= ERROR_RETRY')
-                return False
-            playret = 0
-            if PLAY_ARTIST:
-                playret = play_artist()
-            else:
-                playret = play_play()
-            if -9 == playret:
-                return False
-            elif 1== playret:
-                Global_Retry_Times += 1
-                startlive.tryStartLive()
-                return True
-            elif 0 != playret:
-                    Global_Retry_Times += 1
-            print('*************** END *******************')
-            Global_Sleeping = True
-            time.sleep(5)
-            Global_Sleeping = False
+            playret = play_play()
+        if -9 == playret:
+            return False
+        elif 1== playret:
+            Global_Retry_Times += 1
+            startlive.tryStartLive()
             return True
-
+        elif 0 != playret:
+                Global_Retry_Times += 1
+        print('*************** END *******************')
+        Global_Sleeping = True
+        time.sleep(5)
+        Global_Sleeping = False
+        return True
+        
 
 # 0 0 2-16 * * ?     
 @engine.define( 'reset_retry' )
@@ -274,7 +277,7 @@ def cmd_reset_retry( **params ):
     return True
 
 # before restart_radio
-# once a day
+# once a day, not do call ffmpeg, only startlive
 # 8 0 7 * * ?
 @engine.define( 'startLive' )
 def StartLive(**params):
@@ -283,11 +286,11 @@ def StartLive(**params):
     if today != SITENAME:
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
-    res = startlive.tryStartLive()
+    startlive.tryStartLive()
     cmd_reset_retry()
-    if res.get('code')==0 or 1==res.get('code'):
-        time.sleep(1)
-        cmd_restart_radio()
+    # if res.get('code')==0 or 1==res.get('code'):
+    #     time.sleep(1)
+    #     cmd_restart_radio()
     return True
 
 # before restart_radio
@@ -304,16 +307,17 @@ def startLive_update_rtmp(**params):
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
     res = startlive.tryStartLive()
+    cmd_reset_retry()
     if res.get('code')==0:
         time.sleep(3)
         BILIBILI_RTMP = res.get('rtmp').get('addr')
         BILIBILI_CLMY = res.get('rtmp').get('code')
         if BILIBILI_CLMY:
             RTMP_URL_STR = '\"' + BILIBILI_RTMP + BILIBILI_CLMY + '\"'
-        cmd_restart_radio()
-    elif res.get('code')==1:
-        time.sleep(3)
-        cmd_restart_radio()
+    #     cmd_restart_radio()
+    # elif res.get('code')==1:
+    #     time.sleep(3)
+    #     cmd_restart_radio()
     return True
 
 @engine.define( 'today_mine' )
@@ -344,16 +348,11 @@ def ffmpeg_msgout_on_off(**params):
     return True
 
 # 35 */1 7-23 * * ?
-@engine.define( 'id3_send' )
-def id3_send(**params):
+#@engine.define( 'id3_send' )
+def id3_send():
     global Global_Danmu_Retry_Times
     if 5< Global_Danmu_Retry_Times:
          print('Global_Danmu_Retry_Times>5')
-         return False
-    procs = shell.procs_info("ffmpeg")
-    if not procs:
-         if Global_minutes % 30 == 0:
-            print('ffmpeg not start')
          return False
     now = int(time.time())
     duration_total = 0
@@ -387,7 +386,7 @@ def id3_send(**params):
     return False
 
 # 15 */5 2-16 * * ?
-@engine.define( 'ffmpeg_procs' )
+#@engine.define( 'ffmpeg_procs' )
 def cmd_ffmpeg_procs( **params ):
     procs = shell.procs_info("ffmpeg")
     if procs:
@@ -417,7 +416,7 @@ def cmd_curl( **params ):
     return class_curl.update_code()
 
 # # 待升级
-@engine.define( 'update_proxies' )
+#@engine.define( 'update_proxies' )
 def cmd_update_proxies( **params ):
     update_num = class_proxies.update()
     print('class_proxies.update:',update_num)

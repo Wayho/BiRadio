@@ -325,12 +325,12 @@ def unzip_cache(folder,filename,mainfolder=MP3_ROOT):
     :param path:
     :return:
     """
+    src_path = 'cache.zip'
     if folder==IMG_FLODER:
         dest_path = 'mp3/img/' + filename
         os.rename(src_path,dest_path)
         print('unzip:rename cache.zip to img/*.jpg ok',folder,dest_path) 
         return True
-    src_path = 'cache.zip'
     dest_folder = mainfolder + '/' + folder
     if not os.path.exists(dest_folder):
         print('unzip:mkdir::',dest_folder)

@@ -21,7 +21,7 @@ import shutil
 import psutil
 import gc
 ###########################################################
-MP3_ROOT = 'mp3'
+MP3_ROOT = '/tmp'
 SITENAME = os.environ.get('SITENAME') or 'none'
 MEMORY = os.environ.get('MEMORY') or 'none'
 print('SITENAME:',SITENAME,'MEMORY:',MEMORY)
@@ -36,7 +36,7 @@ MP3_TOTAL_PLAY = 30
 SLEEP = 120
 ERROR_RETRY = 6
 MAX_DOWNLOAD = 10
-MAX_MEMORY = 200
+MAX_MEMORY = 120
 
 ###########################################################
 # rtmp://live-push.bilivideo.com/live-bvc/
@@ -56,7 +56,7 @@ Global_minutes = 0
 
 Global_Mp3_Info = []
 Global_Time_Rtmp_Start = 0      #seconds
-Global_Today = ''
+Global_Today_AP = ['','']
 
 
 engine = Engine()
@@ -76,7 +76,7 @@ def Setup(**params):
     global ERROR_RETRY
     global MAX_DOWNLOAD
     global MAX_MEMORY
-    global Global_Today
+    global Global_Today_AP
     config = class_variable.get_config()
     print(config)
     if config:
@@ -100,8 +100,8 @@ def Setup(**params):
             RTMP_URL_STR = '\"' + BILIBILI_RTMP + BILIBILI_CLMY + '\"'
     else:
         print('############## ERROR IN LOAD CONFIG ##################')
-    (today,tomorrow) = class_variable.get_today_sitename()
-    Global_Today = today
+    (today,tomorrow) = class_variable.get_today_AP()
+    Global_Today_AP = today
     print_v()
     class_variable.SaveCookiesFromDB()
     return True
@@ -173,10 +173,6 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
     global Global_Mp3_Info
     global Global_Time_Rtmp_Start
     print('play_floder:',floder_list, artist,radioname)
-    # today_sitename = class_variable.get_today_sitename()
-    # if today_sitename != SITENAME:
-    #     print('Today site name is',today_sitename,',This site is',SITENAME)
-    #     return 0
     concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
     cmd = concat.get('cmd')
     Global_Mp3_Info = concat.get('info')
@@ -207,10 +203,10 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
 @engine.define( 'do_one_minute' )
 def do_one_minute( **params ):
     global Global_minutes
-    global Global_Today
+    global Global_Today_AP
     if not BILIBILI_CLMY:
         Setup()
-    if Global_Today == SITENAME:
+    if SITENAME in Global_Today_AP:
         procs = shell.procs_info("ffmpeg")
         if procs:
             id3_send()
@@ -221,8 +217,8 @@ def do_one_minute( **params ):
             cmd_restart_radio()
     else:
         if Global_minutes % 5 == 0:
-            (today,tomorrow) = class_variable.get_today_sitename()
-            Global_Today = today
+            (today,tomorrow) = class_variable.get_today_AP()
+            Global_Today_AP = today
             if Global_minutes % 60 == 0:
                 print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
     
@@ -271,7 +267,7 @@ def cmd_reset_retry( **params ):
 @engine.define( 'startLive' )
 def StartLive(**params):
     Setup()
-    (today,tomorrow) = class_variable.get_today_sitename()
+    (today,tomorrow) = class_variable.get_today_AP()
     if today != SITENAME:
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
@@ -291,7 +287,7 @@ def startLive_update_rtmp(**params):
     global BILIBILI_RTMP
     global BILIBILI_CLMY
     Setup()
-    (today,tomorrow) = class_variable.get_today_sitename()
+    (today,tomorrow) = class_variable.get_today_AP()
     if today != SITENAME:
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
@@ -309,14 +305,24 @@ def startLive_update_rtmp(**params):
     #     cmd_restart_radio()
     return True
 
-@engine.define( 'today_mine' )
-def today_mine(**params):
-    class_variable.set_today_sitename(SITENAME)
+@engine.define( 'today_am_mine' )
+def today_am_mine(**params):
+    class_variable.set_today_AP(SITENAME,True)
     return True
 
-@engine.define( 'tomorrow_mine' )
-def tomorrow_mine(**params):
-    class_variable.set_tomorrow_sitename(SITENAME)
+@engine.define( 'today_pm_mine' )
+def today_pm_mine(**params):
+    class_variable.set_today_AP(SITENAME,False)
+    return True
+
+@engine.define( 'tomorrow_am_mine' )
+def tomorrow_am_mine(**params):
+    class_variable.set_tomorrow_AP(SITENAME,True)
+    return True
+
+@engine.define( 'tomorrow_pm_mine' )
+def tomorrow_pm_mine(**params):
+    class_variable.set_tomorrow_AP(SITENAME,False)
     return True
 
 # before restart_radio
@@ -377,15 +383,21 @@ def id3_send():
 
 # 到时运行免费时长
 # 58 59 23 * * ?
-@engine.define( 'ffmpeg_kill' )
-def cmd_ffmpeg_kill( **params ):
-    shell.kill_ffmpeg(True)
+@engine.define( 'kill_ffmpeg' )
+def cmd_kill_ffmpeg( **params ):
+    shell.proc_kill('ffmpeg',True)
+    return True
+
+# restart engine
+@engine.define( 'kill_python' )
+def cmd_kill_python( **params ):
+    shell.proc_kill('python',False)
     return True
 
 @engine.define( 'heart' )
 def cmd_heart( **params ):
     requests.get( "http://localhost:3000" )
-    (today,tomorrow) = class_variable.get_today_sitename()
+    (today,tomorrow) = class_variable.get_today_AP()
     print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
     return True
 
@@ -410,7 +422,12 @@ def cmd_shell( cmd, **params ):
         
 @engine.define( 'ls_mp3' )
 def cmd_ls_mp3( **params):
-    shell.OutputShell('ls mp3 -R -l')
+    shell.OutputShell('ls /tmp -R -l')
+    return True
+
+@engine.define( 'ls_img' )
+def cmd_ls_img( **params):
+    shell.OutputShell('ls mp3/img -R -l')
     return True
 
 @engine.define( 'ls' )
@@ -432,21 +449,21 @@ def cmd_memory( **params ):
     # print("Disk used: %d GiB" % (used // (2**30)))
     # print("Disk free: %d GiB" % (free // (2**30)))
     mem = psutil.virtual_memory()
-    print('Memory total:',mem.total//mem_r)
-    print('Memory available:',mem.available//mem_r)
-    print('Memory percent:',mem.percent)
-    print('Memory used:',mem.used//mem_r)
+    # print('Memory total:',mem.total//mem_r)
+    # print('Memory available:',mem.available//mem_r)
+    # print('Memory percent:',mem.percent)
+    # print('Memory used:',mem.used//mem_r)
     print('Memory free:',mem.free//mem_r)
-    print('Memory active:',mem.active//mem_r)
-    print('Memory inactive:',mem.inactive//mem_r)
-    print('Memory buffers:',mem.buffers//mem_r)
-    print('Memory cached:',mem.cached//mem_r)
-    print('Memory shared:',mem.shared//mem_r)
-    print('Memory slab:',mem.slab//mem_r)
+    # print('Memory active:',mem.active//mem_r)
+    # print('Memory inactive:',mem.inactive//mem_r)
+    # print('Memory buffers:',mem.buffers//mem_r)
+    # print('Memory cached:',mem.cached//mem_r)
+    # print('Memory shared:',mem.shared//mem_r)
+    # print('Memory slab:',mem.slab//mem_r)
     print('gc.collect()',gc.collect())
     return True
 
 @engine.define( 'print_v' )
 def print_v( **params ):
-    print(BILIBILI_CLMY,'RADIO_NAME:',RADIO_NAME,'CHANGE_RADIO_NAME:',CHANGE_RADIO_NAME,'PLAY_ARTIST:',PLAY_ARTIST,'FFMPEG_MESSAGE_OUT:',FFMPEG_MESSAGE_OUT,'MP3_TOTAL_PLAY:',MP3_TOTAL_PLAY,'SLEEP:',SLEEP,'ERROR_RETRY:',ERROR_RETRY,'MAX_DOWNLOAD:',MAX_DOWNLOAD,'MAX_MEMORY:',MAX_MEMORY,'Global_minutes:',Global_minutes)
+    print(BILIBILI_CLMY,'RADIO_NAME:',RADIO_NAME,'CHANGE_RADIO_NAME:',CHANGE_RADIO_NAME,'PLAY_ARTIST:',PLAY_ARTIST,'FFMPEG_MESSAGE_OUT:',FFMPEG_MESSAGE_OUT,'MP3_TOTAL_PLAY:',MP3_TOTAL_PLAY,'SLEEP:',SLEEP,'ERROR_RETRY:',ERROR_RETRY,'MAX_DOWNLOAD:',MAX_DOWNLOAD,'MAX_MEMORY:',MAX_MEMORY,'Global_minutes:',Global_minutes,'Global_Today_AP:',Global_Today_AP)
     return True

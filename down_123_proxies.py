@@ -13,8 +13,9 @@ import class_variable as class_variable
 import class_proxies as class_proxies
 import gc
 import psutil
+import requests
 
-MP3_ROOT = 'mp3'
+MP3_ROOT = '/tmp'
 IMG_FLODER = 'img'
 USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0'
 ###########################################################
@@ -112,7 +113,7 @@ def get_g_initialProps(ShareKey):
     #             "text":'window.g_initialProps = {"res":{"code":0,"message":"ok","data":{"UserNickName":"13********5","UserID":1815181524,"ShareName":"01-The-Beatles...等3个文件","HasPwd":false,"Expiration":"2099-12-12T08:00:00+08:00","CreateAt":"2023-05-23T10:03:59+08:00","Expired":false,"ShareKey":"MrBtVv-w0xpA","HeadImage":"https:\u002F\u002Fstatics.123pan.com\u002Fstatic-by-custom\u002Fdefault_avatar.png","IsVip":false}},"reslist":{"code":0,"message":"ok","data":{"Next":"-1","Len":3,"IsFirst":true,"Expired":false,"InfoList":[{"FileId":2688790,"FileName":"01-The-Beatles-yesterday.zip","Type":0,"Size":2941909,"ContentType":"0","S3KeyFlag":"1815181524-0","CreateAt":"2023-05-23T10:03:46+08:00","UpdateAt":"2023-05-23T10:03:59+08:00","Etag":"bed028af2040ede661e5dbee392c7505","DownloadUrl":"","Status":5,"ParentFileId":2678796,"Category":10,"PunishFlag":0,"StorageNode":"m2"},{"FileId":2685677,"FileName":"requirements.txt","Type":0,"Size":148,"ContentType":"0","S3KeyFlag":"1815181524-0","CreateAt":"2023-05-22T16:23:38+08:00","UpdateAt":"2023-05-22T16:25:34+08:00","Etag":"34fa77af43679699096c7606a7f46050","DownloadUrl":"","Status":2,"ParentFileId":2678796,"Category":6,"PunishFlag":0,"StorageNode":"m2"},{"FileId":2679052,"FileName":"downloadFileList1815181524.txt","Type":0,"Size":269,"ContentType":"0","S3KeyFlag":"1815181524-0","CreateAt":"2023-05-19T23:14:25+08:00","UpdateAt":"2023-05-20T13:54:43+08:00","Etag":"84df2d1b3a154e534e33f9cdf48a3df9","DownloadUrl":"","Status":2,"ParentFileId":2678796,"Category":6,"PunishFlag":0,"StorageNode":"m2"}]}},"publicPath":"https:\u002F\u002Fwww.123pan.com\u002Fb\u002Fapi\u002F"};'
     #             }
     #print(response.reason,response.headers)
-    if 'OK'==response.reason:
+    if 'OK'==response.get('reason'):
         html = str(response.content,encoding='utf-8')
         g_initialProps_start = html.find(keyword)
         if -1!=g_initialProps_start:
@@ -129,7 +130,7 @@ def get_g_initialProps(ShareKey):
         else:
             res['message'] = 'Not find window.g_initialProps'
     else:
-        res['message'] = response.reason
+        res['message'] = response.get('reason')
     print('res::',res['message'],url)
     return res
 ###########################################################
@@ -222,16 +223,18 @@ def get_redirect_url(url,Referer):
     #response = requests.get(url,headers=headers,allow_redirects=False)
     response = class_proxies.get_response(url,headers=headers,allow_redirects=False)
 
-    if 'OK'==response.reason:
+    if 'OK'==response.get('reason'):
         html = response.content
         return json.loads(html)
-    elif 'Moved Temporarily'==response.reason:
+    elif 'Moved Temporarily'==response.get('reason'):
         resUrl = response.headers.get('Location')
         res = {"message":"ok","data":{"redirect_url":resUrl},"code":0}
         return res
+    elif 'NK'==response.get('reason'):
+        return {"message":  response.get('reason') }
     else:
-        print('get_redirect_url::',response.reason,response.content[0:200],url)
-        return {"message":  response.reason }
+        print('get_redirect_url::',response.get('reason'),response.content[0:200],url)
+        return {"message":  response.get('reason') }
 ###########################################################
 ###########################################################
 # GET https://111-40-113-9.d.cjjd15.com:30443/download-cdn.123pan.cn/123-80/34fa77af/1815181524-0/34fa77af43679699096c7606a7f46050/c-m2?v=5&t=1684973261&s=1684973261f42a3ccbd28548ce183b51d71ebfb145&r=SOQXG4&filename=requirements.txt&x-mf-biz-cid=dfa3aa54-e8bb-4a80-9964-d1bd37360cd1-6eaa77&auto_redirect=0&xmfcid=36161c8e-8e24-494b-b6db-3d15f5cd8147-cd8a62355-6450-65
@@ -299,7 +302,7 @@ def download(url,Referer):
     #print(response.reason,response.content)
     #print(response.headers.get('Content-Type'),response.headers.get('Content-disposition'))
     #if 'binary/octet-stream'==headers.get('Content-Type'):
-    if 'OK'==response.reason:
+    if 'OK'==response.get('reason'):
         file_obj = open("cache.zip", 'wb')
         file_obj.write(response.content)
         file_obj.close()
@@ -307,7 +310,7 @@ def download(url,Referer):
         #print(gc.collect())
         return True
     else:
-        print('download::error',response.reason)
+        print('download::error',response.get('reason'))
         return False
 ###########################################################
 def unzip_cache(folder,filename,mainfolder=MP3_ROOT): 
@@ -316,16 +319,16 @@ def unzip_cache(folder,filename,mainfolder=MP3_ROOT):
     :param path:
     :return:
     """
+    if folder==IMG_FLODER:
+        dest_path = 'mp3/img/' + filename
+        os.rename(src_path,dest_path)
+        print('unzip:rename cache.zip to img/*.jpg ok',folder,dest_path) 
+        return True
     src_path = 'cache.zip'
     dest_folder = mainfolder + '/' + folder
     if not os.path.exists(dest_folder):
         print('unzip:mkdir::',dest_folder)
         os.mkdir(dest_folder)
-    if folder==IMG_FLODER:
-        dest_path = dest_folder + '/' + filename
-        os.rename(src_path,dest_path)
-        print('unzip:rename cache.zip to img/*.jpg ok',folder,dest_path) 
-        return True
     r = zipfile.is_zipfile(src_path)
     if r:     
         zipFile = zipfile.ZipFile(src_path, 'r')
@@ -359,7 +362,11 @@ def file_in_floder(filename,folder,mainfolder=MP3_ROOT):
     :param path:
     :return:
     """
-    name = mainfolder + '/' + folder + '/' +filename[0:-4]
+    if folder!=IMG_FLODER:
+        name = mainfolder + '/' + folder + '/' +filename[0:-4]
+    else:
+        name ='mp3/img/'  + filename[0:-4]
+    #name = mainfolder + '/' + folder + '/' +filename[0:-4]
     file_path = name + '.mp3'
     if os.path.exists(file_path):
         return True

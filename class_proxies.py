@@ -35,6 +35,7 @@ def get_response(url,headers,allow_redirects=True,timeout=None):
     :param timeout:timeout
     :return: requests.get
     """
+    best_proxies()
     best_obj = Global_Best_Proxies
     headers['User-Agent'] = USER_AGENT
     ipport = best_obj.get('ip') + ":" + best_obj.get('port')
@@ -51,19 +52,28 @@ def get_response(url,headers,allow_redirects=True,timeout=None):
     if None == timeout:
         timeout = class_variable.get_timeout()
     starttime = time.time()
-    if allow_redirects:
-        response = requests.get(url,headers=headers,proxies=proxies, timeout=timeout)
-    else:
-        response = requests.get(url,headers=headers,proxies=proxies, timeout=timeout, allow_redirects=False)
+    response = {"reason":'NK'}
+    try:
+        if allow_redirects:
+            response = requests.get(url,headers=headers,proxies=proxies, timeout=timeout)
+        else:
+            response = requests.get(url,headers=headers,proxies=proxies, timeout=timeout, allow_redirects=False)
+    except:
+        print('Error in requests.get')
+        bad(best_obj.get('objectId'),500)
     endtime = time.time()
     print('proxies:',proxies,best_obj.get('bad'),'end-start time=',(endtime-starttime)*1000)
-    if 'OK'==response.reason:
+    #if 'OK'==response.reason:
+    if 'OK'==response.get('reason'):
         bad(best_obj.get('objectId'),10)
-    elif 'Moved Temporarily'==response.reason:
+    elif 'Moved Temporarily'==response.get('reason'):
         bad(best_obj.get('objectId'),10)
     else:
-        bad(best_obj.get('objectId'),300)
-        print('get_response:',response.reason,response.headers)
+        bad(best_obj.get('objectId'),500)
+        try:
+            print('get_response:',response.get('reason'),response.get('headers'))
+        except:
+            a=1
     return response
 ###########################################################
 ###########################################################

@@ -52,7 +52,6 @@ def get_response(url,headers,allow_redirects=True,timeout=None):
     if None == timeout:
         timeout = class_variable.get_timeout()
     starttime = time.time()
-    response = {"reason":'NK'}
     try:
         if allow_redirects:
             response = requests.get(url,headers=headers,proxies=proxies, timeout=timeout)
@@ -61,17 +60,18 @@ def get_response(url,headers,allow_redirects=True,timeout=None):
     except:
         print('Error in requests.get')
         bad(best_obj.get('objectId'),500)
+        return None
     endtime = time.time()
     print('proxies:',proxies,best_obj.get('bad'),'end-start time=',(endtime-starttime)*1000)
     #if 'OK'==response.reason:
-    if 'OK'==response.get('reason'):
+    if 'OK'==response.reason:
         bad(best_obj.get('objectId'),10)
-    elif 'Moved Temporarily'==response.get('reason'):
+    elif 'Moved Temporarily'==response.reason:
         bad(best_obj.get('objectId'),10)
     else:
         bad(best_obj.get('objectId'),500)
         try:
-            print('get_response:',response.get('reason'),response.get('headers'))
+            print('get_response:',response.reason,response.headers)
         except:
             a=1
     return response

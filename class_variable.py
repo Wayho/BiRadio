@@ -52,6 +52,69 @@ def get_timeout():
     variable = query.get(OBJECT_ID)
     return variable.get('timeout')
 
+def get_today_AP():
+    """
+    获取星期几哪个台起作用
+    :param :
+    :return sitename:今天是哪个台==SITENAME
+    """
+    VClass = leancloud.Object.extend( "variable" )
+    query = VClass.query
+    variable = query.get(OBJECT_ID)
+    site_ap = variable.get('week_ap')
+    today = datetime.now().weekday()
+    tomorrow = today+1
+    if tomorrow > 6:
+        tomorrow = 0
+    return (site_ap[today],site_ap[tomorrow])
+
+def set_today_AP(sitename,am=False):
+    """
+    设置今天哪个台起作用
+    :param sitename:
+    :param am=False:am or pm
+    :return :今天是哪个台==sitename
+    """
+    VClass = leancloud.Object.extend( "variable" )
+    query = VClass.query
+    variable = query.get(OBJECT_ID)
+    site_list = variable.get('week_ap')
+    new_v = VClass.create_without_data(OBJECT_ID)
+    weekday = datetime.now().weekday()
+    old = site_list[weekday]
+    if am:
+        ap = [sitename,old[1]]
+    else:
+        ap = [old[0],sitename]
+    site_list[weekday] = ap
+    new_v.set('week_ap', site_list)
+    new_v.save()
+    print('DB week today', old,'has update to',ap)
+
+def set_tomorrow_AP(sitename,am=False):
+    """
+    设置明天哪个台起作用
+    :param sitename:
+    :param am=False:am or pm
+    :return :今天是哪个台==sitename
+    """
+    VClass = leancloud.Object.extend( "variable" )
+    query = VClass.query
+    variable = query.get(OBJECT_ID)
+    site_list = variable.get('week_ap')
+    new_v = VClass.create_without_data(OBJECT_ID)
+    tomorrow = (datetime.now().weekday() + 1) % 7
+    old = site_list[tomorrow]
+    if am:
+        ap = [sitename,old[1]]
+    else:
+        ap = [old[0],sitename]
+    site_list[tomorrow] = ap
+    new_v.set('week_ap', site_list)
+    new_v.save()
+    print('DB week tomorrow', old,'has update to',ap)
+##########################
+
 def get_today_sitename():
     """
     获取星期几哪个台起作用

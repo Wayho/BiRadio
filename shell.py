@@ -3,6 +3,7 @@ import subprocess
 import select
 import os, signal
 import psutil
+import sys
 
 ignore_msgs = ['mp3float','Last message','frame=','configuration:','frame=']
 ##################################################
@@ -28,18 +29,24 @@ def OutputShell( cmd, msgout=True ):
 				select_rfds.remove( result.stdout )     #result.stdout需要remove，否则进程不会结束
 			else:
 				#print( readbuf_msg.decode("utf-8"))
-				last_msg = str(readbuf_msg, 'utf8')
-				if msgout:
-						print(last_msg,end='')
+				try:
+					last_msg = str(readbuf_msg, 'utf8')
+					if msgout:
+							print(last_msg,end='')
+				except:
+					last_msg = 'OutputShell:error last_msg utf8'
 
 		if result.stderr in rfds:
 			readbuf_errmsg = result.stderr.readline()
 			if len( readbuf_errmsg ) == 0:
 				select_rfds.remove( result.stderr )     #result.stderr，否则进程不会结束
 			else:
-				last_errmsg = str(readbuf_errmsg, 'utf8')
-				if msgout:
-						print(last_errmsg,end='')
+				try:
+					last_errmsg = str(readbuf_errmsg, 'utf8')
+					if msgout:
+							print(last_errmsg,end='')
+				except:
+					last_errmsg = 'OutputShell:error readbuf_errmsg utf8'
 	result.wait() # 等待字进程结束( 等待shell命令结束 )
 	#print result.returncode
 	##(stdoutMsg,stderrMsg) = result .communicate()#非阻塞时读法.
@@ -64,32 +71,42 @@ def procs_info(name="ffmpeg"):
 			procs.append({"pid":p.pid,"name":p.name(),"status":p.status()})
 	return procs
 
-def kill_ffmpeg(parent=False):
-	"""
-	进程信息
-	:param name:
-	:return:
-	"""
-	pids = psutil.pids()
-	for pid in pids:
-		p = psutil.Process(pid)
-		if p.name() == "ffmpeg":
-			print("ffmpeg",p.pid,p.ppid())
-			os.kill(int(p.ppid()),signal.SIGKILL)
-			os.kill(int(p.pid),signal.SIGKILL)
+# def kill_ffmpeg(parent=False):
+# 	"""
+# 	进程信息
+# 	:param name:
+# 	:return:
+# 	"""
+# 	pids = psutil.pids()
+# 	for pid in pids:
+# 		p = psutil.Process(pid)
+# 		if p.name() == "ffmpeg":
+# 			print("ffmpeg",p.pid,p.ppid())
+# 			os.kill(int(p.ppid()),signal.SIGKILL)
+# 			os.kill(int(p.pid),signal.SIGKILL)
 
-def proc_kill(name="ffmpeg"):
+def proc_kill(name="ffmpeg",parent=False):
 	"""
 	进程信息
-	:param name:
+	:param name:ffmpeg,python
+	:param parent:kill parent
 	:return:
 	"""
 	pids = psutil.pids()
 	for pid in pids:
 		p = psutil.Process(pid)
 		if p.name() == name:
-			print(name,p.pid)
-			os.kill(int(p.pid),signal.SIGSTOP)
+			print(name,p.pid,p.ppid())
+			if parent:
+				os.kill(int(p.ppid()),signal.SIGKILL)
+			if 'python' == name:
+				#cmd = 'kill {}&/usr/share/pyenv/versions/3.8.17/bin/python wsgi.py'
+				cmd = 'kill {}&{} wsgi.py'
+				pythonpath = sys.executable
+				print(pythonpath)
+				OutputShell(cmd.format(p.pid,pythonpath),True)
+			else:
+				os.kill(int(p.pid),signal.SIGKILL)
 
 def include_ignore_msg(msg):
 	for keyword in ignore_msgs:

@@ -121,7 +121,7 @@ def cmd_download_all_key(**params):
             total_download = download.download_by_ShareKey(MAX_DOWNLOAD,k.get('ShareKey'),k.get('SharePwd'),k.get('floder'),SLEEP)
             if total_download > 0:
                 # 只下载一个ShareKey，避免内存超限
-                shell.OutputShell('ls mp3 -R -l')
+                cmd_ls_mp3()
                 return True
             time.sleep(20+SLEEP)
     return False
@@ -360,7 +360,7 @@ def id3_send():
                 return False
             else:
                 Global_Mp3_Info[index]['send'] = True
-                artist = info.get('artist')
+                #artist = info.get('artist')
                 title = info.get('title')
                 
                 if title:
@@ -369,14 +369,14 @@ def id3_send():
                     if 0!=code:
                         print('***********danmu::return code:',code,title)
                         Global_Danmu_Retry_Times += 1
-                    time.sleep(5)
-                if artist:
-                    artist = 'by ' + artist
-                    print(duration_total,artist, info.get('path'))
-                    code = danmu.send(artist)
-                    if 0!=code:
-                        print('***********danmu::return code:',code,artist)
-                        Global_Danmu_Retry_Times += 1
+                #     time.sleep(5)
+                # if artist:
+                #     artist = 'by ' + artist
+                #     print(duration_total,artist, info.get('path'))
+                #     code = danmu.send(artist)
+                #     if 0!=code:
+                #         print('***********danmu::return code:',code,artist)
+                #         Global_Danmu_Retry_Times += 1
                 return True
     return False
 

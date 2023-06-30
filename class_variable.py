@@ -6,8 +6,8 @@ from datetime import datetime,timedelta
 
 COOKIES_PATH = 'cookies.json'
 OBJECT_ID = '63ec4afc14f21573cb450921'
-HOURS_NEW_DAY = 11
-print("class_variable v1.1 HOURS_NEW_DAY=",HOURS_NEW_DAY)
+HOURS_NEW_DAY = 6
+print("class_variable v1.0 HOURS_NEW_DAY=",HOURS_NEW_DAY)
 #63ec4afc14f21573cb450921是variable中唯一的一行的objectId
 
 # {

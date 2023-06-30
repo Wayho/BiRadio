@@ -2,10 +2,12 @@
 import leancloud							#requirements leancloud-sdk>=1.0.9,<=2.0.0
 import os
 import json
-from datetime import datetime
+from datetime import datetime,timedelta
 
 COOKIES_PATH = 'cookies.json'
 OBJECT_ID = '63ec4afc14f21573cb450921'
+HOURS_NEW_DAY = 6
+print("HOURS_NEW_DAY=",HOURS_NEW_DAY)
 #63ec4afc14f21573cb450921是variable中唯一的一行的objectId
 
 # {
@@ -22,6 +24,11 @@ OBJECT_ID = '63ec4afc14f21573cb450921'
 #   "MAX_MEMORY_PY": 400,
 #   "ERROR_RETRY": 5
 # }
+
+def weekday():
+    now_newday = datetime.now() + timedelta(hours = -HOURS_NEW_DAY)
+    print(HOURS_NEW_DAY,now_newday)
+    return now_newday.weekday()
 
 def get_config():
     VClass = leancloud.Object.extend( "variable" )
@@ -62,7 +69,7 @@ def get_today_AP():
     query = VClass.query
     variable = query.get(OBJECT_ID)
     site_ap = variable.get('week_ap')
-    today = datetime.now().weekday()
+    today = weekday()
     tomorrow = today+1
     if tomorrow > 6:
         tomorrow = 0
@@ -80,7 +87,7 @@ def set_today_AP(sitename,am=False):
     variable = query.get(OBJECT_ID)
     site_list = variable.get('week_ap')
     new_v = VClass.create_without_data(OBJECT_ID)
-    weekday = datetime.now().weekday()
+    weekday = weekday()
     old = site_list[weekday]
     if am:
         ap = [sitename,old[1]]
@@ -103,7 +110,7 @@ def set_tomorrow_AP(sitename,am=False):
     variable = query.get(OBJECT_ID)
     site_list = variable.get('week_ap')
     new_v = VClass.create_without_data(OBJECT_ID)
-    tomorrow = (datetime.now().weekday() + 1) % 7
+    tomorrow = (weekday() + 1) % 7
     old = site_list[tomorrow]
     if am:
         ap = [sitename,old[1]]
@@ -125,7 +132,7 @@ def get_today_sitename():
     query = VClass.query
     variable = query.get(OBJECT_ID)
     sitename = variable.get('week')
-    today = datetime.now().weekday()
+    today = weekday()
     tomorrow = today+1
     if tomorrow > 6:
         tomorrow = 0
@@ -142,7 +149,7 @@ def set_today_sitename(sitename):
     variable = query.get(OBJECT_ID)
     site_list = variable.get('week')
     new_v = VClass.create_without_data(OBJECT_ID)
-    weekday = datetime.now().weekday()
+    weekday = weekday()
     old = site_list[weekday]
     site_list[weekday] = sitename
     new_v.set('week', site_list)
@@ -160,7 +167,7 @@ def set_tomorrow_sitename(sitename):
     variable = query.get(OBJECT_ID)
     site_list = variable.get('week')
     new_v = VClass.create_without_data(OBJECT_ID)
-    tomorrow = datetime.now().weekday() + 1
+    tomorrow = weekday() + 1
     old = site_list[tomorrow%6]
     site_list[tomorrow] = sitename
     new_v.set('week', site_list)

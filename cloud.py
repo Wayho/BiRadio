@@ -17,9 +17,10 @@ import down_123_proxies as download
 import class_proxies as class_proxies
 import class_curl as class_curl
 import mp3 as mp3
-import shutil
+#import shutil
 import psutil
 import gc
+import threading
 ###########################################################
 MP3_ROOT = '/tmp'
 SITENAME = os.environ.get('SITENAME') or 'none'
@@ -267,10 +268,8 @@ def cmd_reset_retry( **params ):
 # 确保每台推流机在do_one_minute()启动之前执行两次，以解决空机问题
 @engine.define( 'startLive' )
 def StartLive(**params):
-    Setup()
-    tryStartLive()
-    time.sleep(30)
-    tryStartLive()
+    startLive_thread = threading.Thread(target=tryStartLive,args=(False,))
+    startLive_thread.start()
     return True
 
 # before restart_radio
@@ -278,22 +277,28 @@ def StartLive(**params):
 # 8 59 6 * * ?
 @engine.define( 'startLive_update_rtmp' )
 def startLive_update_rtmp(**params):
+    startLive_thread = threading.Thread(target=tryStartLive,args=(True,))
+    startLive_thread.start()
+    return True
+
+def tryStartLive(rtmp=False):
     global RTMP_URL_STR
     global BILIBILI_RTMP
     global BILIBILI_CLMY
     Setup()
-    res = tryStartLive()
-    time.sleep(30)
-    res = tryStartLive()
-    if res.get('code')==0:
-        time.sleep(3)
-        BILIBILI_RTMP = res.get('rtmp').get('addr')
-        BILIBILI_CLMY = res.get('rtmp').get('code')
-        if BILIBILI_CLMY:
-            RTMP_URL_STR = '\"' + BILIBILI_RTMP + BILIBILI_CLMY + '\"'
-    return True
+    cmd_reset_retry()
+    if not canStart():
+        time.sleep(30)
+        if canStart():
+            res = startlive.tryStartLive()
+            if rtmp:
+                if res.get('code')==0:
+                    BILIBILI_RTMP = res.get('rtmp').get('addr')
+                    BILIBILI_CLMY = res.get('rtmp').get('code')
+                    if BILIBILI_CLMY:
+                        RTMP_URL_STR = '\"' + BILIBILI_RTMP + BILIBILI_CLMY + '\"'
 
-def tryStartLive():
+def canStart():
     (today,tomorrow) = class_variable.get_today_AP()
     if not SITENAME in today:
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
@@ -308,9 +313,7 @@ def tryStartLive():
             class_variable.set_today_AP('BiliRadio_py',False)
         print('#'*40,'EMPTY VIDEO,SET TO DEFAULT','#'*40)
         return False
-    res = startlive.tryStartLive()
-    cmd_reset_retry()
-    return res
+    return True
 
 @engine.define( 'today_am_mine' )
 def today_am_mine(**params):

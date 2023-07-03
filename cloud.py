@@ -313,6 +313,7 @@ def canStart():
             class_variable.set_today_AP('BiliRadio_py',False)
         print('#'*40,'EMPTY VIDEO,SET TO DEFAULT','#'*40)
         return False
+    print('Can start live','Today:',today,'Tomorrow:',tomorrow)
     return True
 
 @engine.define( 'today_am_mine' )

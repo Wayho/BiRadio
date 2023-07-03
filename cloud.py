@@ -295,7 +295,7 @@ def startLive_update_rtmp(**params):
 
 def tryStartLive():
     (today,tomorrow) = class_variable.get_today_AP()
-    if today != SITENAME:
+    if not SITENAME in today:
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
     tmpfilenum = os.listdir(MP3_ROOT)

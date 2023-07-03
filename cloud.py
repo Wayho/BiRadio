@@ -299,6 +299,7 @@ def tryStartLive():
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
     tmpfilenum = os.listdir(MP3_ROOT)
+    print('os.listdir(MP3_ROOT)',tmpfilenum)
     if 3>= len(tmpfilenum):
         # 没有音频，切换备用推流机
         if 'a'==SITENAME[len(SITENAME)-2]:

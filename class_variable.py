@@ -87,13 +87,13 @@ def set_today_AP(sitename,am=False):
     variable = query.get(OBJECT_ID)
     site_list = variable.get('week_ap')
     new_v = VClass.create_without_data(OBJECT_ID)
-    weekday = weekday()
-    old = site_list[weekday]
+    today = weekday()
+    old = site_list[today]
     if am:
         ap = [sitename,old[1]]
     else:
         ap = [old[0],sitename]
-    site_list[weekday] = ap
+    site_list[today] = ap
     new_v.set('week_ap', site_list)
     new_v.save()
     print('DB week today', old,'has update to',ap)
@@ -149,9 +149,9 @@ def set_today_sitename(sitename):
     variable = query.get(OBJECT_ID)
     site_list = variable.get('week')
     new_v = VClass.create_without_data(OBJECT_ID)
-    weekday = weekday()
-    old = site_list[weekday]
-    site_list[weekday] = sitename
+    today = weekday()
+    old = site_list[today]
+    site_list[today] = sitename
     new_v.set('week', site_list)
     new_v.save()
     print('DB week today', old,'has update to',sitename)

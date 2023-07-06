@@ -51,7 +51,7 @@ MAX_MEMORY = 120
 RTMP_URL_STR = '"rtmp://"'
 
 Global_Can_RestartRadio = True
-Global_Danmu_Retry_Times = 0
+Global_Danmu_Retry_Times = 99   # 0 on 99 off
 Global_Retry_Times = 0
 Global_minutes = 0
 
@@ -78,6 +78,7 @@ def Setup(**params):
     global MAX_DOWNLOAD
     global MAX_MEMORY
     global Global_Today_AP
+    global Global_Danmu_Retry_Times
     config = class_variable.get_config()
     print(config)
     if config:
@@ -92,6 +93,7 @@ def Setup(**params):
         SLEEP = config.get('SLEEP')
         ERROR_RETRY = config.get('ERROR_RETRY')
         MAX_DOWNLOAD = config.get('MAX_DOWNLOAD')
+        Global_Danmu_Retry_Times = config.get('DEFAULT_DANMU_RETRY')
         #if 'BiliRadio_py' == SITENAME:
         if '512' == MEMORY[0:3]:
             MAX_MEMORY = config.get('MAX_MEMORY_PY')
@@ -254,11 +256,9 @@ def cmd_restart_radio():
 @engine.define( 'reset_retry' )
 def cmd_reset_retry( **params ):
     global Global_Retry_Times
-    global Global_Danmu_Retry_Times
     global Global_minutes
     print( '***************reset_retry*******************',Global_Retry_Times,Global_Danmu_Retry_Times, Global_minutes)
     Global_Retry_Times = 0
-    Global_Danmu_Retry_Times = 0
     Global_minutes = 0
     return True
 
@@ -351,6 +351,16 @@ def ffmpeg_msgout_on_off(**params):
     global FFMPEG_MESSAGE_OUT
     FFMPEG_MESSAGE_OUT = not FFMPEG_MESSAGE_OUT
     print('############## FFMPEG_MESSAGE_OUT #############',FFMPEG_MESSAGE_OUT)
+    return True
+
+@engine.define( 'danmu_on_off' )
+def danmu_off(**params):
+    global Global_Danmu_Retry_Times
+    if 99==Global_Danmu_Retry_Times:
+        Global_Danmu_Retry_Times = 0
+    else:
+        Global_Danmu_Retry_Times = 99
+    print('############## Global_Danmu_Retry_Times #############',Global_Danmu_Retry_Times)
     return True
 
 # 35 */1 7-23 * * ?

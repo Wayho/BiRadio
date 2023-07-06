@@ -367,9 +367,6 @@ def danmu_off(**params):
 #@engine.define( 'id3_send' )
 def id3_send():
     global Global_Danmu_Retry_Times
-    if 5< Global_Danmu_Retry_Times:
-         print('Global_Danmu_Retry_Times>5')
-         return False
     now = int(time.time())
     duration_total = 0
     #print(Global_Mp3_Info)
@@ -386,18 +383,12 @@ def id3_send():
                 
                 if title:
                     print(duration_total,title, info.get('path'))
+                    if 5< Global_Danmu_Retry_Times:
+                        return False
                     code = danmu.send(title)
                     if 0!=code:
                         print('***********danmu::return code:',code,title)
                         Global_Danmu_Retry_Times += 1
-                #     time.sleep(5)
-                # if artist:
-                #     artist = 'by ' + artist
-                #     print(duration_total,artist, info.get('path'))
-                #     code = danmu.send(artist)
-                #     if 0!=code:
-                #         print('***********danmu::return code:',code,artist)
-                #         Global_Danmu_Retry_Times += 1
                 return True
     return False
 
@@ -486,5 +477,5 @@ def cmd_memory( **params ):
 
 @engine.define( 'print_v' )
 def print_v( **params ):
-    print(BILIBILI_CLMY,'RADIO_NAME:',RADIO_NAME,'CHANGE_RADIO_NAME:',CHANGE_RADIO_NAME,'PLAY_ARTIST:',PLAY_ARTIST,'FFMPEG_MESSAGE_OUT:',FFMPEG_MESSAGE_OUT,'MP3_TOTAL_PLAY:',MP3_TOTAL_PLAY,'SLEEP:',SLEEP,'ERROR_RETRY:',ERROR_RETRY,'MAX_DOWNLOAD:',MAX_DOWNLOAD,'MAX_MEMORY:',MAX_MEMORY,'Global_minutes:',Global_minutes,'Global_Today_AP:',Global_Today_AP)
+    print(BILIBILI_CLMY,'RADIO_NAME:',RADIO_NAME,'CHANGE_RADIO_NAME:',CHANGE_RADIO_NAME,'PLAY_ARTIST:',PLAY_ARTIST,'FFMPEG_MESSAGE_OUT:',FFMPEG_MESSAGE_OUT,'MP3_TOTAL_PLAY:',MP3_TOTAL_PLAY,'SLEEP:',SLEEP,'ERROR_RETRY:',ERROR_RETRY,'MAX_DOWNLOAD:',MAX_DOWNLOAD,'MAX_MEMORY:',MAX_MEMORY,'Global_minutes:',Global_minutes,'Global_Danmu_Retry_Times:',Global_Danmu_Retry_Times,'Global_Today_AP:',Global_Today_AP)
     return True

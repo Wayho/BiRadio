@@ -12,7 +12,8 @@ print("class_variable v1.0 HOURS_NEW_DAY=",HOURS_NEW_DAY)
 
 # {
 #   "BILIBILI_RTMP": "rtmp://live-push.bilivideo.com/live-bvc/",
-#   "BILIBILI_CLMY": "?streamname=live_1737442657_89779234&key=22d0f9797bf072eb015148d5558d8099&schedule=rtmp&pflag=1",
+#   "BILIBILI_CLMY": "?streamname=live_",
+#   "WEBHOOK_DINGDING":"",
 #   "RADIO_NAME": "欧美流行歌曲 | 极其音乐",
 #  "CHANGE_RADIO_NAME": false,
 #   "PLAY_ARTIST": false,
@@ -22,7 +23,8 @@ print("class_variable v1.0 HOURS_NEW_DAY=",HOURS_NEW_DAY)
 #   "MAX_DOWNLOAD": 30,
 #   "MAX_MEMORY": 200,
 #   "MAX_MEMORY_PY": 400,
-#   "ERROR_RETRY": 5
+#   "ERROR_RETRY": 5,
+#   "DEFAULT_DANMU_RETRY": 99
 # }
 
 def weekday():

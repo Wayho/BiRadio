@@ -33,6 +33,7 @@ print('cloud v2.1 SITENAME:',SITENAME,'MEMORY:',MEMORY)
 def cloud_wakeup():
     print("cloud_wakeup:sleep 15 for check MP3_ROOT")
     time.sleep(15)
+    Setup()
     tmpfilenum = os.listdir(MP3_ROOT)
     if 3>= len(tmpfilenum):
         # 没有音频，提醒

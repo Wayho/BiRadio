@@ -17,6 +17,7 @@ import down_123_proxies as download
 import class_proxies as class_proxies
 import class_curl as class_curl
 import mp3 as mp3
+import ding_msg as ding_msg
 #import shutil
 import psutil
 import gc
@@ -25,7 +26,21 @@ import threading
 MP3_ROOT = '/tmp'
 SITENAME = os.environ.get('SITENAME') or 'none'
 MEMORY = os.environ.get('MEMORY') or 'none'
-print('cloud v1.0 SITENAME:',SITENAME,'MEMORY:',MEMORY)
+WEBHOOK_DINGDING = 'https://'
+print('cloud v2.1 SITENAME:',SITENAME,'MEMORY:',MEMORY)
+
+# 每次重启、休眠检查
+def cloud_wakeup():
+    print("cloud_wakeup:sleep 15 for check MP3_ROOT")
+    time.sleep(15)
+    tmpfilenum = os.listdir(MP3_ROOT)
+    if 3>= len(tmpfilenum):
+        # 没有音频，提醒
+        print('ding_msg:tmp file num=',tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':tmp is empty'))
+send_thread = threading.Thread(target=cloud_wakeup,args=())
+send_thread.start()
+
+
 ################# LOAD CONFIG ##############################
 BILIBILI_RTMP = "rtmp://"
 BILIBILI_CLMY = None
@@ -37,7 +52,7 @@ MP3_TOTAL_PLAY = 30
 SLEEP = 120
 ERROR_RETRY = 6
 MAX_DOWNLOAD = 10
-MAX_MEMORY = 120
+MAX_MEMORY = 100
 
 ###########################################################
 # rtmp://live-push.bilivideo.com/live-bvc/
@@ -77,6 +92,7 @@ def Setup(**params):
     global ERROR_RETRY
     global MAX_DOWNLOAD
     global MAX_MEMORY
+    global WEBHOOK_DINGDING
     global Global_Today_AP
     global Global_Danmu_Retry_Times
     config = class_variable.get_config()
@@ -85,6 +101,7 @@ def Setup(**params):
         ## 记得修改为通过startlive.tryStartLive()参数带来BILIBILI_RTMP+BILIBILI_CLMY
         BILIBILI_RTMP = config.get('BILIBILI_RTMP')
         BILIBILI_CLMY = config.get('BILIBILI_CLMY')
+        WEBHOOK_DINGDING = config.get('WEBHOOK_DINGDING')
         RADIO_NAME = config.get('RADIO_NAME')
         CHANGE_RADIO_NAME = config.get('CHANGE_RADIO_NAME')
         PLAY_ARTIST = config.get('PLAY_ARTIST')

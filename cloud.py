@@ -307,7 +307,7 @@ def tryStartLive(rtmp=False):
     cmd_reset_retry()
     if not canStart():
         time.sleep(30)
-        if canStart():
+    if canStart():
             res = startlive.tryStartLive()
             if rtmp:
                 if res.get('code')==0:

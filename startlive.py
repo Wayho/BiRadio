@@ -44,7 +44,7 @@ def startLive():
     COOKIES = class_variable.getCookies()
     url = 'https://api.live.bilibili.com/room/v1/Room/startLive'
     data = {
-        'room_id':'27791346',               # 这个是直播房间的id号
+        'room_id':'30338274',               # 这个是直播房间的id号
         'platform':'pc',               # 平台
         'area_v2':'192',                    # 聊天电台
         'rnd':str(int(time.time())),   # 这个是时间戳
@@ -112,11 +112,11 @@ def startLive():
 def getRoom_live_status():
     # {"code":0,"message":"0","ttl":1,"data":{"room_id":27791346,"short_id":0,"uid":1737442657,"is_hidden":false,"is_locked":false,"is_portrait":false,"live_status":1,
     #COOKIES = class_variable.getCookies()
-    url = 'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=27791346&protocol=0,1&format=0,1,2&codec=0,1&qn=0&platform=web&ptype=8&dolby=5&panorama=1'
+    url = 'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=30338274&protocol=0,1&format=0,1,2&codec=0,1&qn=0&platform=web&ptype=8&dolby=5&panorama=1'
     headers = {
         #'cookie': COOKIES['cookie'],
         'origin': 'https://live.bilibili.com',
-        'referer': 'https://live.bilibili.com/27791346',
+        'referer': 'https://live.bilibili.com/30338274',
         'user-agent': 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
     }
 
@@ -161,7 +161,7 @@ def update_RadioName(title):
     COOKIES = class_variable.getCookies()
     url = 'https://api.live.bilibili.com/room/v1/Room/update'
     data = {
-        'room_id':'27791346',               # 这个是直播房间的id号
+        'room_id':'30338274',               # 这个是直播房间的id号
         'title':title, 
         'csrf_token':COOKIES['csrf_token'],
         'csrf': COOKIES['csrf'],
@@ -198,7 +198,7 @@ def update_RadioName(title):
 # {"code":0,"message":"0","ttl":1,"data":{"by_uids":{},"by_room_ids":{"27791346":{"room_id":27791346,"uid":1737442657,"area_id":192,"live_status":1,"live_url":"https://live.bilibili.com/27791346","parent_area_id":5,"title":"试播 | 欧美流行歌曲 | 极其音乐","parent_area_name":"电台","area_name":"聊天电台","live_time":"2023-05-26 14:07:29","description":"只播音乐,暂时不回弹幕","tags":"音乐爱好者","attention":1260,"online":5,"short_id":0,"uname":"CC双语_中英CC字幕","cover":"https://i0.hdslb.com/bfs/live/1f25d8747696d488e93cf6feaa986eff614f49c5.png","background":"","join_slide":1,"live_id":368537653205274600,"live_id_str":"368537653205274610"}}}}
 ###########################################################
 def getRoomBaseInfo():
-    url = 'https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids=27791346&req_biz=link-center'
+    url = 'https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids=30338274&req_biz=link-center'
     headers = {
         #'cookie': COOKIES['cookie'],
         'origin': 'https://live.bilibili.com',

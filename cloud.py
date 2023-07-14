@@ -305,9 +305,11 @@ def tryStartLive(rtmp=False):
     global BILIBILI_CLMY
     Setup()
     cmd_reset_retry()
-    if not canStart():
+    cans = canStart()
+    if not cans:
         time.sleep(30)
-    if canStart():
+        cans = canStart()
+    if cans:
             res = startlive.tryStartLive()
             if rtmp:
                 if res.get('code')==0:

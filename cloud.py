@@ -307,7 +307,7 @@ def tryStartLive(rtmp=False):
     cmd_reset_retry()
     cans = canStart()
     if not cans:
-        time.sleep(30)
+        time.sleep(18)
         cans = canStart()
     if cans:
             res = startlive.tryStartLive()

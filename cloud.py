@@ -27,7 +27,7 @@ MP3_ROOT = '/tmp'
 SITENAME = os.environ.get('SITENAME') or 'none'
 MEMORY = os.environ.get('MEMORY') or 'none'
 WEBHOOK_DINGDING = 'https://'
-print('cloud v2.1 SITENAME:',SITENAME,'MEMORY:',MEMORY)
+print('cloud v2.2 SITENAME:',SITENAME,'MEMORY:',MEMORY)
 
 # 每次重启、休眠检查
 def cloud_wakeup():

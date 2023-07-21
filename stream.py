@@ -3,7 +3,7 @@ import ffmpeg
 import os
 import random
 import json
-
+import shell as shell
 
 VIDEO_FRAMERATE = 25
 VIDEO_P = 'hd720'
@@ -16,7 +16,7 @@ PLAYLIST_PATH = 'playlist.txt'
 
 MP3_ROOT = 'aux'
 IMG_FLODER = 'img'
-
+sample = ['aux/coco/李玟-爱你爱到.m4a', 'aux/coco/李玟-伊甸园.m4a', 'aux/coco/李玟-过完冬季.m4a']
 # OK ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -listen 1 -r 3 -vcodec libx264 http://127.0.0.1:8080
 
 # ffmpeg -re -ss 0 -t 431 -f lavfi -i color=c=0x000000:s=640x360:r=30 -i mp3/img/1.jpg -i mp3/100/01.aac -i mp3/100/02.aac -filter_complex  "[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];[2:0][3:0]concat=n=2:v=0:a=1[outa]"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 192k -f flv test.flv
@@ -27,7 +27,8 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
-def test(str_rtmp)
+def test(str_rtmp):
+    
     v3 = ffmpeg.input('img/art_coco102.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
     process_stdin = (
             ffmpeg

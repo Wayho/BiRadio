@@ -27,7 +27,7 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
-def test(str_)
+def test(str_rtmp)
     v3 = ffmpeg.input('img/art_coco102.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
     process_stdin = (
             ffmpeg
@@ -38,7 +38,7 @@ def test(str_)
                 vcodec='libx264',
                 acodec='aac',
                 r=VIDEO_FRAMERATE,
-                filter_threads=1,
+                #filter_threads=1,
                 #listen=1, # enables HTTP server
                 f=VIDEO_FORMAT)
             .run_async(cmd=["ffmpeg", "-re"])

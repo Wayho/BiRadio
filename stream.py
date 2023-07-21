@@ -27,7 +27,25 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
-
+def test(str_)
+    v3 = ffmpeg.input('img/art_coco102.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
+    process_stdin = (
+            ffmpeg
+            #.input('pipe:', format=format, pix_fmt=pix_fmt, s=s)
+            .output(
+                v3,
+                str_rtmp,
+                vcodec='libx264',
+                acodec='aac',
+                r=VIDEO_FRAMERATE,
+                filter_threads=1,
+                #listen=1, # enables HTTP server
+                f=VIDEO_FORMAT)
+            .run_async(cmd=["ffmpeg", "-re"])
+    )
+    
+    process_stdin.wait()
+    
 
 def rtmp_concat_floder(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     """
@@ -38,6 +56,8 @@ def rtmp_concat_floder(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     :param artist=None:artist key word
     :return:
     """
+    test(str_rtmp)
+    return
     mp3_list = []
     str_rtmp = '\"{}\"'.format(str_rtmp)
     if len(floder_list)==0:
@@ -221,7 +241,7 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
                 filter_threads=1,
                 #listen=1, # enables HTTP server
                 f=VIDEO_FORMAT)
-            .run_async(cmd=["ffmpeg", "-re"],pipe_stdin=True)
+            .run_(cmd=["ffmpeg", "-re"],pipe_stdin=True)
         )
     else:
         process_stdin = (

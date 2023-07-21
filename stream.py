@@ -28,13 +28,17 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
 def test(str_rtmp):
+    str_rtmp = 'test.flv'
+    total_seconds = write_playlist(sample)
+    print('audio seconds:',total_seconds)
+    a_concat = ffmpeg.input("playlist.txt",**{"f":"concat","safe":0})         #ffmpeg -re -f concat -safe 0 -i playlist.txt
     
-    v3 = ffmpeg.input('img/art_coco102.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
+    #v3 = ffmpeg.input('img/art_coco102.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
     process_stdin = (
             ffmpeg
             #.input('pipe:', format=format, pix_fmt=pix_fmt, s=s)
             .output(
-                v3,
+                a_concat,
                 str_rtmp,
                 vcodec='libx264',
                 acodec='aac',
@@ -44,7 +48,7 @@ def test(str_rtmp):
                 f=VIDEO_FORMAT)
             .run_async(cmd=["ffmpeg", "-re"])
     )
-    
+    shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdin.wait()
     
 
@@ -109,7 +113,7 @@ def all_2_rtmp(str_rtmp,mp3_512M,artist):
     total_seconds = write_playlist(mp3_512M)
     print('audio seconds:',total_seconds)
     a_concat = ffmpeg.input("playlist.txt",**{"f":"concat","safe":0})         #ffmpeg -re -f concat -safe 0 -i playlist.txt
-    v_in_arr = []
+    _in_arr = []
     img_seconds = 0
     img_list = mp3list(IMG_FLODER)
     random.shuffle(img_list)
@@ -308,5 +312,6 @@ if __name__ == '__main__':
     # print(mp3list("mp3/100"))
     # print(os.listdir("mp3"))
     rtmp= "http://127.0.0.1:8080"
+    test('mm.flv')
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
-    rtmp_concat_floder('rtmp',['coco'],total=30,artist=None,max_memory=80)
+    #rtmp_concat_floder('rtmp',[''],total=3,artist=None,max_memory=80)

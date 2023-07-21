@@ -46,7 +46,7 @@ def test(str_rtmp):
                 #filter_threads=1,
                 #listen=1, # enables HTTP server
                 f=VIDEO_FORMAT)
-            .run_async(cmd=["ffmpeg", "-re"])
+            .run_async(cmd=["ffmpeg", "-re","-y"])
     )
     shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdin.wait()

@@ -30,29 +30,9 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
-def test(str_rtmp):
-    str_rtmp = 'test.flv'
-    total_seconds = write_playlist(sample)
-    print('audio seconds:',total_seconds)
-    a_concat = ffmpeg.input("playlist.txt",**{"f":"concat","safe":0})         #ffmpeg -re -f concat -safe 0 -i playlist.txt
-    
-    #v3 = ffmpeg.input('img/art_coco102.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
-    process_stdin = (
-            ffmpeg
-            #.input('pipe:', format=format, pix_fmt=pix_fmt, s=s)
-            .output(
-                a_concat,
-                str_rtmp,
-                vcodec='libx264',
-                acodec='aac',
-                r=VIDEO_FRAMERATE,
-                #filter_threads=1,
-                #listen=1, # enables HTTP server
-                f=VIDEO_FORMAT)
-            .run_async(cmd=["ffmpeg", "-re"])
-    )
-    shell.OutputShell('ps -elf | grep ffmpeg',True)
-    process_stdin.wait()
+def test(num):
+    for i in range(0,num):
+        cmd = 
     
 def testpipe(str_rtmp):
     
@@ -229,7 +209,7 @@ def get_audio_info(file_path):
             artist = tags.get('artist')
     return {'duration':duration,'title':title,'artist':artist}
 
-def mp3list(path="a/coco"):
+def mp3list(path="aux/coco"):
     """
     获取mp3音频文件path列表
     :param path:
@@ -249,6 +229,7 @@ if __name__ == '__main__':
     # print(mp3list("mp3/100"))
     # print(os.listdir("mp3"))
     rtmp= "http://127.0.0.1:8080"
-    testpipe('pipe0.{}'.format(VIDEO_FORMAT))
+    test(8)
+    #testpipe('pipe0.{}'.format(VIDEO_FORMAT))
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
     #rtmp_concat_floder('rtmp',[''],total=3,artist=None,max_memory=80)

@@ -39,6 +39,9 @@ def test(num):
         names = m4a.split('/')
         name = names[len(names)-1]
         name = name[0:-4]
+        probe = ffmpeg.probe(m4a)
+        format = probe.get('format')
+        t = float(format.get('duration'))
         cmd = ffmpeg_mp4.format(m4a,t,img,name)
         shell.OutputShell(cmd,True)
         print('ok',name,img)

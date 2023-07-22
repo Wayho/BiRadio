@@ -130,9 +130,10 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
         if not in_bytes:
             break
         process_stdin.stdin.write(in_bytes)
-    shell.OutputShell('ps -elf | grep ffmpeg',True)
+    #shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdin.stdin.close()
     process_stdout.stdout.close()
+    shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdout.wait()
     process_stdin.wait()
 

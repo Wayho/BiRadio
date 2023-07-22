@@ -8,7 +8,7 @@ import threading
 
 VIDEO_FRAMERATE = 25
 VIDEO_P = 'hd720'
-VIDEO_FORMAT = 'flv'
+VIDEO_FORMAT = 'mp4'
 IMG_SECONDS = 120
 PLAYLIST_PATH = 'playlist.txt'
 

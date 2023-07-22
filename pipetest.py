@@ -8,7 +8,7 @@ import shell as shell
 VIDEO_FRAMERATE = 25
 VIDEO_P = 'hd720'
 VIDEO_FORMAT = 'flv'
-IMG_SECONDS = 30
+IMG_SECONDS = 120
 PLAYLIST_PATH = 'playlist.txt'
 
 # ps -T -p 21097
@@ -53,7 +53,7 @@ def test(str_rtmp):
     
 def testpipe(str_rtmp):
     
-    a_concat = ffmpeg.input(audio_files[0])
+    a_concat = ffmpeg.input(sample[0])
     inv = ffmpeg.input(fn, t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
     v_concat = ffmpeg.filter(inv,filter_name='scale', size='hd720')
     

@@ -54,7 +54,7 @@ def test(str_rtmp):
 def testpipe(str_rtmp):
     
     a_concat = ffmpeg.input(sample[0])
-    inv = ffmpeg.input(fn, t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
+    inv = ffmpeg.input('img/art_coco130.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
     v_concat = ffmpeg.filter(inv,filter_name='scale', size='hd720')
     
     stream_spec_pipe_rtmp(str_rtmp,v_concat,a_concat, format='rawvideo', pix_fmt='yuv420p',s='1280x720')

@@ -126,7 +126,7 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
             .run_async(cmd=["ffmpeg", "-re"],pipe_stdin=True)
         )
     while True:
-        in_bytes = process_stdout.stdout.read(1280*720 * 3)
+        in_bytes = process_stdout.stdout.read(1280*720 * 3*8)
         if not in_bytes:
             break
         process_stdin.stdin.write(in_bytes)

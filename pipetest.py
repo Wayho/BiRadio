@@ -60,7 +60,7 @@ def testpipe(str_rtmp):
     inv = ffmpeg.input('img/art_coco130.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
     v_concat = ffmpeg.filter(inv,filter_name='scale', size='hd720')
     
-    stream_spec_pipe_thread_rtmp(str_rtmp,v_concat,a_concat, format='rawvideo', pix_fmt='yuv420p',s='1280x720')
+    stream_spec_pipe_rtmp(str_rtmp,v_concat,a_concat, format='rawvideo', pix_fmt='yuv420p',s='1280x720')
 
 def all_list_pipe_rtmp(str_rtmp,image_files,audio_files):
     a_in_arr = []
@@ -196,10 +196,13 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
                 f=VIDEO_FORMAT)
             .run_async(cmd=["ffmpeg", "-re"],pipe_stdin=True)
         )
+    nn =0
     while True:
-        in_bytes = process_stdout.stdout.read(1280*720 * 3*8)
+        in_bytes = process_stdout.stdout.read(1280*720 * 3)
         if not in_bytes:
-            break
+            nn+=1
+            if nn > 10000:
+                break
         process_stdin.stdin.write(in_bytes)
     #shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdin.stdin.close()

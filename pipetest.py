@@ -1,6 +1,7 @@
 # coding: utf-8
 import ffmpeg
 import os
+import time
 import random
 import json
 import shell as shell
@@ -94,9 +95,9 @@ def stream_spec_pipe_out(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p
         .output(v_spec,'pipe:', format=format, pix_fmt=pix_fmt)
         .run_async(cmd=["ffmpeg", "-re"],pipe_stdout=True)
     )
-    process_stdout.stdout.close()
+    #process_stdout.stdout.close()
     #shell.OutputShell('ps -elf | grep ffmpeg',True)
-    process_stdout.wait()
+    #process_stdout.wait()
 def stream_spec_pipe_in(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
     # OK
     #v_in = ffmpeg.input('in.mp4')
@@ -133,19 +134,25 @@ def stream_spec_pipe_in(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p'
                 f=VIDEO_FORMAT)
             .run_async(cmd=["ffmpeg", "-re","-y"],pipe_stdin=True)
         )
+    nn = 0
     while True:
-        in_bytes = process_stdout.stdout.read(1280*720 * 3*8)
+        in_bytes = process_stdout.stdout.read(1280*720 * 3)
         if not in_bytes:
-            break
+            nn += 1
+            if nn > 100:
+                break
         process_stdin.stdin.write(in_bytes)
     #shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdin.stdin.close()
+    process_stdout.stdout.close()
+    shell.OutputShell('ps -aux | grep ffmpeg',True)
+    process_stdout.wait()
     process_stdin.wait()
 def stream_spec_pipe_thread_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
     # OK    stream_spec_pipe_in(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
-    out_thread = threading.Thread(target=stream_spec_pipe_in,args=(rtmp,v_spec, a_spec,format, pix_fmt,s))
+    out_thread = threading.Thread(target=stream_spec_pipe_out,args=(rtmp,v_spec, a_spec,format, pix_fmt,s))
     out_thread.start()
-    in_thread = threading.Thread(target=stream_spec_pipe_out,args=(rtmp,v_spec, a_spec,format, pix_fmt,s))
+    in_thread = threading.Thread(target=stream_spec_pipe_in,args=(rtmp,v_spec, a_spec,format, pix_fmt,s))
     in_thread.start()
     shell.OutputShell('ps -aux | grep ffmpeg',True)
 def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
@@ -199,7 +206,7 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
     process_stdout.stdout.close()
     shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdout.wait()
-    process_stdin.wait
+    process_stdin.wait()
 def get_audio_info(file_path):
     """
     获取mp3/aac音频文件时长

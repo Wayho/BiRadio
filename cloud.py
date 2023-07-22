@@ -3,7 +3,6 @@
 from leancloud import Engine
 from leancloud import LeanEngineError
 import shell as shell
-import mp3 as mp3
 import time
 import os
 import requests
@@ -16,25 +15,32 @@ import class_artist as class_artist
 import down_123_proxies as download
 import class_proxies as class_proxies
 import class_curl as class_curl
-import mp3 as mp3
+import stream as stream
 import ding_msg as ding_msg
+import wss_danmu as wss_danmu
 #import shutil
 import psutil
 import gc
 import threading
-###########################################################
-MP3_ROOT = '/tmp'
+####################mp4#######################################
+TMP_ROOT = '/tmp'
+MP3_ROOT = 'aux'
+MP4_ROOT = '/tmp/mp4'
+
 SITENAME = os.environ.get('SITENAME') or 'none'
 MEMORY = os.environ.get('MEMORY') or 'none'
 WEBHOOK_DINGDING = 'https://'
-print('cloud v2.2 SITENAME:',SITENAME,'MEMORY:',MEMORY)
+#ROOM_ID = '30338274'        #7rings
+#ROOM_ID = '30356247'        #mustlive
+ROOM_ID = os.environ.get('ROOM_ID') or None
+print('cloud v6.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 
 # 每次重启、休眠检查
 def cloud_wakeup():
     print("cloud_wakeup:sleep 15 for check MP3_ROOT")
     time.sleep(15)
     Setup()
-    tmpfilenum = os.listdir(MP3_ROOT)
+    tmpfilenum = os.listdir(TMP_ROOT)
     if 3>= len(tmpfilenum):
         # 没有音频，提醒
         print('ding_msg:tmp file num=',tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':tmp is empty'))
@@ -45,6 +51,7 @@ send_thread.start()
 ################# LOAD CONFIG ##############################
 BILIBILI_RTMP = "rtmp://"
 BILIBILI_CLMY = None
+
 RADIO_NAME = 'Live Music | 极其音乐'
 CHANGE_RADIO_NAME = False
 PLAY_ARTIST = False
@@ -54,6 +61,7 @@ SLEEP = 120
 ERROR_RETRY = 6
 MAX_DOWNLOAD = 10
 MAX_MEMORY = 100
+ROOM_ID = 0
 
 ###########################################################
 # rtmp://live-push.bilivideo.com/live-bvc/
@@ -94,6 +102,7 @@ def Setup(**params):
     global MAX_DOWNLOAD
     global MAX_MEMORY
     global WEBHOOK_DINGDING
+    global ROOM_ID
     global Global_Today_AP
     global Global_Danmu_Retry_Times
     config = class_variable.get_config()
@@ -111,6 +120,7 @@ def Setup(**params):
         SLEEP = config.get('SLEEP')
         ERROR_RETRY = config.get('ERROR_RETRY')
         MAX_DOWNLOAD = config.get('MAX_DOWNLOAD')
+        ROOM_ID = config.get('ROOM_ID')
         Global_Danmu_Retry_Times = config.get('DEFAULT_DANMU_RETRY')
         #if 'BiliRadio_py' == SITENAME:
         if '512' == MEMORY[0:3]:
@@ -118,13 +128,21 @@ def Setup(**params):
         else:
             MAX_MEMORY = config.get('MAX_MEMORY')
         if BILIBILI_CLMY:
-            RTMP_URL_STR = '\"' + BILIBILI_RTMP + BILIBILI_CLMY + '\"'
+            RTMP_URL_STR = BILIBILI_RTMP + BILIBILI_CLMY
     else:
         print('############## ERROR IN LOAD CONFIG ##################')
     (today,tomorrow) = class_variable.get_today_AP()
     Global_Today_AP = today
     print_v()
     class_variable.SaveCookiesFromDB()
+    return True
+
+@engine.define( 'wss_danmu' )
+def start_wss_danmu(**params):
+    if 0==ROOM_ID:
+        print('ROOM_ID==0')
+    else:
+        wss_danmu.start(ROOM_ID)
     return True
 
 @engine.define( 'remove' )
@@ -194,27 +212,9 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
     global Global_Mp3_Info
     global Global_Time_Rtmp_Start
     print('play_floder:',floder_list, artist,radioname)
-    concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
-    cmd = concat.get('cmd')
-    Global_Mp3_Info = concat.get('info')
-    Global_Time_Rtmp_Start = int(time.time())
-    if CHANGE_RADIO_NAME:
-        try:
-            res = startlive.getRoomBaseInfo()
-            if res.get('code')==0:
-                title = res.get('data').get('by_room_ids').get('27791346').get('title')
-                if artist:
-                    if title!=radioname:
-                        startlive.update_RadioName(radioname)
-                else:
-                    if title!=RADIO_NAME:
-                        startlive.update_RadioName(RADIO_NAME)
-        except:
-            print('play_floder::getRoomBaseInfo::error')
-    print_v()
-    cmd_memory()
-    ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
-    print('FFMPEG::return:',ret)
+    #concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
+    ret = stream.rtmp_concat_mp4(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
+    print('rtmp::return:',ret)
     cmd_memory()
     return ret
 
@@ -257,14 +257,7 @@ def cmd_restart_radio():
         playret = play_artist()
     else:
         playret = play_play()
-    if -9 == playret:
-        return False
-    elif 1== playret:
-        Global_Retry_Times += 1
-        startlive.tryStartLive()
-        return True
-    elif 0 != playret:
-            Global_Retry_Times += 1
+    # Exiting normally, received signal 2.
     print('*************** END *******************')
     return True
         
@@ -310,7 +303,7 @@ def tryStartLive(rtmp=False):
         time.sleep(18)
         cans = canStart()
     if cans:
-            res = startlive.tryStartLive()
+            res = startlive.tryStartLive(str(ROOM_ID))
             if rtmp:
                 if res.get('code')==0:
                     BILIBILI_RTMP = res.get('rtmp').get('addr')
@@ -323,14 +316,15 @@ def canStart():
     if not SITENAME in today:
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False
-    tmpfilenum = os.listdir(MP3_ROOT)
-    print('os.listdir(MP3_ROOT)',tmpfilenum)
+    #return True
+    tmpfilenum = os.listdir(MP4_ROOT)
+    print('os.listdir(TMP_ROOT)',tmpfilenum)
     if 3>= len(tmpfilenum):
         # 没有音频，切换备用推流机
         if 'a'==SITENAME[len(SITENAME)-2]:
-            class_variable.set_today_AP('BiliRadio_ay',True)
+            class_variable.set_today_AP('BiLive_ay',True)
         else:
-            class_variable.set_today_AP('BiliRadio_py',False)
+            class_variable.set_today_AP('BiLive_py',False)
         print('#'*40,'EMPTY VIDEO,SET TO DEFAULT','#'*40)
         return False
     print('Can start live','Today:',today,'Tomorrow:',tomorrow)
@@ -454,12 +448,17 @@ def cmd_shell( cmd, **params ):
         
 @engine.define( 'ls_mp3' )
 def cmd_ls_mp3( **params):
-    shell.OutputShell('ls /tmp -R -l')
+    shell.OutputShell('ls {} -R -l'.format(MP3_ROOT))
+    return True
+        
+@engine.define( 'ls_mp4' )
+def cmd_ls_mp4( **params):
+    shell.OutputShell('ls {} -R -l'.format(MP4_ROOT))
     return True
 
 @engine.define( 'ls_img' )
 def cmd_ls_img( **params):
-    shell.OutputShell('ls mp3/img -R -l')
+    shell.OutputShell('ls img -R -l')
     return True
 
 @engine.define( 'ls' )
@@ -472,7 +471,31 @@ def cmd_ls( **params):
 def cmd_ps( **params ):
     shell.OutputShell('ps -elf')
     return True
-        
+ 
+@engine.define( 'ps_aux_ffmpeg' )
+# 调试 {"cmd":"ls -l" }
+def cmd_ps_ef_ffmpeg( **params ):
+    infolist = shell.procs_info("ffmpeg")
+    shell.OutputShell('ps -aux | grep ffmpeg')
+    try:
+        for info in infolist:
+            pid = info['pid']
+            shell.OutputShell('ps -T -p{}'.format(pid))
+    finally:
+        pass
+    return 
+@engine.define( 'python' )
+# 调试 {"cmd":"ls -l" }
+def cmd_python(cmd, **params ):
+    shell.OutputShell('python {}'.format(cmd))
+    return True
+
+@engine.define( 'python_pipe' )
+# 调试 {"cmd":"ls -l" }
+def cmd_python_pipe(**params ):
+    shell.OutputShell('python pipetest.py')
+    return True
+               
 @engine.define( 'memory' )
 def cmd_memory( **params ):
     mem_r = 2**20

@@ -143,9 +143,9 @@ def stream_spec_pipe_in(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p'
     process_stdin.wait()
 def stream_spec_pipe_thread_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
     # OK    stream_spec_pipe_in(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
-    out_thread = threading.Thread(target=stream_spec_pipe_out,args=(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'))
+    out_thread = threading.Thread(target=stream_spec_pipe_out,args=(rtmp,v_spec, a_spec,format, pix_fmt,s))
     out_thread.start()
-    in_thread = threading.Thread(target=stream_spec_pipe_in,args=(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'))
+    in_thread = threading.Thread(target=stream_spec_pipe_in,args=(rtmp,v_spec, a_spec,format, pix_fmt,s))
     in_thread.start()
     shell.OutputShell('ps -aux | grep ffmpeg',True)
 def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):

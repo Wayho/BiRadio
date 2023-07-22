@@ -108,7 +108,7 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
                 filter_threads=1,
                 #listen=1, # enables HTTP server
                 f=VIDEO_FORMAT)
-            .run_(cmd=["ffmpeg", "-re"],pipe_stdin=True)
+            .run_async(cmd=["ffmpeg", "-re"],pipe_stdin=True)
         )
     else:
         process_stdin = (

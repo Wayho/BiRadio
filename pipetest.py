@@ -31,8 +31,18 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 /tmp/mp4/{}.mp4"
 def test(num):
+    m4alist = mp3list('aux/coco')
+    imglist = mp3list('img')
     for i in range(0,num):
+        m4a = m4alist[i]
+        img = imglist[i]
+        names = m4a.split('/')
+        name = names[len(names)-1]
+        name = name[0:-4]
         cmd = ffmpeg_mp4.format(m4a,t,img,name)
+        shell.OutputShell(cmd,True)
+        print('ok',name,img)
+        time.sleep(5)
     
 def testpipe(str_rtmp):
     

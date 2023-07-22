@@ -149,7 +149,7 @@ def stream_spec_pipe_thread_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt=
     in_thread.start()
     shell.OutputShell('ps -aux | grep ffmpeg',True)
 def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
-    # 
+    #
     #v_in = ffmpeg.input('in.mp4')
     url = rtmp
     process_stdout = (

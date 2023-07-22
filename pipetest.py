@@ -239,6 +239,6 @@ if __name__ == '__main__':
     # print(mp3list("mp3/100"))
     # print(os.listdir("mp3"))
     rtmp= "http://127.0.0.1:8080"
-    testpipe('pipe0.flv')
+    testpipe('pipe0.{}'.format(VIDEO_FORMAT))
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
     #rtmp_concat_floder('rtmp',[''],total=3,artist=None,max_memory=80)

@@ -130,6 +130,7 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
         if not in_bytes:
             break
         process_stdin.stdin.write(in_bytes)
+    shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdin.stdin.close()
     process_stdout.stdout.close()
     process_stdout.wait()
@@ -174,6 +175,6 @@ if __name__ == '__main__':
     # print(mp3list("mp3/100"))
     # print(os.listdir("mp3"))
     rtmp= "http://127.0.0.1:8080"
-    test('mm.flv')
+    testpipe('pipe0.flv)
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
     #rtmp_concat_floder('rtmp',[''],total=3,artist=None,max_memory=80)

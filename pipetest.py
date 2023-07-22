@@ -91,7 +91,7 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
     process_stdout = (
         ffmpeg
         .output(v_spec,'pipe:', format=format, pix_fmt=pix_fmt)
-        .run_async(cmd=["ffmpeg"],pipe_stdout=True)
+        .run_async(cmd=["ffmpeg", "-re"],pipe_stdout=True)
     )
     
     if a_spec:

@@ -4,6 +4,7 @@ import os
 import random
 import json
 import shell as shell
+import threading
 
 VIDEO_FRAMERATE = 25
 VIDEO_P = 'hd720'
@@ -11,6 +12,7 @@ VIDEO_FORMAT = 'flv'
 IMG_SECONDS = 120
 PLAYLIST_PATH = 'playlist.txt'
 
+process_stdout = None
 # ps -T -p 21097
 # cat /proc/21097/status
 
@@ -57,7 +59,7 @@ def testpipe(str_rtmp):
     inv = ffmpeg.input('img/art_coco130.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
     v_concat = ffmpeg.filter(inv,filter_name='scale', size='hd720')
     
-    stream_spec_pipe_rtmp(str_rtmp,v_concat,a_concat, format='rawvideo', pix_fmt='yuv420p',s='1280x720')
+    stream_spec_pipe_thread_rtmp(str_rtmp,v_concat,a_concat, format='rawvideo', pix_fmt='yuv420p',s='1280x720')
 
 def all_list_pipe_rtmp(str_rtmp,image_files,audio_files):
     a_in_arr = []
@@ -84,8 +86,70 @@ def all_list_pipe_rtmp(str_rtmp,image_files,audio_files):
     v_concat = ffmpeg.concat(*v_in_arr, v=1,a=0)
     stream_spec_pipe_rtmp(str_rtmp,v_concat,a_concat, format='rawvideo', pix_fmt='yuv420p',s='1280x720')
 
-def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
+def stream_spec_pipe_out(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
+    global process_stdout
+    url = rtmp
+    process_stdout = (
+        ffmpeg
+        .output(v_spec,'pipe:', format=format, pix_fmt=pix_fmt)
+        .run_async(cmd=["ffmpeg", "-re"],pipe_stdout=True)
+    )
+    process_stdout.stdout.close()
+    #shell.OutputShell('ps -elf | grep ffmpeg',True)
+    process_stdout.wait()
+def stream_spec_pipe_in(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
     # OK
+    #v_in = ffmpeg.input('in.mp4')
+    global process_stdout
+    url = rtmp 
+    if a_spec:
+        v3 = ffmpeg.input('pipe:', format=format, pix_fmt=pix_fmt, s=s,thread_queue_size=1)
+        process_stdin = (
+            ffmpeg
+            #.input('pipe:', format=format, pix_fmt=pix_fmt, s=s)
+            .output(
+                v3,a_spec,
+                url,
+                vcodec='libx264',
+                acodec='aac',
+                r=VIDEO_FRAMERATE,
+                filter_threads=1,
+                #listen=1, # enables HTTP server
+                f=VIDEO_FORMAT)
+            .run_async(cmd=["ffmpeg", "-re","-y"],pipe_stdin=True)
+        )
+    else:
+        process_stdin = (
+            ffmpeg
+            .input('pipe:', format=format, pix_fmt=pix_fmt, s=s,thread_queue_size=1)
+            .output(
+                #v3,
+                url,
+                vcodec='libx264',
+                acodec='aac',
+                r=VIDEO_FRAMERATE,
+                filter_threads=1,
+                #listen=1, # enables HTTP server
+                f=VIDEO_FORMAT)
+            .run_async(cmd=["ffmpeg", "-re","-y"],pipe_stdin=True)
+        )
+    while True:
+        in_bytes = process_stdout.stdout.read(1280*720 * 3*8)
+        if not in_bytes:
+            break
+        process_stdin.stdin.write(in_bytes)
+    #shell.OutputShell('ps -elf | grep ffmpeg',True)
+    process_stdin.stdin.close()
+    process_stdin.wait()
+def stream_spec_pipe_thread_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
+    # OK    stream_spec_pipe_in(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
+    out_thread = threading.Thread(target=stream_spec_pipe_out,args=(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'))
+    out_thread.start()
+    in_thread = threading.Thread(target=stream_spec_pipe_in,args=(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'))
+    in_thread.start()
+    shell.OutputShell('ps -aux | grep ffmpeg',True)
+def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
+    # 
     #v_in = ffmpeg.input('in.mp4')
     url = rtmp
     process_stdout = (
@@ -135,8 +199,7 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
     process_stdout.stdout.close()
     shell.OutputShell('ps -elf | grep ffmpeg',True)
     process_stdout.wait()
-    process_stdin.wait()
-
+    process_stdin.wait
 def get_audio_info(file_path):
     """
     获取mp3/aac音频文件时长

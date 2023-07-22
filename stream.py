@@ -5,18 +5,19 @@ import random
 import json
 import shell as shell
 
+
 VIDEO_FRAMERATE = 25
 VIDEO_P = 'hd720'
 VIDEO_FORMAT = 'flv'
-IMG_SECONDS = 30
+IMG_SECONDS = 60
 PLAYLIST_PATH = 'playlist.txt'
 
 # ps -T -p 21097
 # cat /proc/21097/status
-
+MP4_ROOT = '/tmp/mp4'
 MP3_ROOT = 'aux'
 IMG_FLODER = 'img'
-sample = ['aux/coco/李玟-爱你爱到.m4a', 'aux/coco/李玟-伊甸园.m4a', 'aux/coco/李玟-过完冬季.m4a']
+
 # OK ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -listen 1 -r 3 -vcodec libx264 http://127.0.0.1:8080
 
 # ffmpeg -re -ss 0 -t 431 -f lavfi -i color=c=0x000000:s=640x360:r=30 -i mp3/img/1.jpg -i mp3/100/01.aac -i mp3/100/02.aac -filter_complex  "[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];[2:0][3:0]concat=n=2:v=0:a=1[outa]"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 192k -f flv test.flv
@@ -27,31 +28,28 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
-def test(str_rtmp):
-    str_rtmp = 'test.flv'
-    total_seconds = write_playlist(sample)
-    print('audio seconds:',total_seconds)
-    a_concat = ffmpeg.input("playlist.txt",**{"f":"concat","safe":0})         #ffmpeg -re -f concat -safe 0 -i playlist.txt
-    
-    #v3 = ffmpeg.input('img/art_coco102.jpg', t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
-    process_stdin = (
-            ffmpeg
-            #.input('pipe:', format=format, pix_fmt=pix_fmt, s=s)
-            .output(
-                a_concat,
-                str_rtmp,
-                vcodec='libx264',
-                acodec='aac',
-                r=VIDEO_FRAMERATE,
-                #filter_threads=1,
-                #listen=1, # enables HTTP server
-                f=VIDEO_FORMAT)
-            .run_async(cmd=["ffmpeg", "-re"])
-    )
-    shell.OutputShell('ps -elf | grep ffmpeg',True)
-    process_stdin.wait()
-    
+ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -vcodec libx264 -acodec aac -f flv {}"
+def rtmp_concat_mp4(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
+    """
+    获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
+    :param str_rtmp:'"rtmp://"'
+    :param floder_list:[fullpath]
+    :param total=MP3_TOTAL_PLAY:最多串接文件个数
+    :param artist=None:artist key word
+    :return:
+    """
+    str_rtmp = '\"{}\"'.format(str_rtmp)
+    mp4list = mp3list(MP4_ROOT)
+    play_list = []
+    for i in range(0,total):
+        play_list.append(mp4list[i])
+    total_seconds = write_playlist(play_list)
+    print('total seconds:',total_seconds)
+    cmd = ffmpeg_playlist.format(str_rtmp)
+    shell.OutputShell(cmd,True)
 
+    #test(str_rtmp)
+    
 def rtmp_concat_floder(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
@@ -61,8 +59,8 @@ def rtmp_concat_floder(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     :param artist=None:artist key word
     :return:
     """
-    test(str_rtmp)
-    return
+    #test(str_rtmp)
+    #return
     mp3_list = []
     str_rtmp = '\"{}\"'.format(str_rtmp)
     if len(floder_list)==0:
@@ -113,7 +111,7 @@ def all_2_rtmp(str_rtmp,mp3_512M,artist):
     total_seconds = write_playlist(mp3_512M)
     print('audio seconds:',total_seconds)
     a_concat = ffmpeg.input("playlist.txt",**{"f":"concat","safe":0})         #ffmpeg -re -f concat -safe 0 -i playlist.txt
-    _in_arr = []
+    v_in_arr = []
     img_seconds = 0
     img_list = mp3list(IMG_FLODER)
     random.shuffle(img_list)
@@ -246,7 +244,7 @@ def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420
                 filter_threads=1,
                 #listen=1, # enables HTTP server
                 f=VIDEO_FORMAT)
-            .run_(cmd=["ffmpeg", "-re"],pipe_stdin=True)
+            .run_async(cmd=["ffmpeg", "-re"],pipe_stdin=True)
         )
     else:
         process_stdin = (
@@ -312,6 +310,7 @@ if __name__ == '__main__':
     # print(mp3list("mp3/100"))
     # print(os.listdir("mp3"))
     rtmp= "http://127.0.0.1:8080"
-    test('mm.flv')
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
-    #rtmp_concat_floder('rtmp',[''],total=3,artist=None,max_memory=80)
+    rtmp_concat_mp4('rtmp',['coco'],total=10,artist=None,max_memory=80)
+
+

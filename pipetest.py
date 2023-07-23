@@ -52,7 +52,7 @@ def test(num):
         format = probe.get('format')
         t = float(format.get('duration'))
         cmd = ffmpeg_mp4.format(m4a,t,img,CACHE_MP4_PATH)
-        ret = shell.OutputShell(cmd,True)
+        ret = shell.OutputShell(cmd,False)
         if 0 == ret:
             print('ok',i,name,img)
             shutil.copy(CACHE_MP4_PATH,'{}/{}.mp4'.format(MP4_ROOT,name))

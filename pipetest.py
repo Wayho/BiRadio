@@ -36,6 +36,7 @@ ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=
 def test(num):
     m4alist = mp3list('aux/coco')
     imglist = mp3list('img')
+    print('m4a:',len(m4alist))
     for i in range(0,num):
         m4a = m4alist[i]
         img = imglist[i]
@@ -48,11 +49,11 @@ def test(num):
         cmd = ffmpeg_mp4.format(m4a,t,img,CACHE_MP4_PATH)
         ret = shell.OutputShell(cmd,True)
         if 0 == ret:
-            print('ok',name,img)
+            print('ok',i,name,img)
             shutil.copy(CACHE_MP4_PATH,'{}/{}.mp4'.format(MP4_ROOT,name))
             #os.path.remove(CACHE_MP4_PATH,'{}/{}.mp4'.format(MP4_ROOT,name))
         else:
-            print('ffmpeg not return 0')
+            print('ffmpeg not return 0',i)
             return
         time.sleep(3)
     

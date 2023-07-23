@@ -56,6 +56,7 @@ def test(num):
             print('ffmpeg not return 0',i)
             return
         time.sleep(3)
+    shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
     
 def testpipe(str_rtmp):
     

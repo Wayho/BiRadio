@@ -6,6 +6,8 @@ import random
 import json
 import shell as shell
 import threading
+import shutil 
+#shutil.copy(oldName, newName)
 
 VIDEO_FRAMERATE = 25
 VIDEO_P = 'hd720'
@@ -16,9 +18,10 @@ PLAYLIST_PATH = 'playlist.txt'
 process_stdout = None
 # ps -T -p 21097
 # cat /proc/21097/status
-
+MP4_ROOT = '/tmp/mp4'
 MP3_ROOT = 'aux'
 IMG_FLODER = 'img'
+CACHE_MP4_PATH = 'cache.mp4'
 sample = ['aux/coco/李玟-爱你爱到.m4a', 'aux/coco/李玟-伊甸园.m4a', 'aux/coco/李玟-过完冬季.m4a']
 # OK ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -listen 1 -r 3 -vcodec libx264 http://127.0.0.1:8080
 
@@ -29,7 +32,7 @@ sample = ['aux/coco/李玟-爱你爱到.m4a', 'aux/coco/李玟-伊甸园.m4a', '
 ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -f flv {}'
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
-ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 /tmp/mp4/{}.mp4"
+ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 {}"
 def test(num):
     m4alist = mp3list('aux/coco')
     imglist = mp3list('img')
@@ -42,10 +45,16 @@ def test(num):
         probe = ffmpeg.probe(m4a)
         format = probe.get('format')
         t = float(format.get('duration'))
-        cmd = ffmpeg_mp4.format(m4a,t,img,name)
-        shell.OutputShell(cmd,True)
-        print('ok',name,img)
-        time.sleep(5)
+        cmd = ffmpeg_mp4.format(m4a,t,img,CACHE_MP4_PATH)
+        ret = shell.OutputShell(cmd,True)
+        if 0 == ret:
+            print('ok',name,img)
+            shutil.copy(CACHE_MP4_PATH,'{}/{}.mp4'.format(MP4_ROOT,name))
+            #os.path.remove(CACHE_MP4_PATH,'{}/{}.mp4'.format(MP4_ROOT,name))
+        else:
+            print('ffmpeg not return 0')
+            return
+        time.sleep(3)
     
 def testpipe(str_rtmp):
     
@@ -242,7 +251,7 @@ if __name__ == '__main__':
     # print(mp3list("mp3/100"))
     # print(os.listdir("mp3"))
     rtmp= "http://127.0.0.1:8080"
-    test(8)
+    test(16)
     #testpipe('pipe0.{}'.format(VIDEO_FORMAT))
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
     #rtmp_concat_floder('rtmp',[''],total=3,artist=None,max_memory=80)

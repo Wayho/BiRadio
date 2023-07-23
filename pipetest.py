@@ -37,6 +37,11 @@ def test(num):
     m4alist = mp3list('aux/coco')
     imglist = mp3list('img')
     print('m4a:',len(m4alist))
+    procs = shell.procs_info("ffmpeg")
+    if procs:
+        shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
+        print('ffmpeg in procs,pass')
+        return
     for i in range(0,num):
         m4a = m4alist[i]
         img = imglist[i]
@@ -253,7 +258,7 @@ if __name__ == '__main__':
     # print(mp3list("mp3/100"))
     # print(os.listdir("mp3"))
     rtmp= "http://127.0.0.1:8080"
-    test(16)
+    test(15)
     #testpipe('pipe0.{}'.format(VIDEO_FORMAT))
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
     #rtmp_concat_floder('rtmp',[''],total=3,artist=None,max_memory=80)

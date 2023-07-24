@@ -22,10 +22,12 @@ import wss_danmu as wss_danmu
 import psutil
 import gc
 import threading
+import shutil 
 ####################mp4#######################################
 TMP_ROOT = '/tmp'
 MP3_ROOT = 'aux'
 MP4_ROOT = '/tmp/mp4'
+SAMPLE_MP4_432p = 'sample_432p_a320k.mp4'
 
 SITENAME = os.environ.get('SITENAME') or 'none'
 MEMORY = os.environ.get('MEMORY') or 'none'
@@ -33,10 +35,14 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v6.7 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v6.9 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
+dest_sample = '{}/{}'.format(MP4_ROOT,SAMPLE_MP4_432p)
+if  not os.path.exists(dest_sample):
+    if  os.path.exists(SAMPLE_MP4_432p):
+        shutil.copy(SAMPLE_MP4_432p,dest_sample)
 
 # 每次重启、休眠检查
 def cloud_wakeup():
@@ -478,24 +484,24 @@ def cmd_ls( **params):
     shell.OutputShell('ls -l')
     return True
 
-@engine.define( 'ps' )
+@engine.define( 'ps_aux' )
 # 调试 {"cmd":"ls -l" }
 def cmd_ps( **params ):
-    shell.OutputShell('ps -elf')
+    shell.OutputShell('ps -aux')
     return True
  
 @engine.define( 'ps_aux_ffmpeg' )
 # 调试 {"cmd":"ls -l" }
 def cmd_ps_ef_ffmpeg( **params ):
-    infolist = shell.procs_info("ffmpeg")
+    #infolist = shell.procs_info("ffmpeg")
     shell.OutputShell('ps -aux | grep ffmpeg')
-    try:
-        for info in infolist:
-            pid = info['pid']
-            shell.OutputShell('ps -T -p{}'.format(pid))
-    finally:
-        pass
-    return 
+    # try:
+    #     for info in infolist:
+    #         pid = info['pid']
+    #         shell.OutputShell('ps -T -p {}'.format(pid))
+    # finally:
+    #     pass
+    # return 
 @engine.define( 'python' )
 # 调试 {"cmd":"ls -l" }
 def cmd_python(cmd, **params ):

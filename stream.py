@@ -19,6 +19,19 @@ MP3_ROOT = 'aux'
 IMG_FLODER = 'img'
 
 # OK ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -listen 1 -r 3 -vcodec libx264 http://127.0.0.1:8080
+##ffplay -f flv http://127.0.0.1:8080
+##############################################
+# # 以第一个视频分辨率作为全局分辨率
+# # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
+# # ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -listen 1 -vcodec libx264 http://127.0.0.1:8080
+# # ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -vcodec libx264 rtmp
+# # ffplay -f flv http://127.0.0.1:8080
+##############################################
+# playlist.txt
+# file 'sample_720p_a320k.mp4'
+# file 'sample_480p_a320k.mp4'
+# #file 'sample_432p_a320k.mp4'
+##############################################
 
 # ffmpeg -re -ss 0 -t 431 -f lavfi -i color=c=0x000000:s=640x360:r=30 -i mp3/img/1.jpg -i mp3/100/01.aac -i mp3/100/02.aac -filter_complex  "[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];[2:0][3:0]concat=n=2:v=0:a=1[outa]"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 192k -f flv test.flv
 
@@ -28,7 +41,9 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 #ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
-ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -vcodec libx264 -acodec aac -f flv {}"
+#ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -vcodec libx264 -acodec aac -f flv {}"
+ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -codec copy -f flv {}"
+print('stream v2.0:',ffmpeg_playlist)
 def rtmp_concat_mp4(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
@@ -40,13 +55,10 @@ def rtmp_concat_mp4(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     """
     str_rtmp = '\"{}\"'.format(str_rtmp)
     mp4list = mp3list(MP4_ROOT)
-    play_list = []
-    for i in range(0,total):
-        play_list.append(mp4list[i])
-    total_seconds = write_playlist(play_list)
+    total_seconds = write_playlist(mp4list)
     print('total seconds:',total_seconds)
     cmd = ffmpeg_playlist.format(str_rtmp)
-    shell.OutputShell(cmd,True)
+    return cmd#shell.OutputShell(cmd,True)
 
     #test(str_rtmp)
     
@@ -311,6 +323,4 @@ if __name__ == '__main__':
     # print(os.listdir("mp3"))
     rtmp= "http://127.0.0.1:8080"
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
-    rtmp_concat_mp4('rtmp',['coco'],total=10,artist=None,max_memory=80)
-
-
+    rtmp_concat_floder('rtmp',['coco'],total=30,artist=None,max_memory=80)

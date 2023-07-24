@@ -33,14 +33,17 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v6.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v6.7 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+if not os.path.exists(MP4_ROOT):
+        print('cloud:mkdir::',MP4_ROOT)
+        os.mkdir(MP4_ROOT)
 
 # 每次重启、休眠检查
 def cloud_wakeup():
-    print("cloud_wakeup:sleep 15 for check MP3_ROOT")
+    print("cloud_wakeup:sleep 15 for check MP4_ROOT")
     time.sleep(15)
     Setup()
-    tmpfilenum = os.listdir(TMP_ROOT)
+    tmpfilenum = os.listdir(MP4_ROOT)
     if 3>= len(tmpfilenum):
         # 没有音频，提醒
         print('ding_msg:tmp file num=',tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':tmp is empty'))
@@ -142,7 +145,8 @@ def start_wss_danmu(**params):
     if 0==ROOM_ID:
         print('ROOM_ID==0')
     else:
-        wss_danmu.start(ROOM_ID)
+        if canStart():
+            wss_danmu.start(ROOM_ID)
     return True
 
 @engine.define( 'remove' )
@@ -213,7 +217,8 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
     global Global_Time_Rtmp_Start
     print('play_floder:',floder_list, artist,radioname)
     #concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
-    ret = stream.rtmp_concat_mp4(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
+    cmd = stream.rtmp_concat_mp4(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
+    ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
     print('rtmp::return:',ret)
     cmd_memory()
     return ret
@@ -252,15 +257,22 @@ def cmd_restart_radio():
     if Global_Retry_Times >= ERROR_RETRY:
         print('Global_Retry_Times >= ERROR_RETRY')
         return False
+    
     playret = 0
     if PLAY_ARTIST:
         playret = play_artist()
     else:
         playret = play_play()
-    # Exiting normally, received signal 2.
+    if -9 == playret:
+        return False
+    elif 1== playret:
+        Global_Retry_Times += 1
+        startlive.tryStartLive(str(ROOM_ID))
+        return True
+    elif 0 != playret:
+            Global_Retry_Times += 1
     print('*************** END *******************')
     return True
-        
         
 
 # 0 0 2-16 * * ?     
@@ -318,7 +330,7 @@ def canStart():
         return False
     #return True
     tmpfilenum = os.listdir(MP4_ROOT)
-    print('os.listdir(TMP_ROOT)',tmpfilenum)
+    print('os.listdir(MP4_ROOT)',tmpfilenum)
     if 3>= len(tmpfilenum):
         # 没有音频，切换备用推流机
         if 'a'==SITENAME[len(SITENAME)-2]:

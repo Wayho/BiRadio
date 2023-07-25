@@ -1,6 +1,7 @@
 # coding: utf-8
 import ffmpeg
 import os
+import sys
 import random
 import json
 import shell as shell
@@ -43,7 +44,7 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -vcodec libx264 -acodec aac -f flv {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -codec copy -f flv {}"
-print('stream v2.0:',ffmpeg_playlist)
+print('stream v3.0:',ffmpeg_playlist)
 def rtmp_concat_mp4(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
@@ -54,7 +55,12 @@ def rtmp_concat_mp4(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     :return:
     """
     str_rtmp = '\"{}\"'.format(str_rtmp)
-    mp4list = mp3list(MP4_ROOT)
+    root_list = mp3list(MP4_ROOT)
+    mp4list=[]
+    for file_path in root_list: 
+        mp4list.append(file_path)
+        if len(mp4list) >= total:
+            break
     total_seconds = write_playlist(mp4list)
     print('total seconds:',total_seconds)
     cmd = ffmpeg_playlist.format(str_rtmp)
@@ -170,6 +176,7 @@ def write_playlist(mp3_list):
         audio_info = get_audio_info(file_path)
         duration = audio_info.get('duration')
         duration_total += duration
+    lineArray.append("# rem")
     playlist_str = '\r\n'.join(lineArray)
     playlist = open(PLAYLIST_PATH, 'w')
     playlist.write(playlist_str)
@@ -316,11 +323,15 @@ def mp3list(path="a/coco"):
     return mp3list
 
 if __name__ == '__main__':
-    # mp3_list = mp3list("mp3/country")
-
-    #print(cmdconcat("mp3/100"))
-    # print(mp3list("mp3/100"))
-    # print(os.listdir("mp3"))
+    # python stream.py 30
+    # <class 'list'> ['stream.py', '30']
     rtmp= "http://127.0.0.1:8080"
+    try:
+        argv = sys.argv[1]
+        print(type(argv),argv)
+        rtmp_concat_floder('rtmp',[''],total=int(argv),artist=None,max_memory=80)
+    except:
+        print('No argv, sample: python stream.py 30')
+        rtmp_concat_floder('rtmp',[''],total=30,artist=None,max_memory=80)
     #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
-    rtmp_concat_floder('rtmp',['coco'],total=30,artist=None,max_memory=80)
+    

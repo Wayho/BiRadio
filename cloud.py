@@ -35,13 +35,14 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v6.9 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v7.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
 dest_sample = '{}/{}'.format(MP4_ROOT,SAMPLE_MP4_432p)
 if  not os.path.exists(dest_sample):
     if  os.path.exists(SAMPLE_MP4_432p):
+        time.sleep(2)
         shutil.copy(SAMPLE_MP4_432p,dest_sample)
 
 # 每次重启、休眠检查
@@ -337,14 +338,16 @@ def canStart():
     #return True
     tmpfilenum = os.listdir(MP4_ROOT)
     print('os.listdir(MP4_ROOT)',tmpfilenum)
-    if 3>= len(tmpfilenum):
-        # 没有音频，切换备用推流机
-        if 'a'==SITENAME[len(SITENAME)-2]:
-            class_variable.set_today_AP('BiLive_ay',True)
-        else:
-            class_variable.set_today_AP('BiLive_py',False)
-        print('#'*40,'EMPTY VIDEO,SET TO DEFAULT','#'*40)
-        return False
+    if not SITENAME in ['BiLive_ay','BiLive_py']:
+        # 备用推流机，直接用，非备用，要看tmpfilenum
+        if 3>= len(tmpfilenum):
+            # 没有音频，切换备用推流机
+            if 'a'==SITENAME[len(SITENAME)-2]:
+                class_variable.set_today_AP('BiLive_ay',True)
+            else:
+                class_variable.set_today_AP('BiLive_py',False)
+            print('#'*40,'EMPTY VIDEO,SET TO DEFAULT','#'*40)
+            return False
     print('Can start live','Today:',today,'Tomorrow:',tomorrow)
     return True
 
@@ -458,7 +461,7 @@ def cmd_update_proxies( **params ):
     print('class_proxies.update:',update_num)
     return True
 
-@engine.define( 'shell' )
+@engine.define( 'a_shell' )
 # 调试 {"cmd":"ls -l" }
 def cmd_shell( cmd, **params ):
     shell.OutputShell(cmd)
@@ -484,7 +487,7 @@ def cmd_ls( **params):
     shell.OutputShell('ls -l')
     return True
 
-@engine.define( 'ps_aux' )
+@engine.define( 'ps_aux_p' )
 # 调试 {"cmd":"ls -l" }
 def cmd_ps( **params ):
     shell.OutputShell('ps -aux')
@@ -511,7 +514,15 @@ def cmd_python(cmd, **params ):
 @engine.define( 'python_pipe' )
 # 调试 {"cmd":"ls -l" }
 def cmd_python_pipe(**params ):
-    shell.OutputShell('python pipetest.py')
+    shell.OutputShell('python pipetest.py '.format(MAX_DOWNLOAD))
+    cmd_memory()
+    return True
+
+@engine.define( 'python_test' )
+# 调试 {"cmd":"ls -l" }
+def cmd_python_test(**params ):
+    shell.OutputShell('python test.py '.format(MAX_DOWNLOAD))
+    cmd_memory()
     return True
                
 @engine.define( 'memory' )

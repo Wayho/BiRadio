@@ -35,7 +35,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v7.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v7.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -514,7 +514,7 @@ def cmd_python(cmd, **params ):
 @engine.define( 'python_pipe' )
 # 调试 {"cmd":"ls -l" }
 def cmd_python_pipe(**params ):
-    shell.OutputShell('python pipetest.py '.format(MAX_DOWNLOAD))
+    shell.OutputShell('python pipetest.py {}'.format(MAX_DOWNLOAD))
     cmd_memory()
     return True
 

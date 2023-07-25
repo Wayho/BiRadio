@@ -43,8 +43,8 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 # last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
 
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -vcodec libx264 -acodec aac -f flv {}"
-ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -codec copy -f flv {}"
-print('stream v3.0:',ffmpeg_playlist)
+ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25 -codec copy -f flv {}"
+print('stream v3.1:',ffmpeg_playlist)
 def rtmp_concat_mp4(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足

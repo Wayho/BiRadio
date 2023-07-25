@@ -62,7 +62,7 @@ ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r
 # {"cmd":"ffmpeg -filter_threads 1 -i aux/coco/李玟_想你的365天.mp3 -ss 0 -t 326.95 -f lavfi -i color=c=0x000000:s=854x480:r=25 -i img/art_coco122.jpg -filter_complex \"[2:v]scale=854:480[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 320k -f mp4 sample_480p_a320k.mp4"}
 #ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 {}"
 ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -vcodec libx264 -acodec copy -y -f mp4 {}"
-print('pipetest v3.0:',ffmpeg_mp4)
+print('pipetest v3.2:',ffmpeg_mp4)
 def test(num):
     
     procs = shell.procs_info("ffmpeg")
@@ -70,8 +70,8 @@ def test(num):
         shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
         print('ffmpeg in procs,pass')
         return
-    #m4alist = mp3list('aux/coco')
-    m4alist = os.listdir(SOURCE_ADUIO_FLODER)   #only name
+    m4alist = mp3list('aux/coco')
+    #m4alist = os.listdir(SOURCE_ADUIO_FLODER)   #only name
     imglist = mp3list('img')
 
     # 先做mp4list里面没有的
@@ -83,11 +83,11 @@ def test(num):
         mp4_path = '{}/{}.mp4'.format(MP4_ROOT,name)
         # 更新mp4list
         mp4list = mp4list_by_time(MP4_ROOT)
-        print('mp4:',MP4_ROOT,len(mp4list))
+        print('mp4:',done_num,MP4_ROOT,len(mp4list))
         img = imglist[done_num % len(imglist)]     #imglist must too large
         if not mp4_path in mp4list:
             #没有
-            ret = ffmpeg_mp4(m4a,img)
+            ret = ai_to_mp4(m4a,img)
             if 0 == ret:
                 print('ok',done_num,m4a,img)
             else:
@@ -96,31 +96,35 @@ def test(num):
                 return
             done_num += 1
             time.sleep(3)
-            
-    # mp4list里面没有的做完，这里就是都有的了,先最老,mp4list[0]
+    print('mp4list里面没有的,OK')
+    # mp4list里面没有的，做完，这里就是都有的了,先最老,mp4list[0]
     # 对MP4_ROOT/sample_432p_a320k.mp4 pass
-    while done_num < num:
-        mp4list = mp4list_by_time(MP4_ROOT)
-        print('mp4:',MP4_ROOT,len(mp4list))
-        name = file_name(mp4list[0])
-        mp4_path = '{}/{}.mp4'.format(MP4_ROOT,name)
-        for m4a in m4alist:
-            m4a_name = file_name(m4a)
-            if m4a_name == name:
-                # 避免 sample_432p_a320k
-                img = imglist[done_num % len(imglist)]     #imglist must too large
-                ret = ffmpeg_mp4(m4a,img)
-                if 0 == ret:
-                    print('ok',done_num,m4a,img)
-                else:
-                    shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
-                    print('ffmpeg not return 0',done_num,m4a,img)
-                    return
-                done_num += 1
-                time.sleep(3)
+    mp4_m4a_list = []
+    mp4list = mp4list_by_time(MP4_ROOT)
+    print('mp4:',done_num,MP4_ROOT,len(mp4list))
+    for mp4 in mp4list:
+        name = file_name(mp4)
+        mp4_src_m4a_path = '{}/{}.m4a'.format(SOURCE_ADUIO_FLODER,name)
+        if mp4_src_m4a_path in m4alist:
+            mp4_m4a_list.append({"mp4":mp4,"m4a":mp4_src_m4a_path})
+    for mp4_m4a in mp4_m4a_list:
+        if done_num >= num:
+            break
+        m4a = mp4_m4a['m4a']
+        img = imglist[done_num % len(imglist)]     #imglist must too large
+        ret = ai_to_mp4(m4a,img)
+        if 0 == ret:
+            print('ok',done_num,m4a,img)
+        else:
+            shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
+            print('ffmpeg not return 0',done_num,m4a,img)
+            return
+        done_num += 1
+        time.sleep(3)
+    print('mp4list里面有的,OK')
     shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
 
-def ffmpeg_mp4(m4a,img):
+def ai_to_mp4(m4a,img):
     name = file_name(m4a)
     probe = ffmpeg.probe(m4a)
     format = probe.get('format')
@@ -152,7 +156,7 @@ def mp4list_by_time(path="aux/coco"):
     file_list = []
     if os.path.exists(path):
         for file_name in os.listdir(path):
-            print(os.path.join(path, file_name))
+            #print(os.path.join(path, file_name))
             file_list.append(os.path.join(path, file_name))
         # 获取按照文件时间修改排序的列表，默认是按时间升序
         mp3list = sorted(file_list, key=lambda file: os.path.getmtime(file))

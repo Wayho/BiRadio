@@ -1,0 +1,4 @@
+file 'sample_432p_a320k.mp4'
+file 'sample_432p_a320k.mp4'
+# rem ffplay -f flv http://127.0.0.1:8080
+# rem ffmpeg -re -f concat -safe 0 -i samplelist.txt -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy -listen 1 http://127.0.0.1:8080

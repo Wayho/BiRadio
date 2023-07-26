@@ -35,15 +35,16 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v7.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.0.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
-dest_sample = '{}/{}'.format(MP4_ROOT,SAMPLE_MP4_432p)
-if  not os.path.exists(dest_sample):
-    if  os.path.exists(SAMPLE_MP4_432p):
-        time.sleep(2)
-        shutil.copy(SAMPLE_MP4_432p,dest_sample)
+        dest_sample = '{}/{}'.format(MP4_ROOT,SAMPLE_MP4_432p)
+        #if  not os.path.exists(dest_sample):
+        if  os.path.exists(SAMPLE_MP4_432p):
+            time.sleep(0.1)
+            #shutil.copy(SAMPLE_MP4_432p,dest_sample)
+            os.rename(SAMPLE_MP4_432p,dest_sample)
 
 # 每次重启、休眠检查
 def cloud_wakeup():
@@ -53,7 +54,7 @@ def cloud_wakeup():
     tmpfilenum = os.listdir(MP4_ROOT)
     if 3>= len(tmpfilenum):
         # 没有音频，提醒
-        print('ding_msg:tmp file num=',tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':tmp is empty'))
+        print('ding_msg:{} file:'.format(MP4_ROOT),tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':tmp is empty'))
 send_thread = threading.Thread(target=cloud_wakeup,args=())
 send_thread.start()
 
@@ -61,6 +62,10 @@ send_thread.start()
 ################# LOAD CONFIG ##############################
 BILIBILI_RTMP = "rtmp://"
 BILIBILI_CLMY = None
+
+FFMPEG_MP4_CODEC = '-vcodec libx264 -acodec acc'
+FFMPEG_RTMP_CODEC = '-vcodec copy -acodec aac'
+FFMPEG_FRAMERATE = None
 
 RADIO_NAME = 'Live Music | 极其音乐'
 CHANGE_RADIO_NAME = False
@@ -70,7 +75,7 @@ MP3_TOTAL_PLAY = 30
 SLEEP = 120
 ERROR_RETRY = 6
 MAX_DOWNLOAD = 10
-MAX_MEMORY = 100
+MAX_MEMORY = 90
 ROOM_ID = 0
 
 ###########################################################
@@ -115,9 +120,13 @@ def Setup(**params):
     global ROOM_ID
     global Global_Today_AP
     global Global_Danmu_Retry_Times
-    config = class_variable.get_config()
-    print(config)
-    if config:
+    global FFMPEG_MP4_CODEC
+    global FFMPEG_RTMP_CODEC
+    # config = class_variable.get_config()
+    # print(config)
+    variable = class_variable.get_variable()
+    if variable:
+        config = variable.get('config')
         ## 记得修改为通过startlive.tryStartLive()参数带来BILIBILI_RTMP+BILIBILI_CLMY
         BILIBILI_RTMP = config.get('BILIBILI_RTMP')
         BILIBILI_CLMY = config.get('BILIBILI_CLMY')
@@ -139,8 +148,11 @@ def Setup(**params):
             MAX_MEMORY = config.get('MAX_MEMORY')
         if BILIBILI_CLMY:
             RTMP_URL_STR = BILIBILI_RTMP + BILIBILI_CLMY
+        # v5.0.0
+        FFMPEG_MP4_CODEC = variable.get('codec_mp4')
+        FFMPEG_RTMP_CODEC = variable.get('codec_rtmp')
     else:
-        print('############## ERROR IN LOAD CONFIG ##################')
+        print('############## ERROR IN LOAD VARIABLE ##################')
     (today,tomorrow) = class_variable.get_today_AP()
     Global_Today_AP = today
     print_v()
@@ -224,11 +236,20 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
     global Global_Time_Rtmp_Start
     print('play_floder:',floder_list, artist,radioname)
     #concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
-    cmd = stream.rtmp_concat_mp4(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
+    cmd = stream.rtmp_concat_mp4(RTMP_URL_STR, MP3_TOTAL_PLAY, codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=floder_list)
     ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
     print('rtmp::return:',ret)
     cmd_memory()
     return ret
+
+@engine.define( 'map_mp4' )
+def map_mp4(floder_list=[], artist=None,radioname=RADIO_NAME):
+    """
+     获取SOURCE_ADUIO_FLODER下m4a，转mp4
+    :return:
+    """
+    done_num = stream.map_video_audio_mp4(MP3_TOTAL_PLAY,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE)
+    return done_num
 
 # 18 */1 7-23 * * ?
 # 统一到一个云函数定时1分钟运行
@@ -401,30 +422,6 @@ def danmu_off(**params):
 # 35 */1 7-23 * * ?
 #@engine.define( 'id3_send' )
 def id3_send():
-    global Global_Danmu_Retry_Times
-    now = int(time.time())
-    duration_total = 0
-    #print(Global_Mp3_Info)
-    for index in range(0,len(Global_Mp3_Info)):
-        info = Global_Mp3_Info[index]
-        duration_total += info.get('duration')        
-        if now-Global_Time_Rtmp_Start-20 < duration_total:
-            if info.get('send'):
-                return False
-            else:
-                Global_Mp3_Info[index]['send'] = True
-                #artist = info.get('artist')
-                title = info.get('title')
-                
-                if title:
-                    print(duration_total,title, info.get('path'))
-                    if 5< Global_Danmu_Retry_Times:
-                        return False
-                    code = danmu.send(title)
-                    if 0!=code:
-                        print('***********danmu::return code:',code,title)
-                        Global_Danmu_Retry_Times += 1
-                return True
     return False
 
 
@@ -496,15 +493,16 @@ def cmd_ps( **params ):
 @engine.define( 'ps_aux_ffmpeg' )
 # 调试 {"cmd":"ls -l" }
 def cmd_ps_ef_ffmpeg( **params ):
-    #infolist = shell.procs_info("ffmpeg")
+    infolist = shell.procs_info("ffmpeg")
     shell.OutputShell('ps -aux | grep ffmpeg')
-    # try:
-    #     for info in infolist:
-    #         pid = info['pid']
-    #         shell.OutputShell('ps -T -p {}'.format(pid))
-    # finally:
-    #     pass
-    # return 
+    try:
+        for info in infolist:
+            pid = info['pid']
+            shell.OutputShell('cat /proc/{}/status'.format(pid))
+    finally:
+        pass
+    return 
+
 @engine.define( 'python' )
 # 调试 {"cmd":"ls -l" }
 def cmd_python(cmd, **params ):
@@ -549,5 +547,6 @@ def cmd_memory( **params ):
 
 @engine.define( 'print_v' )
 def print_v( **params ):
-    print(BILIBILI_CLMY,'RADIO_NAME:',RADIO_NAME,'CHANGE_RADIO_NAME:',CHANGE_RADIO_NAME,'PLAY_ARTIST:',PLAY_ARTIST,'FFMPEG_MESSAGE_OUT:',FFMPEG_MESSAGE_OUT,'MP3_TOTAL_PLAY:',MP3_TOTAL_PLAY,'SLEEP:',SLEEP,'ERROR_RETRY:',ERROR_RETRY,'MAX_DOWNLOAD:',MAX_DOWNLOAD,'MAX_MEMORY:',MAX_MEMORY,'Global_minutes:',Global_minutes,'Global_Danmu_Retry_Times:',Global_Danmu_Retry_Times,'Global_Today_AP:',Global_Today_AP)
+    print(BILIBILI_CLMY,'RADIO_NAME:',RADIO_NAME,'CHANGE_RADIO_NAME:',CHANGE_RADIO_NAME,'PLAY_ARTIST:',PLAY_ARTIST,'FFMPEG_MESSAGE_OUT:',FFMPEG_MESSAGE_OUT,'MP3_TOTAL_PLAY:',MP3_TOTAL_PLAY,'SLEEP:',SLEEP,'ERROR_RETRY:',ERROR_RETRY,'MAX_DOWNLOAD:',MAX_DOWNLOAD,'MAX_MEMORY:',MAX_MEMORY)
+    print('FFMPEG_FRAMERATE:',FFMPEG_FRAMERATE,'FFMPEG_MP4_CODEC:',FFMPEG_MP4_CODEC,'FFMPEG_RTMP_CODEC:',FFMPEG_RTMP_CODEC,'Global_minutes:',Global_minutes,'Global_Danmu_Retry_Times:',Global_Danmu_Retry_Times,'Global_Today_AP:',Global_Today_AP)
     return True

@@ -18,8 +18,9 @@ import shutil
 # s=1138x640 内存量超出该实例规格
 # s=1280x720 rtmp sample.mp4 338M
 ############ no scale ram == scale
-# s=770x432 mp4=154M
-
+# s=770x432 mp4=154M thread=0
+# s=770x432 mp4=135M thread=2
+# s=770x432 mp4=126M thread=1
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}

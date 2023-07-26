@@ -3,28 +3,43 @@ import ffmpeg
 import os
 import sys
 import random
-import json
+import time
+import shutil 
 import shell as shell
 
+FFMPEG_MP4_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 320k'
+FFMPEG_RTMP_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 320k'
 
-VIDEO_FRAMERATE = 25
+FFMPEG_FRAMERATE = 25
 VIDEO_P = 'hd720'
 VIDEO_FORMAT = 'flv'
-IMG_SECONDS = 60
+IMG_SECONDS = 30
 PLAYLIST_PATH = 'playlist.txt'
 
-# ps -T -p 21097
-# cat /proc/21097/status
 MP4_ROOT = '/tmp/mp4'
 MP3_ROOT = 'aux'
 IMG_FLODER = 'img'
+SOURCE_ADUIO_FLODER = 'aux/coco'
+CACHE_MP4_PATH = 'cache.mp4'
 
-# OK ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -listen 1 -r 3 -vcodec libx264 http://127.0.0.1:8080
-##ffplay -f flv http://127.0.0.1:8080
+# s=770x432 mp4=154M thread=0
+# s=770x432 mp4=135M thread=2
+# s=770x432 mp4=126M thread=1
+
+# ffmpeg  -i aux/coco/李玟_想你的365天.mp3 -ss 0 -t 326.95 -f lavfi -i color=c=0x000000:s=770x433:r=25 -i img/art_coco103.jpg -filter_complex "[1:v][2:v]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]" -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 320k -f mp4 overlay_432p_a320k.mp4
+# ffmpeg -i aux/coco/李玟-爱你爱到.m4a -ss 0 -t 261.328 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco132.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 2 -vcodec libx264 -acodec aac -y -f mp4 cache.mp4
+#ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 {}"
+ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r={} -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r {} {} -y -f mp4 {}"
+# ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
+#ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
+ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r  {}  -f flv {}  {}"
+print('stream v5.0.2:mp4',ffmpeg_mp4)
+print('stream v5.0.1:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
-# # ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -listen 1 -vcodec libx264 http://127.0.0.1:8080
+# # ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -threads 2 -acodec aac -b:a 320k -vcodec libx264 -listen 1 http://127.0.0.1:8080
+# # ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy -listen 1 http://127.0.0.1:8080
 # # ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -vcodec libx264 rtmp
 # # ffplay -f flv http://127.0.0.1:8080
 ##############################################
@@ -33,27 +48,19 @@ IMG_FLODER = 'img'
 # file 'sample_480p_a320k.mp4'
 # #file 'sample_432p_a320k.mp4'
 ##############################################
-
-# ffmpeg -re -ss 0 -t 431 -f lavfi -i color=c=0x000000:s=640x360:r=30 -i mp3/img/1.jpg -i mp3/100/01.aac -i mp3/100/02.aac -filter_complex  "[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];[2:0][3:0]concat=n=2:v=0:a=1[outa]"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 192k -f flv test.flv
-
 # FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。但是下载的还在
-
-ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec aac -f flv {}'
-#ffmpeg_concat = 'ffmpeg -re -ss 0 -t {} -f lavfi -i color=c=0x000000:s=640x360:r=30 -i {}{} -filter_complex  \"[1:v]scale=640:360[v1];[0:v][v1]overlay=0:0[outv];{}\"  -map [outv] -map [outa] -vcodec libx264 -acodec copy -f flv {}'
-# last_errmsg: Streamcopy requested for output stream 0:1, which is fed from a complex filtergraph. Filtering and streamcopy cannot be used together.
-
-#ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -vcodec libx264 -acodec aac -f flv {}"
-ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25 -vcodec copy -acodec aac -f flv {}"
-print('stream v3.2:',ffmpeg_playlist)
-def rtmp_concat_mp4(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
+########################## rtmp ###############################
+def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=['']):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
     :param str_rtmp:'"rtmp://"'
-    :param floder_list:[fullpath]
-    :param total=MP3_TOTAL_PLAY:最多串接文件个数
-    :param artist=None:artist key word
-    :return:
+    :param total:=MP4_TOTAL_PLAY:最多串接文件个数
+    :param framerate:=FFMPEG_FRAMERATE
+    :param codec:=FFMPEG_RTMP_CODEC
+    :return: ffmpeg cmd
     """
+    if not framerate:
+        framerate = FFMPEG_FRAMERATE
     str_rtmp = '\"{}\"'.format(str_rtmp)
     root_list = mp3list(MP4_ROOT)
     mp4list=[]
@@ -63,104 +70,9 @@ def rtmp_concat_mp4(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
             break
     total_seconds = write_playlist(mp4list)
     print('total seconds:',total_seconds)
-    cmd = ffmpeg_playlist.format(str_rtmp)
+    cmd = ffmpeg_playlist.format(framerate,codec,str_rtmp)
+    print(cmd)
     return cmd#shell.OutputShell(cmd,True)
-
-    #test(str_rtmp)
-    
-def rtmp_concat_floder(str_rtmp,floder_list,total=30,artist=None,max_memory=80):
-    """
-    获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
-    :param str_rtmp:'"rtmp://"'
-    :param floder_list:[fullpath]
-    :param total=MP3_TOTAL_PLAY:最多串接文件个数
-    :param artist=None:artist key word
-    :return:
-    """
-    #test(str_rtmp)
-    #return
-    mp3_list = []
-    str_rtmp = '\"{}\"'.format(str_rtmp)
-    if len(floder_list)==0:
-        # 空的floder_list表示所有floder
-        for file_floder_name in os.listdir(MP3_ROOT):
-            full_path = MP3_ROOT + '/' + file_floder_name
-            if os.path.isdir(full_path):
-                floder_list.append(full_path)
-    random.shuffle(floder_list)
-    for floder_path in floder_list:
-        a_mp3_list = mp3list(floder_path)
-        for file_path in a_mp3_list: 
-            # img_floder = IMG_FLODER
-            # if file_path[0:len(img_floder)] != img_floder:
-            #     # 排除 mp3/img
-                mp3_list.append(file_path)
-                if len(mp3_list) >=total:
-                    break
-    
-    mp3_total = len(mp3_list)
-    # 不够total的话，复制自身补足
-    if mp3_total > 0:
-        for lo in range(0,int(total/mp3_total)):
-            if len(mp3_list) >=total:
-                    break
-            for item in mp3_list:
-                if len(mp3_list) >=total:
-                    break
-                mp3_list.append(item)
-    mp3_512M = []
-    total_size = 0
-    CONST_MB = float(1024 * 1024)
-    for file_path in mp3_list:
-        fsize = os.path.getsize(file_path) / CONST_MB
-        if total_size + fsize > max_memory:
-            break
-        mp3_512M.append(file_path)
-        total_size += fsize
-    print('Total files:',len(mp3_512M),',Total size:',total_size)
-    if 0==total_size:
-        return {'cmd':'ls {} -R -l'.format(MP3_ROOT), 'info':[]}
-    #return ffmpeg_concat_by_list(str_rtmp,mp3_512M,artist)
-    return all_2_rtmp(str_rtmp,mp3_512M,artist)
-
-def all_2_rtmp(str_rtmp,mp3_512M,artist):
-    # OK ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -acodec aac -listen 1 -r 3 -vcodec libx264 http://127.0.0.1:8080
-    # a_c = ffmpeg.input("concat:a1.m4a|a2.m4a")    #ok first
-    total_seconds = write_playlist(mp3_512M)
-    print('audio seconds:',total_seconds)
-    a_concat = ffmpeg.input("playlist.txt",**{"f":"concat","safe":0})         #ffmpeg -re -f concat -safe 0 -i playlist.txt
-    v_in_arr = []
-    img_seconds = 0
-    img_list = mp3list(IMG_FLODER)
-    random.shuffle(img_list)
-    for fn in img_list:
-        if img_seconds+IMG_SECONDS>=total_seconds:
-            break
-        inv = ffmpeg.input(fn, t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
-        v_s = ffmpeg.filter(inv,filter_name='scale', size='hd720')
-        v_in_arr.append(v_s)
-        img_seconds += IMG_SECONDS
-    print('image seconds:',img_seconds)
-    v_concat = ffmpeg.concat(*v_in_arr, v=1,a=0)
-
-    try:
-        out, err = (ffmpeg
-            .output(
-                a_concat, v_concat,     #!!!! a_concat must first !!!!
-                str_rtmp,
-                vcodec='libx264',
-                acodec='aac',
-                r=VIDEO_FRAMERATE,
-                #listen=1, # enables HTTP server
-                f=VIDEO_FORMAT)
-            .run(cmd=["ffmpeg", "-re"])#capture_stderr=True)
-        )
-        print(ffmpeg.compile(out))
-        #print('err:',type(err.decode()),err.decode())
-    except ffmpeg.Error as error:
-        #print("stderr:",error.stderr.decode())
-        print("stderr:")
-    return {'cmd':'OK {} seconds'.format(total_seconds), 'info':[]}
 
 def write_playlist(mp3_list):
     """
@@ -184,112 +96,117 @@ def write_playlist(mp3_list):
     print(playlist_str)
     return duration_total
 
-########################## no need, pipe version ###############################
-
-def ffmpeg_concat_by_list(str_rtmp,mp3_list,artist=None):
+########################## mp4 ###############################
+def map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE):
     """
-    根据mp3_list的串接cmd
-    :param str_rtmp:'"rtmp://"'
-    :param mp3_list:['fullpath']
-    :param artist=None:artist key word
-    :return: {'cmd':cmd, 'info':mp3_info_list}
+    获取SOURCE_ADUIO_FLODER下m4a，转mp4
+    :param total:=MP3_TOTAL_PLAY:最多个数
+    :param framerate:=FFMPEG_FRAMERATE
+    :param codec:=FFMPEG_MP4_CODEC
+    :return: ls MP4
     """
-    duration_total = 0
-    str_input = ''
-    # [2:0][3:0]concat=n=2:v=0:a=1[outa]
-    str_contac = ''
-    index = 2
-    mp3_info_list = []
-    for file_path in mp3_list:
-        audio_info = get_audio_info(file_path)
-        # duration = get_duration_mp3(file_path)
-        # id3 = get_id3_mp3(file_path)
-        duration = audio_info.get('duration')
-        duration_total += duration
-        mp3_info_list.append({'duration':duration, 'title':audio_info.get('title'), 'artist':audio_info.get('artist'),'path':file_path, 'send':False})
-   
+    if not framerate:
+        framerate = FFMPEG_FRAMERATE
+    procs = shell.procs_info("ffmpeg")
+    if procs:
+        shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
+        print('ffmpeg in procs,pass')
+        return
+    m4alist = mp3list(SOURCE_ADUIO_FLODER)
+    imglist = mp3list(IMG_FLODER)
 
-    img_list = mp3list(IMG_FLODER)
-    random.shuffle(img_list)
-
-    return all_list_pipe_rtmp(str_rtmp,img_list,mp3_list)
-
-def all_list_pipe_rtmp(str_rtmp,image_files,audio_files):
-    a_in_arr = []
-    total_seconds = 0
-    for fn in audio_files:
-        ina = ffmpeg.input(fn)
-        a_in_arr.append(ina)
-        probe = ffmpeg.probe(fn)
-        format = probe.get('format')
-        duration = float(format.get('duration'))
-        total_seconds += duration
-    print('total seconds:',total_seconds)
-    a_concat = ffmpeg.concat(*a_in_arr, v=0,a=1)
-    v_in_arr = []
-    img_seconds = 0
-    for fn in image_files:
-        if img_seconds+IMG_SECONDS>=total_seconds:
+    # 先做mp4list里面没有的
+    done_num = 0
+    for m4a in m4alist:
+        if done_num >= total:
+                break
+        name = file_name(m4a)
+        mp4_path = '{}/{}.mp4'.format(MP4_ROOT,name)
+        # 更新mp4list
+        mp4list = mp4list_by_time(MP4_ROOT)
+        print('mp4:',done_num,MP4_ROOT,len(mp4list))
+        img = imglist[done_num % len(imglist)]     #imglist must too large
+        if not mp4_path in mp4list:
+            #没有
+            ret = ai_to_mp4(m4a,img,codec=codec,framerate=framerate)
+            if 0 == ret:
+                print('ok',done_num,m4a,img)
+            else:
+                shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
+                print('ffmpeg not return 0',done_num,m4a,img)
+                return
+            done_num += 1
+            time.sleep(3)
+    print('mp4list里面没有的,OK')
+    # mp4list里面没有的，做完，这里就是都有的了,先最老,mp4list[0]
+    # 对MP4_ROOT/sample_432p_a320k.mp4 pass
+    mp4_m4a_list = []
+    mp4list = mp4list_by_time(MP4_ROOT)
+    print('mp4:',done_num,MP4_ROOT,len(mp4list))
+    for mp4 in mp4list:
+        name = file_name(mp4)
+        mp4_src_m4a_path = '{}/{}.m4a'.format(SOURCE_ADUIO_FLODER,name)
+        if mp4_src_m4a_path in m4alist:
+            mp4_m4a_list.append({"mp4":mp4,"m4a":mp4_src_m4a_path})
+    for mp4_m4a in mp4_m4a_list:
+        if done_num >= total:
             break
-        inv = ffmpeg.input(fn, t=IMG_SECONDS, framerate=VIDEO_FRAMERATE, loop=1)
-        v_s = ffmpeg.filter(inv,filter_name='scale', size='hd720')
-        v_in_arr.append(v_s)
-        img_seconds += IMG_SECONDS
-    print('image seconds:',img_seconds)
-    v_concat = ffmpeg.concat(*v_in_arr, v=1,a=0)
-    stream_spec_pipe_rtmp(str_rtmp,v_concat,a_concat, format='rawvideo', pix_fmt='yuv420p',s='1280x720')
+        m4a = mp4_m4a['m4a']
+        img = imglist[done_num % len(imglist)]     #imglist must too large
+        ret = ai_to_mp4(m4a,img,codec=codec,framerate=framerate)
+        if 0 == ret:
+            print('ok',done_num,m4a,img)
+        else:
+            shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
+            print('ffmpeg not return 0',done_num,m4a,img)
+            return
+        done_num += 1
+        time.sleep(3)
+    print('mp4list里面有的,OK')
+    shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
+    return done_num
 
-def stream_spec_pipe_rtmp(rtmp,v_spec, a_spec,format='rawvideo', pix_fmt='yuv420p',s='1280x720'):
-    # OK
-    #v_in = ffmpeg.input('in.mp4')
-    url = rtmp
-    process_stdout = (
-        ffmpeg
-        .output(v_spec,'pipe:', format=format, pix_fmt=pix_fmt)
-        .run_async(cmd=["ffmpeg"],pipe_stdout=True)
-    )
-    
-    if a_spec:
-        v3 = ffmpeg.input('pipe:', format=format, pix_fmt=pix_fmt, s=s,thread_queue_size=1)
-        process_stdin = (
-            ffmpeg
-            #.input('pipe:', format=format, pix_fmt=pix_fmt, s=s)
-            .output(
-                v3,a_spec,
-                url,
-                vcodec='libx264',
-                acodec='aac',
-                r=VIDEO_FRAMERATE,
-                filter_threads=1,
-                #listen=1, # enables HTTP server
-                f=VIDEO_FORMAT)
-            .run_async(cmd=["ffmpeg", "-re"],pipe_stdin=True)
-        )
-    else:
-        process_stdin = (
-            ffmpeg
-            .input('pipe:', format=format, pix_fmt=pix_fmt, s=s,thread_queue_size=1)
-            .output(
-                #v3,
-                url,
-                vcodec='libx264',
-                acodec='aac',
-                r=VIDEO_FRAMERATE,
-                filter_threads=1,
-                #listen=1, # enables HTTP server
-                f=VIDEO_FORMAT)
-            .run_async(cmd=["ffmpeg", "-re"],pipe_stdin=True)
-        )
-    while True:
-        in_bytes = process_stdout.stdout.read(1280*720 * 3)
-        if not in_bytes:
-            break
-        process_stdin.stdin.write(in_bytes)
-    process_stdin.stdin.close()
-    process_stdout.stdout.close()
-    process_stdout.wait()
-    process_stdin.wait()
+def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE):
+    name = file_name(m4a)
+    probe = ffmpeg.probe(m4a)
+    format = probe.get('format')
+    t = float(format.get('duration'))
+    cmd = ffmpeg_mp4.format(m4a,t,framerate,img,framerate,codec,CACHE_MP4_PATH)
+    print(cmd)
+    ret = shell.OutputShell(cmd,False)
+    if 0 == ret:
+        mp4_path = '{}/{}.mp4'.format(MP4_ROOT,name)
+        shutil.copy(CACHE_MP4_PATH,mp4_path)
+        #os.rename(CACHE_MP4_PATH,mp4_path)
+    return ret
 
+def file_name(fullpath,ext=3):
+    # 无扩展名
+    names = fullpath.split('/')
+    name = names[len(names)-1]
+    return name[0:-ext-1]
+
+def mp4list_by_time(path=SOURCE_ADUIO_FLODER):
+    """
+    获取mp4最近修改（modify）时间,path列表
+    :param path:
+    :return:
+    """
+    # os.path.getctime()：获取文件创建（create）时间
+    # os.path.getatime()：获取文件最近访问（access）时间
+    # os.path.getmtime()：获取文件最近修改（modify）时间
+    mp3list = []
+    file_list = []
+    if os.path.exists(path):
+        for file_name in os.listdir(path):
+            #print(os.path.join(path, file_name))
+            file_list.append(os.path.join(path, file_name))
+        # 获取按照文件时间修改排序的列表，默认是按时间升序
+        mp3list = sorted(file_list, key=lambda file: os.path.getmtime(file))
+        #random.shuffle(mp3list)
+    return mp3list
+
+########################## base ###############################
 def get_audio_info(file_path):
     """
     获取mp3/aac音频文件时长
@@ -323,15 +240,18 @@ def mp3list(path="a/coco"):
     return mp3list
 
 if __name__ == '__main__':
-    # python stream.py 30
-    # <class 'list'> ['stream.py', '30']
+    # python stream.py m/r num
+    # <class 'list'> ['test.py', 'm', '5']
     rtmp= "http://127.0.0.1:8080"
+    argv = sys.argv
+    print(type(argv),argv)
     try:
         argv = sys.argv[1]
-        print(type(argv),argv)
-        rtmp_concat_floder('rtmp',[''],total=int(argv),artist=None,max_memory=80)
+        if 'r'==argv:
+            rtmp_concat_mp4('rtmp',int(sys.argv[2]))
+        if 'm'==argv:
+            map_video_audio_mp4(int(sys.argv[2]))
     except:
-        print('No argv, sample: python stream.py 30')
-        rtmp_concat_floder('rtmp',[''],total=30,artist=None,max_memory=80)
-    #rtmp_concat_floder(rtmp,[],total=30,artist=None,max_memory=80)
-    
+        print('No argv or error, sample: python stream.py m/r num')
+        print("{\"cmd\":\"python stream.py m  5\"}","mp4")
+        print("{\"cmd\":\"python stream.py r  5\"}","rtmp")

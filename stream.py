@@ -7,8 +7,8 @@ import time
 import shutil 
 import shell as shell
 
-FFMPEG_MP4_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 320k'
-FFMPEG_RTMP_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 320k'
+FFMPEG_MP4_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 192k'
+FFMPEG_RTMP_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 192k'
 
 FFMPEG_FRAMERATE = 25
 VIDEO_P = 'hd720'
@@ -33,7 +33,7 @@ ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=
 # ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r  {}  -f flv {}  {}"
-print('stream v5.0.2:mp4',ffmpeg_mp4)
+print('stream v5.0.3:mp4',ffmpeg_mp4)
 print('stream v5.0.1:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
@@ -61,6 +61,11 @@ def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAM
     """
     if not framerate:
         framerate = FFMPEG_FRAMERATE
+    procs = shell.procs_info("ffmpeg")
+    if procs:
+        shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
+        print('ffmpeg in procs,pass')
+        return
     str_rtmp = '\"{}\"'.format(str_rtmp)
     root_list = mp3list(MP4_ROOT)
     mp4list=[]
@@ -71,7 +76,7 @@ def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAM
     total_seconds = write_playlist(mp4list)
     print('total seconds:',total_seconds)
     cmd = ffmpeg_playlist.format(framerate,codec,str_rtmp)
-    print(cmd)
+    #print(cmd)
     return cmd#shell.OutputShell(cmd,True)
 
 def write_playlist(mp3_list):

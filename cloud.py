@@ -35,7 +35,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.1.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.1.5 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -63,8 +63,8 @@ send_thread.start()
 BILIBILI_RTMP = "rtmp://"
 BILIBILI_CLMY = None
 
-FFMPEG_MP4_CODEC = '-vcodec libx264 -acodec aac  -b:a 192k'
-FFMPEG_RTMP_CODEC = '-vcodec copy -acodec aac'
+FFMPEG_MP4_CODEC = '-threads 1 -vcodec libx264 -acodec aac  -b:a 192k'
+FFMPEG_RTMP_CODEC = '-threads 3 -vcodec copy -acodec aac -b:a 192k'
 FFMPEG_FRAMERATE = None
 
 RADIO_NAME = 'Live Music | 极其音乐'
@@ -248,6 +248,8 @@ def map_mp4(floder_list=[], artist=None,radioname=RADIO_NAME):
      获取SOURCE_ADUIO_FLODER下m4a，转mp4
     :return:
     """
+    if not BILIBILI_CLMY:
+        Setup()
     done_num = stream.map_video_audio_mp4(MAX_DOWNLOAD,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE)
     return done_num
 

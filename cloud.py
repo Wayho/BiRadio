@@ -35,7 +35,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.1.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.1.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -236,7 +236,7 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
     global Global_Time_Rtmp_Start
     print('play_floder:',floder_list, artist,radioname)
     #concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
-    cmd = stream.rtmp_concat_mp4(RTMP_URL_STR, MAX_DOWNLOAD, codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=floder_list)
+    cmd = stream.rtmp_concat_mp4(RTMP_URL_STR, MP3_TOTAL_PLAY, codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=floder_list)
     ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
     print('rtmp::return:',ret)
     cmd_memory()
@@ -248,7 +248,7 @@ def map_mp4(floder_list=[], artist=None,radioname=RADIO_NAME):
      获取SOURCE_ADUIO_FLODER下m4a，转mp4
     :return:
     """
-    done_num = stream.map_video_audio_mp4(MP3_TOTAL_PLAY,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE)
+    done_num = stream.map_video_audio_mp4(MAX_DOWNLOAD,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE)
     return done_num
 
 # 18 */1 7-23 * * ?

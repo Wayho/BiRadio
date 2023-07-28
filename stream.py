@@ -32,13 +32,13 @@ CACHE_MP4_PATH = 'cache.mp4'
 # ffmpeg  -i aux/coco/李玟_想你的365天.mp3 -ss 0 -t 326.95 -f lavfi -i color=c=0x000000:s=770x433:r=25 -i img/art_coco103.jpg -filter_complex "[1:v][2:v]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]" -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 320k -f mp4 overlay_432p_a320k.mp4
 # ffmpeg -i aux/coco/李玟-爱你爱到.m4a -ss 0 -t 261.328 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco132.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 2 -vcodec libx264 -acodec aac -y -f mp4 cache.mp4
 #ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 {}"
-ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r={} -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]{}\" -map [outv] -map 0:a -r {} {} -y -f mp4 {}"
+ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r={} -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0{}[outv]\" -map [outv] -map 0:a -r {} {} -y -f mp4 {}"
 # ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a  -ss 0 -t 326.93 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco130.jpg  -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=0:0,subtitles=sample.srt:force_style='Fontsize=24'[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264   -acodec copy -f mp4 /tmp/mp4/sample_srt.mp4"
 subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 # ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r  {}  -f flv {}  {}"
-print('stream v5.2.0:mp4',ffmpeg_mp4)
+print('stream v5.2.1:mp4',ffmpeg_mp4)
 print('stream v5.2.0:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率

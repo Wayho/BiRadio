@@ -27,6 +27,7 @@ import shutil
 TMP_ROOT = '/tmp'
 MP3_ROOT = 'aux'
 MP4_ROOT = '/tmp/mp4'
+SUBTITLE_ROOT = 'srt'
 SAMPLE_MP4_432p = 'sample_432p_a320k.mp4'
 
 SITENAME = os.environ.get('SITENAME') or 'none'
@@ -35,7 +36,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.2.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.2.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -482,6 +483,11 @@ def cmd_ls_mp3( **params):
 @engine.define( 'ls_mp4' )
 def cmd_ls_mp4( **params):
     shell.OutputShell('ls {} -R -l'.format(MP4_ROOT))
+    return True
+
+@engine.define( 'ls_srt' )
+def cmd_ls_srt( **params):
+    shell.OutputShell('ls {} -R -l'.format(SUBTITLE_ROOT))
     return True
 
 @engine.define( 'ls_img' )

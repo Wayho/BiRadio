@@ -8,7 +8,7 @@ import os
 SUBTITLE_PATH = 'srt/coco'
 
 DB_NAME = 'subtitle'
-print('class_subtitle v5.2.1:',DB_NAME)
+print('class_subtitle v5.2.2:',DB_NAME)
 def update_subtitle_file(name):
      # name:无扩展名 include 192k-CoCo-
     # return subtitle object
@@ -21,6 +21,7 @@ def update_subtitle_file(name):
         check_path()
         lyric =  find[0].get('lyric')
         lyric = trim_apos(lyric)
+        lyric = repalc_n_str(lyric)
         srt_file = open(os.path.join(SUBTITLE_PATH, name+'.srt'), 'w')
         srt_file.write(lyric)
         srt_file.close()
@@ -46,7 +47,14 @@ def check_path():
 def trim_apos(text):
     for i in range(0,9):
         text = text.replace('&apos;','\'')
+    text = text + '\r\n'
     return text
+
+def repalc_n_str(text):
+    text_list = text.split('\\n')
+    text_list.append("\r\n")
+    print(text_list)
+    return '\r\n'.join(text_list)
 
 if __name__ == '__main__':
     update_subtitle_file('192k-CoCo-想你的365天')

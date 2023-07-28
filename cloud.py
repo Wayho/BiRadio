@@ -37,7 +37,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.2.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.2.3 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -47,6 +47,9 @@ if not os.path.exists(MP4_ROOT):
             time.sleep(0.1)
             #shutil.copy(SAMPLE_MP4_432p,dest_sample)
             os.rename(SAMPLE_MP4_432p,dest_sample)
+if not os.path.exists(SUBTITLE_ROOT):
+        print('cloud:mkdir::',SUBTITLE_ROOT)
+        os.mkdir(SUBTITLE_ROOT)
 
 # 每次重启、休眠检查
 def cloud_wakeup():

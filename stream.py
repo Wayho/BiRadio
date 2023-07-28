@@ -6,11 +6,14 @@ import random
 import time
 import shutil 
 import shell as shell
+import class_subtitle as class_subtitle
 
 FFMPEG_MP4_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 192k'
-FFMPEG_RTMP_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 192k'
-
+FFMPEG_RTMP_CODEC = '-threads 8 -vcodec libx264 -acodec aac -b:a 192k'
+FFMPEG_SUBTITLE = True
 FFMPEG_FRAMERATE = 25
+SUBTITLE_PATH = 'srt/coco'
+
 VIDEO_P = 'hd720'
 VIDEO_FORMAT = 'flv'
 IMG_SECONDS = 30
@@ -29,12 +32,14 @@ CACHE_MP4_PATH = 'cache.mp4'
 # ffmpeg  -i aux/coco/李玟_想你的365天.mp3 -ss 0 -t 326.95 -f lavfi -i color=c=0x000000:s=770x433:r=25 -i img/art_coco103.jpg -filter_complex "[1:v][2:v]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]" -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 320k -f mp4 overlay_432p_a320k.mp4
 # ffmpeg -i aux/coco/李玟-爱你爱到.m4a -ss 0 -t 261.328 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco132.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 2 -vcodec libx264 -acodec aac -y -f mp4 cache.mp4
 #ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 {}"
-ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r={} -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r {} {} -y -f mp4 {}"
+ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r={} -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]{}\" -map [outv] -map 0:a -r {} {} -y -f mp4 {}"
+# ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a  -ss 0 -t 326.93 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco130.jpg  -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=0:0,subtitles=sample.srt:force_style='Fontsize=24'[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264   -acodec copy -f mp4 /tmp/mp4/sample_srt.mp4"
+subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 # ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r  {}  -f flv {}  {}"
-print('stream v5.0.3:mp4',ffmpeg_mp4)
-print('stream v5.0.1:rtmp',ffmpeg_playlist)
+print('stream v5.2.0:mp4',ffmpeg_mp4)
+print('stream v5.2.0:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -48,6 +53,8 @@ print('stream v5.0.1:rtmp',ffmpeg_playlist)
 # file 'sample_480p_a320k.mp4'
 # #file 'sample_432p_a320k.mp4'
 ##############################################
+# ffmpeg -i sample_432p_a320k.mp4 -vf subtitles=subtitle.cn.srt output_srt.mp4
+# ffmpeg -re -i sample_432p_a320k.mp4  -f flv -threads 6 -vcodec libx264 -acodec copy -vf subtitles=subtitle.flc -listen 1 http://127.0.0.1:8080
 # FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。但是下载的还在
 ########################## rtmp ###############################
 def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=['']):
@@ -102,7 +109,7 @@ def write_playlist(mp3_list):
     return duration_total
 
 ########################## mp4 ###############################
-def map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE):
+def map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE):
     """
     获取SOURCE_ADUIO_FLODER下m4a，转mp4
     :param total:=MP3_TOTAL_PLAY:最多个数
@@ -119,7 +126,7 @@ def map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE)
         return
     m4alist = mp3list(SOURCE_ADUIO_FLODER)
     imglist = mp3list(IMG_FLODER)
-
+    print("map_video_audio_mp4():",total)
     # 先做mp4list里面没有的
     done_num = 0
     for m4a in m4alist:
@@ -171,12 +178,19 @@ def map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE)
     shell.OutputShell('ls {} -l'.format(MP4_ROOT),True)
     return done_num
 
-def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE):
+def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE):
     name = file_name(m4a)
+    if subtitle:
+        class_subtitle.update_subtitle_file(name)
     probe = ffmpeg.probe(m4a)
     format = probe.get('format')
     t = float(format.get('duration'))
-    cmd = ffmpeg_mp4.format(m4a,t,framerate,img,framerate,codec,CACHE_MP4_PATH)
+    sub_para = ''
+    if subtitle:
+        subtitle_path = os.path.join(SUBTITLE_PATH, name+'.srt')
+        if os.path.exists(subtitle_path):
+            sub_para = subtitle_para.format(subtitle_path)
+    cmd = ffmpeg_mp4.format(m4a,t,framerate,img,sub_para,framerate,codec,CACHE_MP4_PATH)
     print(cmd)
     ret = shell.OutputShell(cmd,False)
     if 0 == ret:
@@ -256,6 +270,10 @@ if __name__ == '__main__':
             rtmp_concat_mp4('rtmp',int(sys.argv[2]))
         if 'm'==argv:
             map_video_audio_mp4(int(sys.argv[2]))
+        else:
+            name = '192k-CoCo-想你的365天'
+            print('map sample mp4:',name)
+            ai_to_mp4(os.path.join(SOURCE_ADUIO_FLODER, name+'.m4a'),'img/art_coco135.jpg')
     except:
         print('No argv or error, sample: python stream.py m/r num')
         print("{\"cmd\":\"python stream.py m  5\"}","mp4")

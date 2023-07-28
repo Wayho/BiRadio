@@ -35,7 +35,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.1.5 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.2.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -66,6 +66,7 @@ BILIBILI_CLMY = None
 FFMPEG_MP4_CODEC = '-threads 1 -vcodec libx264 -acodec aac  -b:a 192k'
 FFMPEG_RTMP_CODEC = '-threads 3 -vcodec copy -acodec aac -b:a 192k'
 FFMPEG_FRAMERATE = None
+FFMPEG_SUBTITLE = True
 
 RADIO_NAME = 'Live Music | 极其音乐'
 CHANGE_RADIO_NAME = False
@@ -122,6 +123,8 @@ def Setup(**params):
     global Global_Danmu_Retry_Times
     global FFMPEG_MP4_CODEC
     global FFMPEG_RTMP_CODEC
+    global FFMPEG_FRAMERATE
+    global FFMPEG_SUBTITLE
     # config = class_variable.get_config()
     # print(config)
     variable = class_variable.get_variable()
@@ -140,6 +143,7 @@ def Setup(**params):
         ERROR_RETRY = config.get('ERROR_RETRY')
         MAX_DOWNLOAD = config.get('MAX_DOWNLOAD')
         ROOM_ID = config.get('ROOM_ID')
+        FFMPEG_SUBTITLE = config.get('FFMPEG_SUBTITLE')
         Global_Danmu_Retry_Times = config.get('DEFAULT_DANMU_RETRY')
         #if 'BiliRadio_py' == SITENAME:
         if '512' == MEMORY[0:3]:
@@ -250,7 +254,7 @@ def map_mp4(floder_list=[], artist=None,radioname=RADIO_NAME):
     """
     if not BILIBILI_CLMY:
         Setup()
-    done_num = stream.map_video_audio_mp4(MAX_DOWNLOAD,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE)
+    done_num = stream.map_video_audio_mp4(MAX_DOWNLOAD,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE)
     return done_num
 
 # 18 */1 7-23 * * ?

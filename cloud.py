@@ -6,6 +6,7 @@ import shell as shell
 import time
 import os
 import requests
+import random
 
 import class_variable as class_variable
 import danmu as danmu
@@ -36,7 +37,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.2.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.2.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -256,6 +257,13 @@ def map_mp4(floder_list=[], artist=None,radioname=RADIO_NAME):
     if not BILIBILI_CLMY:
         Setup()
     done_num = stream.map_video_audio_mp4(MAX_DOWNLOAD,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE)
+    return done_num
+
+@engine.define( 'map_mp4_sample' )
+def map_mp4_sample(floder_list=[], artist=None,radioname=RADIO_NAME):
+    if not BILIBILI_CLMY:
+        Setup()
+    done_num = stream.ai_to_mp4('aux/coco/192k-CoCo-想你的365天.m4a','img/art_coco1{}.jpg'.format(random.randint(1,80)))
     return done_num
 
 # 18 */1 7-23 * * ?

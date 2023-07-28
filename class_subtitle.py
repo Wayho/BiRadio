@@ -8,7 +8,7 @@ import os
 SUBTITLE_PATH = 'srt/coco'
 
 DB_NAME = 'subtitle'
-print('class_subtitle v5.2.0:',DB_NAME)
+print('class_subtitle v5.2.1:',DB_NAME)
 def update_subtitle_file(name):
      # name:无扩展名 include 192k-CoCo-
     # return subtitle object
@@ -18,6 +18,7 @@ def update_subtitle_file(name):
     query.equal_to('name', name)        # include 192k-CoCo-
     find = query.find()
     if find:
+        check_path()
         lyric =  find[0].get('lyric')
         lyric = trim_apos(lyric)
         srt_file = open(os.path.join(SUBTITLE_PATH, name+'.srt'), 'w')
@@ -37,8 +38,10 @@ def get_subtitle(name):
         return find[0]
     return None
 
-def trim_name(name):
-    return name[10:]        #not include 192k-CoCo-
+def check_path():
+    if not os.path.exists(SUBTITLE_PATH):
+        print('class_subtitle:mkdir::',SUBTITLE_PATH)
+        os.mkdir(SUBTITLE_PATH)
 
 def trim_apos(text):
     for i in range(0,9):

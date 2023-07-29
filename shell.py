@@ -6,9 +6,10 @@ import psutil
 import sys
 
 ignore_msgs = ['mp3float','Last message','frame=','configuration:','frame=']
-print('shell v5.0.0',ignore_msgs)
+print('shell v5.0.1a',ignore_msgs)
 ##################################################
 def OutputShell( cmd, msgout=True ):
+	msgout=True
 	print( 'shell:',msgout,cmd[0:300])
 	result = subprocess.Popen(
 		#[ "ping 127.0.0.1" ],

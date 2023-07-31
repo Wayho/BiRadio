@@ -7,7 +7,7 @@ import class_variable as class_variable
 
 print('startLive v2.1a SITENAME:')
 
-def tryStartLive(room_id):
+def tryStartLive(room_id=27791346):
     """
     :param room_id:str
     :return:

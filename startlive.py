@@ -3,10 +3,19 @@ import requests
 import time
 import class_variable as class_variable
 
-def tryStartLive():
-    live_status = getRoom_live_status()
+#{'code': -400, 'message': 'strconv.ParseInt: parsing "None": invalid syntax', 'ttl': 1}
+
+print('startLive v2.1a SITENAME:')
+
+def tryStartLive(room_id):
+    """
+    :param room_id:str
+    :return:
+    """
+    return startLive(room_id)
+    live_status = getRoom_live_status(room_id)
     if 0==live_status:
-        return startLive()
+        return startLive(room_id)
     return {"code":live_status, "rtmp":None}
 
 ###########################################################
@@ -39,12 +48,12 @@ def tryStartLive():
 #       {"code":0,"data":{"change":1,"status":"LIVE","try_time":"0000-00-00 00:00:00","room_type":0,"live_key":"366480222136569842","sub_session_key":"366480222136569842sub_time:1684480035","rtmp":{"addr":"rtmp://live-push.bilivideo.com/live-bvc/","code":"?streamname=live_1737442657_89779234&key=22d0f9797bf072eb015148d5558d8099&schedule=rtmp&pflag=1","new_link":"https://core.bilivideo.com/video/uplinkcore/selfbuild/schedule?up_rtmp=live-push.bilivideo.com%2Flive-bvc%2F%3Fstreamname%3Dlive_1737442657_89779234%26key%3D22d0f9797bf072eb015148d5558d8099%26schedule%3Drtmp%26pflag%3D1&edge=edge","provider":"live"},"protocols":[{"protocol":"rtmp","addr":"rtmp://live-push.bilivideo.com/live-bvc/","code":"?streamname=live_1737442657_89779234&key=22d0f9797bf072eb015148d5558d8099&schedule=rtmp&pflag=1","new_link":"https://core.bilivideo.com/video/uplinkcore/selfbuild/schedule?up_rtmp=live-push.bilivideo.com%2Flive-bvc%2F%3Fstreamname%3Dlive_1737442657_89779234%26key%3D22d0f9797bf072eb015148d5558d8099%26schedule%3Drtmp%26pflag%3D1&edge=edge","provider":"txy"}],"notice":{"type":1,"status":0,"title":"","msg":"","button_text":"","button_url":""},"qr":"","need_face_auth":false,"service_source":"room-service"},"message":"","msg":""}
 # call {'code': 0, 'data': {'change': 1, 'status': 'LIVE', 'try_time': '0000-00-00 00:00:00', 'room_type': 0, 'live_key': '370281439992221682', 'sub_session_key': '370281439992221682sub_time:1685586055', 'rtmp': {'addr': 'rtmp://live-push.bilivideo.com/live-bvc/', 'code': '?streamname=live_1737442657_89779234&key=22d0f9797bf072eb015148d5558d8099&schedule=rtmp&pflag=1', 'new_link': 'https://core.bilivideo.com/video/uplinkcore/selfbuild/schedule?up_rtmp=live-push.bilivideo.com%2Flive-bvc%2F%3Fstreamname%3Dlive_1737442657_89779234%26key%3D22d0f9797bf072eb015148d5558d8099%26schedule%3Drtmp%26pflag%3D1&edge=edge', 'provider': 'live'}, 'protocols': [{'protocol': 'rtmp', 'addr': 'rtmp://live-push.bilivideo.com/live-bvc/', 'code': '?streamname=live_1737442657_89779234&key=22d0f9797bf072eb015148d5558d8099&schedule=rtmp&pflag=1', 'new_link': 'https://core.bilivideo.com/video/uplinkcore/selfbuild/schedule?up_rtmp=live-push.bilivideo.com%2Flive-bvc%2F%3Fstreamname%3Dlive_1737442657_89779234%26key%3D22d0f9797bf072eb015148d5558d8099%26schedule%3Drtmp%26pflag%3D1&edge=edge', 'provider': 'txy'}], 'notice': {'type': 1, 'status': 0, 'title': '', 'msg': '', 'button_text': '', 'button_url': ''}, 'qr': '', 'need_face_auth': False, 'service_source': 'room-service'}, 'message': '', 'msg': ''}
 ###########################################################
-def startLive():
+def startLive(room_id):
     # {"code":0,"data":{"change":1,"status":"LIVE","try_time":"0000-00-00 00:00:00","room_type":0,
     COOKIES = class_variable.getCookies()
     url = 'https://api.live.bilibili.com/room/v1/Room/startLive'
     data = {
-        'room_id':'30338274',               # 这个是直播房间的id号
+        'room_id':room_id,               # 这个是直播房间的id号
         'platform':'pc',               # 平台
         'area_v2':'192',                    # 聊天电台
         'rnd':str(int(time.time())),   # 这个是时间戳
@@ -109,14 +118,16 @@ def startLive():
 # result
 # {"code":0,"message":"0","ttl":1,"data":{"room_id":27791346,"short_id":0,"uid":1737442657,"is_hidden":false,"is_locked":false,"is_portrait":false,"live_status":1,"hidden_till":0,"lock_till":0,"encrypted":false,"pwd_verified":true,"live_time":1684725662,"room_shield":0,"all_special_types":[],"playurl_info":{"conf_json":"{\"cdn_rate\":10000,\"report_interval_sec\":150}","playurl":{"cid":27791346,"g_qn_desc":[{"qn":30000,"desc":"杜比","hdr_desc":"","attr_desc":null},{"qn":20000,"desc":"4K","hdr_desc":"","attr_desc":null},{"qn":10000,"desc":"原画","hdr_desc":"","attr_desc":null},{"qn":400,"desc":"蓝光","hdr_desc":"HDR","attr_desc":null},{"qn":250,"desc":"超清","hdr_desc":"HDR","attr_desc":null},{"qn":150,"desc":"高清","hdr_desc":"","attr_desc":null},{"qn":80,"desc":"流畅","hdr_desc":"","attr_desc":null}],"stream":[{"protocol_name":"http_stream","format":[{"format_name":"flv","codec":[{"codec_name":"avc","current_qn":10000,"accept_qn":[10000],"base_url":"/live-bvc/238232/live_1737442657_89779234.flv?","url_info":[{"host":"https://cn-jxnc-cm-01-11.bilivideo.com","extra":"expires=1684729710&pt=web&deadline=1684729710&len=0&oi=0x2409896a05580267dcedd3a1901d2fe3&platform=web&qn=10000&trid=1000260393c8194b44b19095fc1a477112b5&uipk=100&uipv=100&nbs=1&uparams=cdn,deadline,len,oi,platform,qn,trid,uipk,uipv,nbs&cdn=cn-gotcha01&upsig=ea5d20e2f422226e5f61f7a72acd3082&sk=cc16e243d61363d44194927863825fbd&p2p_type=1&sl=1&free_type=0&mid=1737442657&sid=cn-jxnc-cm-01-11&chash=1&bmt=1&sche=ban&score=1&pp=rtmp&source=onetier&trace=10c9&site=60121caf24ce819edead4e54171f4760&order=1","stream_ttl":3600}],"hdr_qn":null,"dolby_type":0,"attr_name":""}]}]},{"protocol_name":"http_hls","format":[{"format_name":"ts","codec":[{"codec_name":"avc","current_qn":10000,"accept_qn":[10000],"base_url":"/live-bvc/238232/live_1737442657_89779234.m3u8?","url_info":[{"host":"https://d1--cn-gotcha101.bilivideo.com","extra":"expires=1684729710&len=0&oi=0x2409896a05580267dcedd3a1901d2fe3&pt=web&qn=10000&trid=1003260393c8194b44b19095fc1a477112b5&sigparams=cdn,expires,len,oi,pt,qn,trid&cdn=cn-gotcha01&sign=b1106602bf50f22073984ddb496dfdf1&sk=cc16e243d61363d44194927863825fbd&p2p_type=1&sl=1&free_type=0&mid=1737442657&pp=rtmp&source=onetier&trace=40&site=60121caf24ce819edead4e54171f4760&order=1","stream_ttl":3600}],"hdr_qn":null,"dolby_type":0,"attr_name":""}]}]}],"p2p_data":{"p2p":true,"p2p_type":1,"m_p2p":false,"m_servers":null},"dolby_qn":null}},"official_type":0,"official_room_id":0}}
 ###########################################################
-def getRoom_live_status():
+def getRoom_live_status(room_id):
     # {"code":0,"message":"0","ttl":1,"data":{"room_id":27791346,"short_id":0,"uid":1737442657,"is_hidden":false,"is_locked":false,"is_portrait":false,"live_status":1,
     #COOKIES = class_variable.getCookies()
-    url = 'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=30338274&protocol=0,1&format=0,1,2&codec=0,1&qn=0&platform=web&ptype=8&dolby=5&panorama=1'
+    #url = 'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=30338274&protocol=0,1&format=0,1,2&codec=0,1&qn=0&platform=web&ptype=8&dolby=5&panorama=1'
+    url = 'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id={}&protocol=0,1&format=0,1,2&codec=0,1&qn=0&platform=web&ptype=8&dolby=5&panorama=1'
+    url = url.format(room_id)
     headers = {
         #'cookie': COOKIES['cookie'],
         'origin': 'https://live.bilibili.com',
-        'referer': 'https://live.bilibili.com/30338274',
+        'referer': 'https://live.bilibili.com/{}'.format(room_id),
         'user-agent': 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
     }
 
@@ -154,29 +165,31 @@ def getRoom_live_status():
 # result
 # {"code":0,"msg":"ok","message":"ok","data":[]}
 ###########################################################
-def update_RadioName(title):
-    if len(title) < 5:
-        print('updateRoomTitle:string must >5',title)
-        return
-    COOKIES = class_variable.getCookies()
-    url = 'https://api.live.bilibili.com/room/v1/Room/update'
-    data = {
-        'room_id':'30338274',               # 这个是直播房间的id号
-        'title':title, 
-        'csrf_token':COOKIES['csrf_token'],
-        'csrf': COOKIES['csrf'],
-    }            
-    headers = {
-        'cookie': COOKIES['cookie'],
-        'origin': 'https://link.bilibili.com',
-        'referer': 'https://link.bilibili.com/p/center/index#/my-room/start-live',
-        'user-agent': 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
-    }
+def update_RadioName(room_id,title):
+    return
+# def update_RadioName_Not_Use(room_id,title):
+#     if len(title) < 5:
+#         print('updateRoomTitle:string must >5',title)
+#         return
+#     COOKIES = class_variable.getCookies()
+#     url = 'https://api.live.bilibili.com/room/v1/Room/update'
+#     data = {
+#         'room_id':room_id,               # 这个是直播房间的id号
+#         'title':title, 
+#         'csrf_token':COOKIES['csrf_token'],
+#         'csrf': COOKIES['csrf'],
+#     }            
+#     headers = {
+#         'cookie': COOKIES['cookie'],
+#         'origin': 'https://link.bilibili.com',
+#         'referer': 'https://link.bilibili.com/p/center/index#/my-room/start-live',
+#         'user-agent': 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
+#     }
 
-    response = requests.post(url,data=data,headers=headers)
-    res = response.json()
-    print(res)
-    return res['code']
+#     response = requests.post(url,data=data,headers=headers)
+#     res = response.json()
+#     print(res)
+#     return res['code']
 
 ###########################################################
 # https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids=27791346&req_biz=link-center
@@ -197,8 +210,9 @@ def update_RadioName(title):
 # result
 # {"code":0,"message":"0","ttl":1,"data":{"by_uids":{},"by_room_ids":{"27791346":{"room_id":27791346,"uid":1737442657,"area_id":192,"live_status":1,"live_url":"https://live.bilibili.com/27791346","parent_area_id":5,"title":"试播 | 欧美流行歌曲 | 极其音乐","parent_area_name":"电台","area_name":"聊天电台","live_time":"2023-05-26 14:07:29","description":"只播音乐,暂时不回弹幕","tags":"音乐爱好者","attention":1260,"online":5,"short_id":0,"uname":"CC双语_中英CC字幕","cover":"https://i0.hdslb.com/bfs/live/1f25d8747696d488e93cf6feaa986eff614f49c5.png","background":"","join_slide":1,"live_id":368537653205274600,"live_id_str":"368537653205274610"}}}}
 ###########################################################
-def getRoomBaseInfo():
-    url = 'https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids=30338274&req_biz=link-center'
+def getRoomBaseInfo(room_id):
+    url = 'https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids={}&req_biz=link-center'
+    url.format(room_id)
     headers = {
         #'cookie': COOKIES['cookie'],
         'origin': 'https://live.bilibili.com',
@@ -214,8 +228,8 @@ def getRoomBaseInfo():
 
 if __name__ == '__main__':
     a=1
-    res = getRoomBaseInfo()
-    RadioName = res.get('data').get('by_room_ids').get('27791346').get('title')
+    res = getRoomBaseInfo('30338274')
+    RadioName = res.get('data').get('by_room_ids').get('30338274').get('title')
     print(RadioName)
     # retcode =updateRoomTitle('试播 | 欧美流行歌曲 | 极其音乐')
     # print(retcode)

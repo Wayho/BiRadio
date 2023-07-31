@@ -4,6 +4,7 @@ import os
 import sys
 import random
 import time
+from datetime import datetime
 import shutil 
 import shell as shell
 import class_subtitle as class_subtitle
@@ -12,7 +13,7 @@ FFMPEG_MP4_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 192k'
 FFMPEG_RTMP_CODEC = '-threads 8 -vcodec libx264 -acodec aac -b:a 192k'
 FFMPEG_SUBTITLE = True
 FFMPEG_FRAMERATE = 25
-SUBTITLE_PATH = 'srt/coco'
+SUBTITLE_PATH = '/tmp/srt'
 
 VIDEO_P = 'hd720'
 VIDEO_FORMAT = 'flv'
@@ -25,11 +26,13 @@ IMG_FLODER = 'img'
 SOURCE_ADUIO_FLODER = 'aux/coco'
 CACHE_MP4_PATH = 'cache.mp4'
 
+# ffmpeg -i -loop 0 aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco102.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv -listen 1  http://127.0.0.1:8080
+FFMPEG_SAMPLE_M4A_LIVE  = "ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv {}"
 # s=770x432 mp4=154M thread=0
 # s=770x432 mp4=135M thread=2
 # s=770x432 mp4=126M thread=1
 
-# ffmpeg  -i aux/coco/李玟_想你的365天.mp3 -ss 0 -t 326.95 -f lavfi -i color=c=0x000000:s=770x433:r=25 -i img/art_coco103.jpg -filter_complex "[1:v][2:v]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]" -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 320k -f mp4 overlay_432p_a320k.mp4
+# ffmpeg  -i aux/coco/李玟_想你的365天.mp3 -ss 0 -t 326.95 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco103.jpg -filter_complex "[1:v][2:v]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]" -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 320k -f mp4 overlay_432p_a320k.mp4
 # ffmpeg -i aux/coco/李玟-爱你爱到.m4a -ss 0 -t 261.328 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco132.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 2 -vcodec libx264 -acodec aac -y -f mp4 cache.mp4
 #ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 {}"
 ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r={} -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0{}[outv]\" -map [outv] -map 0:a -r {} {} -y -f mp4 {}"
@@ -39,7 +42,7 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r  {}  -f flv {}  {}"
 print('stream v5.2.1:mp4',ffmpeg_mp4)
-print('stream v5.2.0:rtmp',ffmpeg_playlist)
+print('stream v5.2.2:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -76,13 +79,22 @@ def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAM
     str_rtmp = '\"{}\"'.format(str_rtmp)
     root_list = mp3list(MP4_ROOT)
     mp4list=[]
-    for file_path in root_list: 
-        mp4list.append(file_path)
-        if len(mp4list) >= total:
-            break
-    total_seconds = write_playlist(mp4list)
-    print('total seconds:',total_seconds)
-    cmd = ffmpeg_playlist.format(framerate,codec,str_rtmp)
+    # 不够total的话，复制自身补足
+    mp4_total = len(root_list)
+    if mp4_total > 0:
+        for lo in range(0,int(total/mp4_total)):
+            if len(mp4list) >=total:
+                    break
+            for file_path in root_list: 
+                if len(mp4list) >= total:
+                    break
+                mp4list.append(file_path)
+        total_seconds = write_playlist(mp4list)
+        print('total seconds:',total_seconds)
+        cmd = ffmpeg_playlist.format(framerate,codec,str_rtmp)
+    else:
+        # return 实时生成 flv
+        cmd = ''
     #print(cmd)
     return cmd#shell.OutputShell(cmd,True)
 
@@ -94,12 +106,18 @@ def write_playlist(mp3_list):
     """
     duration_total = 0
     lineArray = []
+    now = int(datetime.timestamp(datetime.now()))
     
     for file_path in mp3_list:
-        lineArray.append("file \'{}\'".format(file_path))
         audio_info = get_audio_info(file_path)
-        duration = audio_info.get('duration')
-        duration_total += duration
+        if audio_info:
+            duration = audio_info.get('duration')
+            date_time = datetime.fromtimestamp(now+int(duration_total))
+            lineArray.append("# {}".format(date_time))
+            lineArray.append("file \'{}\'".format(file_path))
+            duration_total += duration
+        else:
+            print('error ffprobe:',file_path)
     lineArray.append("# rem")
     playlist_str = '\r\n'.join(lineArray)
     playlist = open(PLAYLIST_PATH, 'w')
@@ -234,15 +252,19 @@ def get_audio_info(file_path):
     """
     title = None
     artist = None
-    probe = ffmpeg.probe(file_path)
-    format = probe.get('format')
-    duration = float(format.get('duration'))
-    if format.get('tags'):
-        tags = format.get('tags')
-        if tags.get('title'):
-            title = tags.get('title')
-        if tags.get('artist'):
-            artist = tags.get('artist')
+    duration = 0
+    try:
+        probe = ffmpeg.probe(file_path)
+        format = probe.get('format')
+        duration = float(format.get('duration'))
+        if format.get('tags'):
+            tags = format.get('tags')
+            if tags.get('title'):
+                title = tags.get('title')
+            if tags.get('artist'):
+                artist = tags.get('artist')
+    except:
+        return None
     return {'duration':duration,'title':title,'artist':artist}
 
 def mp3list(path="a/coco"):

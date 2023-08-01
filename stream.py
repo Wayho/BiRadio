@@ -42,7 +42,7 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r  {}  -f flv {}  {}"
 print('stream v5.2.3:mp4',ffmpeg_mp4)
-print('stream v5.2.5:rtmp',ffmpeg_playlist)
+print('stream v5.2.6:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -84,7 +84,7 @@ def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAM
     # 不够total的话，复制自身补足
     mp4_total = len(root_list)
     if mp4_total > 0:
-        for lo in range(0,int(total/mp4_total)+1):
+        for lo in range(0,int(total/mp4_total)):
             if len(mp4list) >=total:
                     break
             for file_path in root_list: 

@@ -9,7 +9,7 @@ import shutil
 import shell as shell
 import class_subtitle as class_subtitle
 
-FFMPEG_MP4_CODEC = '-threads 2 -vcodec libx264 -acodec aac -b:a 192k'
+FFMPEG_MP4_CODEC = '-threads 3 -vcodec libx264 -acodec aac -b:a 192k'
 FFMPEG_RTMP_CODEC = '-threads 8 -vcodec libx264 -acodec aac -b:a 192k'
 FFMPEG_SUBTITLE = True
 FFMPEG_FRAMERATE = 25
@@ -41,8 +41,8 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 # ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r  {}  -f flv {}  {}"
-print('stream v5.2.1:mp4',ffmpeg_mp4)
-print('stream v5.2.2:rtmp',ffmpeg_playlist)
+print('stream v5.2.3:mp4',ffmpeg_mp4)
+print('stream v5.2.5:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -60,6 +60,8 @@ print('stream v5.2.2:rtmp',ffmpeg_playlist)
 # ffmpeg -re -i sample_432p_a320k.mp4  -f flv -threads 6 -vcodec libx264 -acodec copy -vf subtitles=subtitle.flc -listen 1 http://127.0.0.1:8080
 # FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。但是下载的还在
 ########################## rtmp ###############################
+def test(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE,floder_list=['']):
+    return 'ls /tmp'
 def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=['']):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
@@ -82,7 +84,7 @@ def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAM
     # 不够total的话，复制自身补足
     mp4_total = len(root_list)
     if mp4_total > 0:
-        for lo in range(0,int(total/mp4_total)):
+        for lo in range(0,int(total/mp4_total)+1):
             if len(mp4list) >=total:
                     break
             for file_path in root_list: 
@@ -118,6 +120,8 @@ def write_playlist(mp3_list):
             duration_total += duration
         else:
             print('error ffprobe:',file_path)
+    date_time = datetime.fromtimestamp(now+int(duration_total))
+    lineArray.append("# end: {}".format(date_time))
     lineArray.append("# rem")
     playlist_str = '\r\n'.join(lineArray)
     playlist = open(PLAYLIST_PATH, 'w')
@@ -158,7 +162,7 @@ def map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,
         img = imglist[done_num % len(imglist)]     #imglist must too large
         if not mp4_path in mp4list:
             #没有
-            ret = ai_to_mp4(m4a,img,codec=codec,framerate=framerate)
+            ret = ai_to_mp4(m4a,img,codec=codec,framerate=framerate,subtitle=FFMPEG_SUBTITLE)
             if 0 == ret:
                 print('ok',done_num,m4a,img)
             else:
@@ -183,7 +187,7 @@ def map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,
             break
         m4a = mp4_m4a['m4a']
         img = imglist[done_num % len(imglist)]     #imglist must too large
-        ret = ai_to_mp4(m4a,img,codec=codec,framerate=framerate)
+        ret = ai_to_mp4(m4a,img,codec=codec,framerate=framerate,subtitle=FFMPEG_SUBTITLE)
         if 0 == ret:
             print('ok',done_num,m4a,img)
         else:
@@ -208,11 +212,13 @@ def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle
         subtitle_path = os.path.join(SUBTITLE_PATH, name+'.srt')
         if os.path.exists(subtitle_path):
             sub_para = subtitle_para.format(subtitle_path)
+        else:
+            print('No subtitle of this audio:',m4a)
     cmd = ffmpeg_mp4.format(m4a,t,framerate,img,sub_para,framerate,codec,CACHE_MP4_PATH)
     print(cmd)
     ret = shell.OutputShell(cmd,False)
     if 0 == ret:
-        mp4_path = '{}/{}.mp4'.format(MP4_ROOT,name)
+        mp4_path = os.path.join(MP4_ROOT, name+'.mp4')   #'{}/{}.mp4'.format(MP4_ROOT,name)
         shutil.copy(CACHE_MP4_PATH,mp4_path)
         #os.rename(CACHE_MP4_PATH,mp4_path)
     return ret

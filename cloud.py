@@ -37,7 +37,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.3.5 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.3.6 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -289,6 +289,7 @@ def map_mp4_sample(floder_list=[], artist=None,radioname=RADIO_NAME):
 def do_one_minute( **params ):
     global Global_minutes
     if not canStart():
+        Global_minutes += 1
         return False
     if not BILIBILI_CLMY:
         Setup()

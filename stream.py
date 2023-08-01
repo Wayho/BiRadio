@@ -27,7 +27,7 @@ SOURCE_ADUIO_FLODER = 'aux/coco'
 CACHE_MP4_PATH = 'cache.mp4'
 
 # ffmpeg -i -loop 0 aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco102.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv -listen 1  http://127.0.0.1:8080
-FFMPEG_SAMPLE_M4A_LIVE  = "ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv {}"
+FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec copy -f  flv {}"
 # s=770x432 mp4=154M thread=0
 # s=770x432 mp4=135M thread=2
 # s=770x432 mp4=126M thread=1
@@ -61,7 +61,7 @@ print('stream v5.2.5:rtmp',ffmpeg_playlist)
 # FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。但是下载的还在
 ########################## rtmp ###############################
 def test(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE,floder_list=['']):
-    return 'ls /tmp'
+    return FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
 def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=['']):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
@@ -96,7 +96,7 @@ def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAM
         cmd = ffmpeg_playlist.format(framerate,codec,str_rtmp)
     else:
         # return 实时生成 flv
-        cmd = ''
+        cmd = FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
     #print(cmd)
     return cmd#shell.OutputShell(cmd,True)
 

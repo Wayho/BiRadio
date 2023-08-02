@@ -37,7 +37,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.3.6 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.4.7 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -79,10 +79,9 @@ PLAY_ARTIST = False
 FFMPEG_MESSAGE_OUT = False
 MP3_TOTAL_PLAY = 30
 SLEEP = 120
-ERROR_RETRY = 99
+ERROR_RETRY = 399
 MAX_DOWNLOAD = 10
 MAX_MEMORY = 90
-ROOM_ID = 0
 
 ###########################################################
 # rtmp://live-push.bilivideo.com/live-bvc/
@@ -164,13 +163,23 @@ def Setup(**params):
     return True
 
 @engine.define( 'wss_danmu' )
+# 一次性唤醒，无需Heart
 def start_wss_danmu(**params):
-    if 0==ROOM_ID:
-        print('ROOM_ID==0')
-    else:
-        if canStart():
-            wss_danmu.start(ROOM_ID)
+    print('try:start_wss_danmu',ROOM_ID)
+    cloud_thread = threading.Thread(target=try_wss_danmu,args=())
+    cloud_thread.start()
     return True
+
+def try_wss_danmu():
+    requests.get( "http://localhost:3000" )
+    if canStart():
+        Setup()
+        if not ROOM_ID:
+            print('ROOM_ID==None',ROOM_ID)
+        else:
+            wss_danmu.start(ROOM_ID)
+    else:
+        print('canStart() return False')
 
 @engine.define( 'remove' )
 def cmd_remove(floder,**params):
@@ -240,7 +249,7 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
     global Global_Time_Rtmp_Start
     print('play_floder:',floder_list, artist,radioname)
     #concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
-    cmd = stream.rtmp_concat_mp4(RTMP_URL_STR, MP3_TOTAL_PLAY, codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=floder_list)
+    cmd = stream.rtmp_concat_mp4(RTMP_URL_STR, MP3_TOTAL_PLAY, codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,floder_list=floder_list)
     ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
     print('rtmp::return:',ret)
     cmd_memory()
@@ -250,7 +259,7 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
 def play_test(floder_list=[], artist=None,radioname=RADIO_NAME):
     print('play_test:',floder_list, artist,radioname)
     #concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
-    cmd = stream.test(RTMP_URL_STR, MP3_TOTAL_PLAY, codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE,floder_list=floder_list)
+    cmd = stream.test(RTMP_URL_STR, MP3_TOTAL_PLAY, codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,subtitle=FFMPEG_SUBTITLE,floder_list=floder_list)
     ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
     print('rtmp::return:',ret)
     cmd_memory()
@@ -258,20 +267,21 @@ def play_test(floder_list=[], artist=None,radioname=RADIO_NAME):
 
 @engine.define( 'map_mp4' )
 def map_mp4(floder_list=[], artist=None,radioname=RADIO_NAME):
-    """
-     获取SOURCE_ADUIO_FLODER下m4a，转mp4
-    :return:
-    """
-    if not BILIBILI_CLMY:
-        Setup()
-    done_num = stream.map_video_audio_mp4(MAX_DOWNLOAD,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE)
-    return done_num
+    cloud_thread = threading.Thread(target=do_map_mp4,args=(MAX_DOWNLOAD))
+    cloud_thread.start()
+    return True
 
 @engine.define( 'map_mp4_6' )
 def map_mp4_6(floder_list=[], artist=None,radioname=RADIO_NAME):
+    cloud_thread = threading.Thread(target=do_map_mp4,args=(6))
+    cloud_thread.start()
+    return True
+
+def do_map_mp4(total):
+    #获取SOURCE_ADUIO_FLODER下m4a，转mp4
     if not BILIBILI_CLMY:
         Setup()
-    done_num = stream.map_video_audio_mp4(6,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE)
+    done_num = stream.map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE)
     return done_num
 
 @engine.define( 'map_mp4_sample' )
@@ -288,20 +298,25 @@ def map_mp4_sample(floder_list=[], artist=None,radioname=RADIO_NAME):
 @engine.define( 'do_one_minute' )
 def do_one_minute( **params ):
     global Global_minutes
+    Global_minutes += 1
     if not canStart():
-        Global_minutes += 1
         return False
     if not BILIBILI_CLMY:
         Setup()
-    procs = shell.procs_info("ffmpeg")
-    if procs:
+    ffmpeg_status = stream.ffmpeg_status()
+    if ffmpeg_status:
         #id3_send()
-        if Global_minutes % 20 == 0:
-            print('do_one_minute:',Global_Retry_Times,procs)
-            requests.get( "http://localhost:3000" )
-    else:
-        cmd_restart_radio()
-    Global_minutes += 1
+        if Global_minutes % 20 == 1:
+                print('do_one_minute:',Global_Retry_Times,ffmpeg_status)
+                requests.get( "http://localhost:3000" )
+        is_playlist = ffmpeg_status.get('playlist')
+        if is_playlist:
+            return False
+        else:
+            # is making mp4, must kill for cmd_restart_radio
+            cmd_kill_ffmpeg()
+            #time.sleep(2)
+    cmd_restart_radio()
     return True
 
 def cmd_restart_radio():
@@ -321,7 +336,7 @@ def cmd_restart_radio():
     elif 1== playret:
         Global_Retry_Times += 1
         print('play:',ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':ffmpeg={}:Retry times:{}'.format(playret,Global_Retry_Times)))
-        startlive.tryStartLive(str(ROOM_ID))
+        #startlive.tryStartLive(str(ROOM_ID))
     elif 0 != playret:
         Global_Retry_Times += 1
         print('play:',ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':ffmpeg={}:Retry times:{}'.format(playret,Global_Retry_Times)))
@@ -381,7 +396,7 @@ def canStart():
     global Global_minutes
     (today,tomorrow) = class_variable.get_today_AP()
     if not SITENAME in today:
-        if Global_minutes % 60 == 0:
+        if Global_minutes % 60 == 1:
             print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
         return False   
     if not SITENAME in ['BiLive_ay','BiLive_py']:
@@ -394,10 +409,10 @@ def canStart():
             else:
                 class_variable.set_today_AP('BiLive_py',False)
             print('#'*40,'EMPTY VIDEO,SET TO DEFAULT','#'*40)
-            print('ding_msg:{} file:'.format(MP4_ROOT),tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':tmp is empty'))
+            print('ding_msg:{} file:'.format(MP4_ROOT),tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':EMPTY VIDEO,SET TO DEFAULT'))
             return False
     #print('Can start live','Today:',today,'Tomorrow:',tomorrow)
-    if Global_minutes % 60 == 0:
+    if Global_minutes % 60 == 1:
         print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
     return True
 

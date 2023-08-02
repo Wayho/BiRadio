@@ -267,13 +267,13 @@ def play_test(floder_list=[], artist=None,radioname=RADIO_NAME):
 
 @engine.define( 'map_mp4' )
 def map_mp4(floder_list=[], artist=None,radioname=RADIO_NAME):
-    cloud_thread = threading.Thread(target=do_map_mp4,args=(MAX_DOWNLOAD))
+    cloud_thread = threading.Thread(target=do_map_mp4,args=(MAX_DOWNLOAD,))
     cloud_thread.start()
     return True
 
 @engine.define( 'map_mp4_6' )
 def map_mp4_6(floder_list=[], artist=None,radioname=RADIO_NAME):
-    cloud_thread = threading.Thread(target=do_map_mp4,args=(6))
+    cloud_thread = threading.Thread(target=do_map_mp4,args=(6,))
     cloud_thread.start()
     return True
 

@@ -265,6 +265,7 @@ def play_test(floder_list=[], artist=None,radioname=RADIO_NAME):
         ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
         print('rtmp::return:',ret)
         cmd_memory()
+        cmd_memory()
         if -9 == ret:
             break
     return ret

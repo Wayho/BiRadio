@@ -45,7 +45,7 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -f flv {}  {}"
 print('stream v5.2.5:mp4',ffmpeg_mp4)
-print('stream v5.4.0:rtmp',ffmpeg_playlist)
+print('stream v5.4.2:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -127,7 +127,7 @@ def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAM
             mem_list.append(file_path)
             total_size += fsize
         total_seconds = write_playlist(mem_list)
-        print('total seconds:{} total size:{}'.format(total_seconds,total_size))
+        print('total seconds:{} hours:{} total size:{}'.format(total_seconds,total_seconds/60/60,total_size))
         cmd = ffmpeg_playlist.format(PLAYLIST_PATH,framerate,codec,str_rtmp)
     else:
         # return 实时生成 flv
@@ -243,7 +243,7 @@ def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle
         class_subtitle.update_subtitle_file(name)
     probe = ffmpeg.probe(m4a)
     format = probe.get('format')
-    t = float(format.get('duration'))
+    t = int(format.get('duration'))+1
     sub_para = ''
     if subtitle:
         subtitle_path = os.path.join(SUBTITLE_PATH, name+'.srt')

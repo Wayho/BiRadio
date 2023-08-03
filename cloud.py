@@ -37,7 +37,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.4.7 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.4.8 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -260,9 +260,13 @@ def play_test(floder_list=[], artist=None,radioname=RADIO_NAME):
     print('play_test:',floder_list, artist,radioname)
     #concat = mp3.cmdconcat_floder(RTMP_URL_STR, floder_list, MP3_TOTAL_PLAY, artist,MAX_MEMORY)
     cmd = stream.test(RTMP_URL_STR, MP3_TOTAL_PLAY, codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,subtitle=FFMPEG_SUBTITLE,floder_list=floder_list)
-    ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
-    print('rtmp::return:',ret)
-    cmd_memory()
+    ret = -9
+    for i in range(6):
+        ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
+        print('rtmp::return:',ret)
+        cmd_memory()
+        if -9 == ret:
+            break
     return ret
 
 @engine.define( 'map_mp4' )
@@ -279,16 +283,14 @@ def map_mp4_6(floder_list=[], artist=None,radioname=RADIO_NAME):
 
 def do_map_mp4(total):
     #获取SOURCE_ADUIO_FLODER下m4a，转mp4
-    if not BILIBILI_CLMY:
-        Setup()
+    Setup()
     done_num = stream.map_video_audio_mp4(total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE)
     return done_num
 
 @engine.define( 'map_mp4_sample' )
 def map_mp4_sample(floder_list=[], artist=None,radioname=RADIO_NAME):
     # ffmpeg -re -i /tmp/mp4/192k-CoCo-想你的365天.mp4 -f flv -threads 8 -acodec aac -b:a 192k -vcodec copy rtmp
-    if not BILIBILI_CLMY:
-        Setup()
+    Setup()
     done_num = stream.ai_to_mp4('aux/coco/192k-CoCo-想你的365天.m4a','img/art_coco1{}.jpg'.format(random.randint(10,94)))
     return done_num
 

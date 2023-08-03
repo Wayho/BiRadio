@@ -9,7 +9,10 @@ import shutil
 import shell as shell
 import class_subtitle as class_subtitle
 
-FFMPEG_MP4_CODEC = '-threads 3 -vcodec libx264 -acodec aac -b:a 192k'
+MAX_MEMORY = 100
+# Error writing trailer of rtmp://live-push.bilivideo.com/live-bvc/?streamname=live_349pflag=1: End of file\n  [aac @ 0x5599e11787c0] Qavg: 801.218  Conversion failed!
+
+FFMPEG_MP4_CODEC = '-threads 4 -vcodec libx264 -c:a aac -ac 2 -ar 44100 -ab 192k'
 FFMPEG_RTMP_CODEC = '-threads 8 -vcodec libx264 -acodec aac -b:a 192k'
 FFMPEG_SUBTITLE = True
 FFMPEG_FRAMERATE = 25
@@ -40,9 +43,9 @@ ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=
 subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 # ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
-ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r  {}  -f flv {}  {}"
-print('stream v5.2.3:mp4',ffmpeg_mp4)
-print('stream v5.2.6:rtmp',ffmpeg_playlist)
+ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -f flv {}  {}"
+print('stream v5.2.5:mp4',ffmpeg_mp4)
+print('stream v5.4.0:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -60,9 +63,32 @@ print('stream v5.2.6:rtmp',ffmpeg_playlist)
 # ffmpeg -re -i sample_432p_a320k.mp4  -f flv -threads 6 -vcodec libx264 -acodec copy -vf subtitles=subtitle.flc -listen 1 http://127.0.0.1:8080
 # FFMPEG::return: 137 您的实例 [web1] 使用内存量超出该实例规格，导致进程 OOM 退出。但是下载的还在
 ########################## rtmp ###############################
-def test(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle=FFMPEG_SUBTITLE,floder_list=['']):
+def ffmpeg_status():
+    process_info = shell.process_info("ffmpeg")
+    if process_info:
+        cmdline = process_info.get('cmdline')
+        if PLAYLIST_PATH in cmdline:
+            return {
+                "pid":process_info.get('pid'),
+                "name":process_info.get('name'),
+                "status":process_info.get('status'),
+                "cpu_percent":process_info.get('cpu_percent'),
+                "memory_info":process_info.get('memory_info'),
+                "playlist":True
+                }
+        else:
+            return {
+                "pid":process_info.get('pid'),
+                "name":process_info.get('name'),
+                "status":process_info.get('status'),
+                "cpu_percent":process_info.get('cpu_percent'),
+                "memory_info":process_info.get('memory_info'),
+                "playlist":False
+                }
+    return None
+def test(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,subtitle=FFMPEG_SUBTITLE,floder_list=['']):
     return FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
-def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,floder_list=['']):
+def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,floder_list=['']):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足
     :param str_rtmp:'"rtmp://"'
@@ -81,19 +107,28 @@ def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAM
     str_rtmp = '\"{}\"'.format(str_rtmp)
     root_list = mp3list(MP4_ROOT)
     mp4list=[]
-    # 不够total的话，复制自身补足
     mp4_total = len(root_list)
     if mp4_total > 0:
-        for lo in range(0,int(total/mp4_total)):
+        # 不够total的话，复制自身补足
+        total_size = 0
+        CONST_MB = float(1024 * 1024)
+        for lo in range(0,int(total/mp4_total)+1):
             if len(mp4list) >=total:
                     break
             for file_path in root_list: 
                 if len(mp4list) >= total:
                     break
                 mp4list.append(file_path)
-        total_seconds = write_playlist(mp4list)
-        print('total seconds:',total_seconds)
-        cmd = ffmpeg_playlist.format(framerate,codec,str_rtmp)
+        mem_list = []
+        for file_path in mp4list: 
+            fsize = os.path.getsize(file_path) / CONST_MB
+            if total_size + fsize > max_memory:
+                break
+            mem_list.append(file_path)
+            total_size += fsize
+        total_seconds = write_playlist(mem_list)
+        print('total seconds:{} total size:{}'.format(total_seconds,total_size))
+        cmd = ffmpeg_playlist.format(PLAYLIST_PATH,framerate,codec,str_rtmp)
     else:
         # return 实时生成 flv
         cmd = FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
@@ -107,6 +142,7 @@ def write_playlist(mp3_list):
     :return: duration_total
     """
     duration_total = 0
+    file_total = 0
     lineArray = []
     now = int(datetime.timestamp(datetime.now()))
     
@@ -118,10 +154,11 @@ def write_playlist(mp3_list):
             lineArray.append("# {}".format(date_time))
             lineArray.append("file \'{}\'".format(file_path))
             duration_total += duration
+            file_total += 1
         else:
             print('error ffprobe:',file_path)
     date_time = datetime.fromtimestamp(now+int(duration_total))
-    lineArray.append("# end: {}".format(date_time))
+    lineArray.append("# Total:{}: {}".format(file_total,date_time))
     lineArray.append("# rem")
     playlist_str = '\r\n'.join(lineArray)
     playlist = open(PLAYLIST_PATH, 'w')

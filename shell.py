@@ -8,14 +8,14 @@ from queue import Queue
 
 MAX_MSG_NUM = 20
 ignore_msgs = ['mp3float','Last message','frame=','configuration:']
-print('shell v5.5.0',ignore_msgs)
+print('shell v5.5.1',ignore_msgs)
 ##################################################
 def OutputShell( cmd, msgout=True ):
 	# output twice ignore_msgs
 	# if print last 20 msg
 	ignore_msgs_times = [0,0,0,0]
 	msg_queue_obj = Queue(MAX_MSG_NUM)  # 创建一个队列对象
-	print( 'shell:',msgout,cmd[0:300])
+	print( 'shell:',msgout,cmd[0:400])
 	result = subprocess.Popen(
 		#[ "ping 127.0.0.1" ],
 		#[ "find /usr" ],

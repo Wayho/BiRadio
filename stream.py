@@ -44,7 +44,7 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 # ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -f flv {}  {}"
-print('stream v5.2.5:mp4',ffmpeg_mp4)
+print('stream v5.2.6:mp4',ffmpeg_mp4)
 print('stream v5.4.2:rtmp',ffmpeg_playlist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
@@ -243,7 +243,9 @@ def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle
         class_subtitle.update_subtitle_file(name)
     probe = ffmpeg.probe(m4a)
     format = probe.get('format')
-    t = int(format.get('duration'))+1
+    t = int(float(format.get('duration'))+1)
+    streams = probe.get('streams')
+    print(m4a,streams)
     sub_para = ''
     if subtitle:
         subtitle_path = os.path.join(SUBTITLE_PATH, name+'.srt')
@@ -252,7 +254,6 @@ def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle
         else:
             print('No subtitle of this audio:',m4a)
     cmd = ffmpeg_mp4.format(m4a,t,framerate,img,sub_para,framerate,codec,CACHE_MP4_PATH)
-    print(cmd)
     ret = shell.OutputShell(cmd,False)
     if 0 == ret:
         mp4_path = os.path.join(MP4_ROOT, name+'.mp4')   #'{}/{}.mp4'.format(MP4_ROOT,name)

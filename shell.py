@@ -6,9 +6,9 @@ import psutil
 import sys
 from queue import Queue
 
-MAX_MSG_NUM = 20
+MAX_MSG_NUM = 30
 ignore_msgs = ['mp3float','Last message','frame=','configuration:']
-print('shell v5.5.1',ignore_msgs)
+print('shell v5.5.2',ignore_msgs)
 ##################################################
 def OutputShell( cmd, msgout=True ):
 	# output twice ignore_msgs

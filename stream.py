@@ -89,6 +89,7 @@ def ffmpeg_status():
                 }
     return None
 def test(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,subtitle=FFMPEG_SUBTITLE,floder_list=['']):
+    str_rtmp = '\"{}\"'.format(str_rtmp)
     return FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
 def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,floder_list=['']):
     """

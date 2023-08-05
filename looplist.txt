@@ -1,4 +1,4 @@
-file '/tmp/cache.mp4'
+file '/tmp/cache.flv'
 #file '/tmp/voice.mp4'
-file '/tmp/cache.mp4'
+file '/tmp/cache.flv'
 #file '/tmp/voice.mp4'

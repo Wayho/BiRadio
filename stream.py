@@ -32,7 +32,7 @@ CACHE_MP4_PATH = 'cache.mp4'
 # ffmpeg -i -loop 0 aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco102.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv -listen 1  http://127.0.0.1:8080
 FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec copy -f  flv {}"
 #ffmpeg -re -stream_loop -1 -i list.txt -flush_packets 0 -f m
-FFMPEG_SAMPLE_RTMP_LIVE = "ffmpeg -re -stream_loop -1 -i looplist.txt -flush_packets 0 -f flv {}"
+FFMPEG_SAMPLE_RTMP_LIVE = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r 25 -f flv -threads 5 -vcodec copy -acodec aac -b:a 192k {}"
 # s=770x432 mp4=154M thread=0
 # s=770x432 mp4=135M thread=2
 # s=770x432 mp4=126M thread=1

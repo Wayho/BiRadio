@@ -103,7 +103,7 @@ def test_(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,max_m
     str_rtmp = '\"{}\"'.format(str_rtmp)
     return FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
 
-def test(str_rtmp,total,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE,adelay=10000):
+def test(str_rtmp,total,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,subtitle=FFMPEG_SUBTITLE,floder_list=[''],adelay=10000):
     """
     返回rtmp looplist 的cmd，并启动替换loop.mp4的线程，适时根据loop.mp4的时长，用新的temp.mp4替换loop.mp4
     替换cache.mp4的线程需要马上开始混音，并生成temp.mp4，保证在loop播完前生成

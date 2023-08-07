@@ -6,6 +6,7 @@ import random
 import time
 from datetime import datetime
 import shutil 
+import threading
 import shell as shell
 import class_subtitle as class_subtitle
 
@@ -13,7 +14,8 @@ MAX_MEMORY = 100
 # Error writing trailer of rtmp://live-push.bilivideo.com/live-bvc/?streamname=live_349pflag=1: End of file\n  [aac @ 0x5599e11787c0] Qavg: 801.218  Conversion failed!
 
 FFMPEG_MP4_CODEC = '-threads 4 -vcodec libx264 -c:a aac -ac 2 -ar 44100 -ab 192k'
-FFMPEG_RTMP_CODEC = '-threads 8 -vcodec libx264 -acodec aac -b:a 192k'
+FFMPEG_RTMP_CODEC = '-threads 5 -vcodec libx264 -acodec aac -b:a 192k'
+FFMPEG_AMIX_CODEC = '-threads 16 -vcodec copy -acodec copy'
 FFMPEG_SUBTITLE = True
 FFMPEG_FRAMERATE = 25
 SUBTITLE_PATH = '/tmp/srt'
@@ -29,10 +31,16 @@ IMG_FLODER = 'img'
 SOURCE_ADUIO_FLODER = 'aux/coco'
 CACHE_MP4_PATH = 'cache.mp4'
 
+LOOP_LOOP_MP4_PATH  = "/tmp/loop.mp4"
+LOOP_NEXT_MP4_PATH  = "/tmp/next.mp4"           #next->loop
+LOOP_TEMP_MP4_PATH  = "/tmp/temp.mp4"       #temp->next
+LOOP_AMIX_M4A_LIST = ['/tmp/s192.m4a']     #混音文件路径
+SECONDS_UPDATE_LOOP = 7
+
 # ffmpeg -i -loop 0 aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco102.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv -listen 1  http://127.0.0.1:8080
 FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec copy -f  flv {}"
 #ffmpeg -re -stream_loop -1 -i list.txt -flush_packets 0 -f m
-FFMPEG_SAMPLE_RTMP_LIVE = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r 25 -f flv -threads 5 -vcodec copy -acodec aac -b:a 192k {}"
+#FFMPEG_SAMPLE_RTMP_LIVE = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r 25 -f flv -threads 5 -vcodec copy -acodec aac -b:a 192k {}"
 # s=770x432 mp4=154M thread=0
 # s=770x432 mp4=135M thread=2
 # s=770x432 mp4=126M thread=1
@@ -46,8 +54,11 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 # ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -f flv {}  {}"
+FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
+ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -f flv  {}"
 print('stream v5.2.6:mp4',ffmpeg_mp4)
 print('stream v5.4.2:rtmp',ffmpeg_playlist)
+print('stream v5.6.0:ffmpeg_looplist',ffmpeg_looplist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -88,9 +99,123 @@ def ffmpeg_status():
                 "playlist":False
                 }
     return None
-def test(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,subtitle=FFMPEG_SUBTITLE,floder_list=['']):
+def test_(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,subtitle=FFMPEG_SUBTITLE,floder_list=['']):
     str_rtmp = '\"{}\"'.format(str_rtmp)
     return FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
+
+def test(str_rtmp,total,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE,adelay=10000):
+    """
+    返回rtmp looplist 的cmd，并启动替换loop.mp4的线程，适时根据loop.mp4的时长，用新的temp.mp4替换loop.mp4
+    替换cache.mp4的线程需要马上开始混音，并生成temp.mp4，保证在loop播完前生成
+    :param str_rtmp:'"rtmp://"'
+    :param total:=MP4_TOTAL_PLAY:最多串接文件个数
+    :param framerate:=FFMPEG_FRAMERATE
+    :param codec:=FFMPEG_RTMP_CODEC
+    :return: ffmpeg cmd
+    """
+    if not framerate:
+        framerate = FFMPEG_FRAMERATE
+    str_rtmp = '\"{}\"'.format(str_rtmp)
+    mp4list = mp3list(MP4_ROOT)
+    if len(mp4list) == 0:
+        # return 实时生成 flv
+        cmd = FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
+    else:
+        # return 实时生成 flv
+        cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
+    #print(cmd)
+    make_temp_next_loop_thread = threading.Thread(target=make_temp_next_loop,args=(adelay,codec,framerate,))
+    make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
+    make_temp_next_loop_thread.start()
+    return cmd#shell.OutputShell(cmd,True)
+
+def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
+    """
+    len(MP4_ROOT)==0,退出
+    适时查看混音变量（None or mix file path）
+    mix file path 可由弹幕模块控制
+    如果不混音，直接复制mp4替换loop.mp4
+    如果混音，生成temp.mp4，保证在loop.mp4播完前生成
+    :param name:=预先生成的mp4 path
+    :param mix_m4a:=混入语音path
+    :param adelay:=混入语音adelay ms
+    :param framerate:=FFMPEG_FRAMERATE
+    :param codec:=FFMPEG_MP4_CODEC
+    :return: T/F
+    """
+    global LOOP_AMIX_M4A_LIST
+    mp4list = mp3list(MP4_ROOT)
+    if len(mp4list) == 0:
+        return False
+    time.sleep(1)
+    amix_thread = None
+    while True:
+        now = time.time()       #seconds
+        probe = ffmpeg.probe(LOOP_LOOP_MP4_PATH)
+        format = probe.get('format')
+        last_loop_duration = float(format.get('duration'))      #seconds
+        time_update_loop = now + last_loop_duration - SECONDS_UPDATE_LOOP
+        #如果混音，就再次覆盖LOOP_NEXT_MP4_PATH，失败，补救
+        mp4list = mp3list(MP4_ROOT)
+        now = time.time()
+        
+        while now < time_update_loop:
+            #等待到更新时间
+            time.sleep(1)
+            if LOOP_AMIX_M4A_LIST:
+                if amix_thread:
+                    if not amix_thread.is_alive():
+                        # 不混音中，make
+                        mix_m4a_list = LOOP_AMIX_M4A_LIST
+                        #LOOP_AMIX_M4A_LIST = []
+                        amix_thread = threading.Thread(target=amix_next,args=(mp4list[0],mix_m4a_list,adelay,codec,framerate,))
+                        amix_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
+                        amix_thread.start()
+                else:
+                    mix_m4a_list = LOOP_AMIX_M4A_LIST
+                    #LOOP_AMIX_M4A_LIST = []
+                    amix_thread = threading.Thread(target=amix_next,args=(mp4list[0],mix_m4a_list,adelay,codec,framerate,))
+                    amix_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
+                    amix_thread.start()
+            now = time.time()
+        if amix_thread:
+            if amix_thread.is_alive():
+                # 混音中，等不及，复制
+                shutil.copy(mp4list[0],LOOP_NEXT_MP4_PATH)
+        else:
+            # 从没混音，复制
+            shutil.copy(mp4list[0],LOOP_NEXT_MP4_PATH)
+        shutil.copy(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
+        
+
+
+def amix_next(mp4,mix_m4a_list,adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
+    """
+    混音，生成temp.mp4，保证在loop.mp4播完前生成
+    :param name:=预先生成的mp4 path
+    :param mix_m4a_list:=混入语音path
+    :param adelay:=混入语音adelay ms
+    :param framerate:=FFMPEG_FRAMERATE
+    :param codec:=FFMPEG_MP4_CODEC
+    :return: T/F
+    """
+    FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
+    cmd = FFMPEG_AMIX.format(mp4,mix_m4a_list[0],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
+    ret = shell.OutputShell(cmd,True)
+    if 0==ret:
+        try:
+            probe = ffmpeg.probe(LOOP_TEMP_MP4_PATH)
+            streams = probe.get('streams')
+            os.rename(LOOP_TEMP_MP4_PATH,LOOP_NEXT_MP4_PATH)
+            print(LOOP_TEMP_MP4_PATH,streams)
+            return ret
+        except:
+            print('Error probe:',LOOP_TEMP_MP4_PATH)
+    #失败，补救
+    print('Error shell cmd:',LOOP_TEMP_MP4_PATH)
+    shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+    return ret
+
 def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,floder_list=['']):
     """
     获取floder_list下所有path mp3的串接cmd，不够total的话，复制自身补足

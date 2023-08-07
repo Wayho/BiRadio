@@ -37,7 +37,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.5.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.5.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -69,7 +69,7 @@ BILIBILI_RTMP = "rtmp://"
 BILIBILI_CLMY = None
 
 FFMPEG_MP4_CODEC = '-threads 3 -vcodec libx264 -acodec aac  -b:a 192k'
-FFMPEG_RTMP_CODEC = '-threads 8 -vcodec copy -acodec aac -b:a 192k'
+FFMPEG_RTMP_CODEC = '-threads 5 -vcodec copy -acodec aac -b:a 192k'
 FFMPEG_FRAMERATE = None
 FFMPEG_SUBTITLE = True
 
@@ -80,7 +80,7 @@ FFMPEG_MESSAGE_OUT = False
 MP3_TOTAL_PLAY = 30
 SLEEP = 120
 ERROR_RETRY = 399
-MAX_DOWNLOAD = 10
+MAX_DOWNLOAD = 25
 MAX_MEMORY = 90
 
 ###########################################################
@@ -258,6 +258,8 @@ def play_floder(floder_list=[], artist=None,radioname=RADIO_NAME):
         cmd_memory()
         if -9 == ret:
             break
+        if 1 == ret:
+            break
     return ret
 
 @engine.define( 'play_test' )
@@ -272,6 +274,8 @@ def play_test(floder_list=[], artist=None,radioname=RADIO_NAME):
         cmd_memory()
         cmd_memory()
         if -9 == ret:
+            break
+        if 1 == ret:
             break
     return ret
 

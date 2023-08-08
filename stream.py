@@ -183,7 +183,7 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
     amix_thread = threading.Thread(target=amix_next,args=(mp4list[0],[],adelay,codec,framerate,))
     amix_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
     
-    while True:
+    while LOOP_MAKE_TEMP_NEXT_LOOP:
         now = time.time()       #seconds
         probe = ffmpeg.probe(LOOP_LOOP_MP4_PATH)
         format = probe.get('format')

@@ -236,7 +236,7 @@ def amix_next(mp4,mix_m4a_list,adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FF
     LOOP_CAN_MAKE_NEXT = False
     FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
     cmd = FFMPEG_AMIX.format(mp4,mix_m4a_list[0],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
-    ret = shell.OutputShell(cmd,True)
+    ret = shell.OutputShell(cmd,False)
     if 0==ret:
         try:
             probe = ffmpeg.probe(LOOP_TEMP_MP4_PATH)

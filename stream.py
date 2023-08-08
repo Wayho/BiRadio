@@ -195,7 +195,7 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
         while now < time_update_loop:
             #等待到更新时间
             now = time.time()
-            if LOOP_TIME_START + LOOP_DURATION_TOTAL-last_loop_duration < now:
+            if LOOP_TIME_START + LOOP_DURATION_TOTAL < now:
                 #等待解锁，amix_next一旦执行，是不允许改写的，直到下次解锁
                 # shutil.copy后，是允许改写的
                 LOOP_CAN_MAKE_NEXT = True
@@ -220,6 +220,7 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
             # 从没混音，复制
             shutil.copy(mp4list[0],LOOP_NEXT_MP4_PATH)
         os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
+        time.sleep(2)
         
 
 

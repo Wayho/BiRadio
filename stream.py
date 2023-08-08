@@ -139,8 +139,8 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adel
     global LOOP_TIME_START
     global make_temp_next_loop_thread
     print('try rtmp_loop LOOP_RTMP_LOOP:{}  LOOP_MAKE_TEMP_NEXT_LOOP:{}'.format(LOOP_RTMP_LOOP,LOOP_MAKE_TEMP_NEXT_LOOP))
-    if LOOP_RTMP_LOOP:
-        return None
+    # if LOOP_RTMP_LOOP:
+    #     return None
     if not framerate:
         framerate = FFMPEG_FRAMERATE
     str_rtmp = '\"{}\"'.format(str_rtmp)

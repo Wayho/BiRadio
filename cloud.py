@@ -31,6 +31,7 @@ MP4_ROOT = '/tmp/mp4'
 SUBTITLE_ROOT = '/tmp/srt'
 LOOP_LOOP_MP4_PATH  = "/tmp/loop.mp4"
 SAMPLE_MP4_432p_LIST = ['s365_432p_201_192k.mp4','s365_432p_101_192k.mp4','s365_432p_146_192k.mp4','sziji_432p_176_192k.mp4']
+BAK_MP4_PATH = 's365_432p_201_192k.mp4'
 
 SITENAME = os.environ.get('SITENAME') or 'none'
 MEMORY = os.environ.get('MEMORY') or 'none'
@@ -38,18 +39,20 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.6.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.6.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
         time.sleep(0.1)
         # /tmp 下loop.mp4,next.mp4
-        shutil.copy(SAMPLE_MP4_432p_LIST[0],LOOP_LOOP_MP4_PATH)
+        shutil.copy(BAK_MP4_PATH,LOOP_LOOP_MP4_PATH)
         for sample in SAMPLE_MP4_432p_LIST:
             dest_sample = os.path.join(MP4_ROOT, sample)    # '{}/{}'.format(MP4_ROOT,sample)
             if  os.path.exists(sample):
-                #shutil.copy(SAMPLE_MP4_432p,dest_sample)
-                os.rename(sample,dest_sample)
+                if sample==BAK_MP4_PATH:
+                    shutil.copy(sample,dest_sample)
+                else:
+                    os.rename(sample,dest_sample)
 if not os.path.exists(SUBTITLE_ROOT):
         print('cloud:mkdir::',SUBTITLE_ROOT)
         os.mkdir(SUBTITLE_ROOT)
@@ -59,10 +62,10 @@ def cloud_wakeup():
     print("cloud_wakeup:sleep 15 for check MP4_ROOT")
     time.sleep(15)
     Setup()
-    tmpfilenum = os.listdir(MP4_ROOT)
-    if len(SAMPLE_MP4_432p_LIST)>= len(tmpfilenum):
+    mp4file = os.listdir(MP4_ROOT)
+    if len(SAMPLE_MP4_432p_LIST)>= len(mp4file):
         # 没有音频，提醒
-        print('ding_msg:{} file:'.format(MP4_ROOT),tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':tmp is empty'))
+        print('ding_msg:{} file:'.format(MP4_ROOT),mp4file,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':mp4 is empty'))
 send_thread = threading.Thread(target=cloud_wakeup,args=())
 send_thread.start()
 
@@ -288,8 +291,26 @@ def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     print('ffmpeg_loop:',floder_list, artist,radioname)
     if not BILIBILI_CLMY:
         Setup()
-    make_temp_next_loop_thread = threading.Thread(target=stream.rtmp_loop,args=(RTMP_URL_STR,FFMPEG_RTMP_CODEC,FFMPEG_AMIX_CODEC,10000,FFMPEG_FRAMERATE,))
+    # make_temp_next_loop_thread = threading.Thread(target=stream.rtmp_loop,args=(RTMP_URL_STR,FFMPEG_RTMP_CODEC,FFMPEG_AMIX_CODEC,10000,FFMPEG_FRAMERATE,))
+    # make_temp_next_loop_thread.start()
+    cmd = stream.rtmp_loop(RTMP_URL_STR,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adelay=10000,framerate=FFMPEG_FRAMERATE)
+    ret = -9
+    make_temp_next_loop_thread = threading.Thread(target=stream.make_temp_next_loop,args=(10000,FFMPEG_AMIX_CODEC,))
+    #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
     make_temp_next_loop_thread.start()
+    if cmd:
+        for i in range(999):
+            ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
+            print('rtmp::return:',ret)
+            #stream.rtmp_loop_reset()
+            cmd_memory()
+            time.sleep(2)
+            cmd_memory()
+            if -9 == ret:
+                break
+            if 1 == ret:
+                break
+    return ret
     return True
 
 @engine.define( 'ffmpeg_loop_exit' )
@@ -346,7 +367,7 @@ def do_one_minute( **params ):
         else:
             # is making mp4, must kill for cmd_restart_radio
             cmd_kill_ffmpeg()
-            #time.sleep(2)
+            time.sleep(3)
     cmd_restart_radio()        
     return True
 
@@ -521,7 +542,9 @@ def cmd_kill_python( **params ):
 def cmd_heart( **params ):
     requests.get( "http://localhost:3000" )
     (today,tomorrow) = class_variable.get_today_AP()
-    print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)
+    ffmpeg_status = stream.ffmpeg_status()
+    print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes,ffmpeg_status)
+    
     return True
 
 # # 待升级

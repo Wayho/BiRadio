@@ -36,13 +36,14 @@ LOOP_LOOPLIST_PATH = 'looplist.txt'
 LOOP_LOOP_MP4_PATH  = "/tmp/loop.mp4"
 LOOP_NEXT_MP4_PATH  = "/tmp/next.mp4"           #next->loop
 LOOP_TEMP_MP4_PATH  = "/tmp/temp.mp4"       #temp->next
-LOOP_AMIX_M4A_LIST = ['/tmp/s192.m4a']     #混音文件路径
+LOOP_AMIX_M4A_LIST = ['aux/voice/s192.m4a']     #混音文件路径
 LOOP_SECONDS_UPDATE = 7
 LOOP_CAN_MAKE_NEXT= True      #锁，解锁需要在next->loop,loop开始播放后
 LOOP_RTMP_LOOP = False
 LOOP_MAKE_TEMP_NEXT_LOOP = False
 LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
 LOOP_TIME_START = 0
+make_temp_next_loop_thread = None
 
 # ffmpeg -i -loop 0 aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco102.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv -listen 1  http://127.0.0.1:8080
 FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -re -stream_loop -1 -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec copy -f  flv {}"
@@ -122,9 +123,10 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adel
     global LOOP_MAKE_TEMP_NEXT_LOOP
     global LOOP_DURATION_TOTAL
     global LOOP_TIME_START
+    global make_temp_next_loop_thread
     print('try rtmp_loop LOOP_RTMP_LOOP:{}  LOOP_MAKE_TEMP_NEXT_LOOP:{}'.format(LOOP_RTMP_LOOP,LOOP_MAKE_TEMP_NEXT_LOOP))
     if LOOP_RTMP_LOOP:
-        return 0
+        return None
     if not framerate:
         framerate = FFMPEG_FRAMERATE
     str_rtmp = '\"{}\"'.format(str_rtmp)
@@ -140,19 +142,21 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adel
     cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
     LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
     LOOP_TIME_START = time.time()
-    if not LOOP_MAKE_TEMP_NEXT_LOOP:
-        LOOP_MAKE_TEMP_NEXT_LOOP = True
-        make_temp_next_loop_thread = threading.Thread(target=make_temp_next_loop,args=(adelay,amix_codec,framerate,))
-        make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-        make_temp_next_loop_thread.start()
-    ret =  shell.OutputShell(cmd,msgout)
-    LOOP_MAKE_TEMP_NEXT_LOOP = False
-    LOOP_RTMP_LOOP = False
-    return ret
+    # if not LOOP_MAKE_TEMP_NEXT_LOOP:
+    #     LOOP_MAKE_TEMP_NEXT_LOOP = True
+    #     make_temp_next_loop_thread = threading.Thread(target=make_temp_next_loop,args=(adelay,amix_codec,framerate,))
+    #     #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
+    #     make_temp_next_loop_thread.start()
+    #ret =  shell.OutputShell(cmd,msgout)
+    # LOOP_MAKE_TEMP_NEXT_LOOP = False
+    # LOOP_RTMP_LOOP = False
+    return cmd
 
-def rtmp_loop_exit():
+def rtmp_loop_reset():
     global LOOP_RTMP_LOOP
+    global LOOP_MAKE_TEMP_NEXT_LOOP
     LOOP_RTMP_LOOP = False
+    LOOP_MAKE_TEMP_NEXT_LOOP = False
 
 def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
     """
@@ -171,7 +175,9 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
     global LOOP_AMIX_M4A_LIST
     global LOOP_CAN_MAKE_NEXT
     global LOOP_DURATION_TOTAL
+    global LOOP_MAKE_TEMP_NEXT_LOOP
     print('try make_temp_next_loop',LOOP_MAKE_TEMP_NEXT_LOOP)
+    LOOP_MAKE_TEMP_NEXT_LOOP = True
     # duration_total = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
     # TIME_START = time.time()
     mp4list = mp3list(MP4_ROOT)
@@ -192,6 +198,8 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
         print('make_temp_next_loop:TIME_START={},DURATION_TOTAL={},t={}'.format(LOOP_TIME_START,LOOP_DURATION_TOTAL,now-LOOP_TIME_START))
         while now < time_update_loop:
             #等待到更新时间
+            if not LOOP_MAKE_TEMP_NEXT_LOOP:
+                break
             now = time.time()
             if LOOP_TIME_START + LOOP_DURATION_TOTAL < now:
                 #等待解锁，amix_next一旦执行，是不允许改写的，直到下次解锁

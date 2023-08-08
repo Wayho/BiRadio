@@ -11,6 +11,7 @@ import shell as shell
 import class_subtitle as class_subtitle
 
 MAX_MEMORY = 100
+BAK_MP4_PATH = 's365_432p_201_192k.mp4'
 # Error writing trailer of rtmp://live-push.bilivideo.com/live-bvc/?streamname=live_349pflag=1: End of file\n  [aac @ 0x5599e11787c0] Qavg: 801.218  Conversion failed!
 
 FFMPEG_MP4_CODEC = '-threads 4 -vcodec libx264 -c:a aac -ac 2 -ar 44100 -ab 192k'
@@ -132,14 +133,11 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adel
     time.sleep(2)
     LOOP_RTMP_LOOP = True
     if len(mp4list) == 0:
+        shutil.copy(BAK_MP4_PATH,LOOP_LOOP_MP4_PATH)
         # return 实时生成 flv
-        cmd = FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
-        return shell.OutputShell(cmd,msgout)
-    else:
-        cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
-    # rtmp_thread = threading.Thread(target=shell.OutputShell,args=(cmd,msgout,))
-    # rtmp_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    # rtmp_thread.start()
+        # cmd = FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
+        # return shell.OutputShell(cmd,msgout)
+    cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
     LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
     LOOP_TIME_START = time.time()
     if not LOOP_MAKE_TEMP_NEXT_LOOP:
@@ -234,6 +232,14 @@ def amix_next(mp4,mix_m4a_list,adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FF
     """
     global LOOP_CAN_MAKE_NEXT
     LOOP_CAN_MAKE_NEXT = False
+    mix_list = []
+    for file_path in mix_m4a_list:
+        if  os.path.exists(file_path):
+            mix_list.append(file_path)
+    if(len(mix_list)==0):
+        print('No mix audio:',LOOP_TEMP_MP4_PATH)
+        shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+        return 1
     FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
     cmd = FFMPEG_AMIX.format(mp4,mix_m4a_list[0],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
     ret = shell.OutputShell(cmd,False)

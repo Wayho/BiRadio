@@ -38,10 +38,13 @@ LOOP_TEMP_MP4_PATH  = "/tmp/temp.mp4"       #temp->next
 LOOP_AMIX_M4A_LIST = ['/tmp/s192.m4a']     #混音文件路径
 LOOP_SECONDS_UPDATE = 7
 LOOP_CAN_MAKE_NEXT= True      #锁，解锁需要在next->loop,loop开始播放后
-LOOP_EXIT = False
+LOOP_RTMP_LOOP = False
+LOOP_MAKE_TEMP_NEXT_LOOP = False
+LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
+LOOP_TIME_START = 0
 
 # ffmpeg -i -loop 0 aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco102.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv -listen 1  http://127.0.0.1:8080
-FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec copy -f  flv {}"
+FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -re -stream_loop -1 -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec copy -f  flv {}"
 #ffmpeg -re -stream_loop -1 -i list.txt -flush_packets 0 -f m
 #FFMPEG_SAMPLE_RTMP_LIVE = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r 25 -f flv -threads 5 -vcodec copy -acodec aac -b:a 192k {}"
 # s=770x432 mp4=154M thread=0
@@ -61,7 +64,7 @@ FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud
 ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -f flv  {}"
 print('stream v5.2.6:mp4',ffmpeg_mp4)
 print('stream v5.4.2:rtmp',ffmpeg_playlist)
-print('stream v5.6.1:ffmpeg_looplist',ffmpeg_looplist)
+print('stream v5.6.2:ffmpeg_looplist',ffmpeg_looplist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -114,30 +117,44 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adel
     :param codec:=FFMPEG_RTMP_CODEC
     :return: ffmpeg cmd
     """
+    global LOOP_RTMP_LOOP
+    global LOOP_MAKE_TEMP_NEXT_LOOP
+    global LOOP_DURATION_TOTAL
+    global LOOP_TIME_START
+    print('try rtmp_loop LOOP_RTMP_LOOP:{}  LOOP_MAKE_TEMP_NEXT_LOOP:{}'.format(LOOP_RTMP_LOOP,LOOP_MAKE_TEMP_NEXT_LOOP))
+    if LOOP_RTMP_LOOP:
+        return 0
     if not framerate:
         framerate = FFMPEG_FRAMERATE
     str_rtmp = '\"{}\"'.format(str_rtmp)
     msgout = False
     mp4list = mp3list(MP4_ROOT)
+    time.sleep(2)
+    LOOP_RTMP_LOOP = True
     if len(mp4list) == 0:
         # return 实时生成 flv
         cmd = FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
+        return shell.OutputShell(cmd,msgout)
     else:
         cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
     # rtmp_thread = threading.Thread(target=shell.OutputShell,args=(cmd,msgout,))
     # rtmp_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
     # rtmp_thread.start()
-    make_temp_next_loop_thread = threading.Thread(target=make_temp_next_loop,args=(adelay,amix_codec,framerate,))
-    make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    make_temp_next_loop_thread.start()
-    return shell.OutputShell(cmd,msgout)
-    while not LOOP_EXIT:
-        pass
-    print('LOOP_EXIT',LOOP_EXIT,datetime.now())
+    LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
+    LOOP_TIME_START = time.time()
+    if not LOOP_MAKE_TEMP_NEXT_LOOP:
+        LOOP_MAKE_TEMP_NEXT_LOOP = True
+        make_temp_next_loop_thread = threading.Thread(target=make_temp_next_loop,args=(adelay,amix_codec,framerate,))
+        make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
+        make_temp_next_loop_thread.start()
+    ret =  shell.OutputShell(cmd,msgout)
+    LOOP_MAKE_TEMP_NEXT_LOOP = False
+    LOOP_RTMP_LOOP = False
+    return ret
 
 def rtmp_loop_exit():
-    global LOOP_EXIT
-    LOOP_EXIT = True
+    global LOOP_RTMP_LOOP
+    LOOP_RTMP_LOOP = False
 
 def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
     """
@@ -155,8 +172,10 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
     """
     global LOOP_AMIX_M4A_LIST
     global LOOP_CAN_MAKE_NEXT
-    duration_total = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
-    TIME_START = time.time()
+    global LOOP_DURATION_TOTAL
+    print('try make_temp_next_loop',LOOP_MAKE_TEMP_NEXT_LOOP)
+    # duration_total = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
+    # TIME_START = time.time()
     mp4list = mp3list(MP4_ROOT)
     if len(mp4list) == 0:
         return False
@@ -169,14 +188,14 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
         probe = ffmpeg.probe(LOOP_LOOP_MP4_PATH)
         format = probe.get('format')
         last_loop_duration = float(format.get('duration'))      #seconds
-        duration_total += last_loop_duration
+        LOOP_DURATION_TOTAL += last_loop_duration
         time_update_loop = now + last_loop_duration - LOOP_SECONDS_UPDATE
         mp4list = mp3list(MP4_ROOT)
         mustcopy = False
         while now < time_update_loop:
             #等待到更新时间
             now = time.time()
-            if TIME_START + duration_total-last_loop_duration < now:
+            if LOOP_TIME_START + LOOP_DURATION_TOTAL-last_loop_duration < now:
                 #等待解锁，amix_next一旦执行，是不允许改写的，直到下次解锁
                 # shutil.copy后，是允许改写的
                 LOOP_CAN_MAKE_NEXT = True

@@ -293,7 +293,7 @@ def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     return True
 
 @engine.define( 'ffmpeg_loop_exit' )
-def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
+def ffmpeg_loop_exit(floder_list=[], artist=None,radioname=RADIO_NAME):
     print('ffmpeg_loop_exit:',floder_list, artist,radioname)
     stream.rtmp_loop_exit()
     return True
@@ -561,6 +561,11 @@ def cmd_ls_srt( **params):
 @engine.define( 'ls_img' )
 def cmd_ls_img( **params):
     shell.OutputShell('ls img -R -l')
+    return True
+
+@engine.define( 'ls_tmp' )
+def cmd_ls_tmp( **params):
+    shell.OutputShell('ls /tmp -l')
     return True
 
 @engine.define( 'ls' )

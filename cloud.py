@@ -29,6 +29,7 @@ TMP_ROOT = '/tmp'
 MP3_ROOT = 'aux'
 MP4_ROOT = '/tmp/mp4'
 SUBTITLE_ROOT = '/tmp/srt'
+LOOP_LOOP_MP4_PATH  = "/tmp/loop.mp4"
 SAMPLE_MP4_432p_LIST = ['s365_432p_201_192k.mp4','s365_432p_101_192k.mp4','s365_432p_146_192k.mp4','sziji_432p_176_192k.mp4']
 
 SITENAME = os.environ.get('SITENAME') or 'none'
@@ -37,11 +38,13 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.5.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.6.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
         time.sleep(0.1)
+        # /tmp 下loop.mp4,next.mp4
+        shutil.copy(SAMPLE_MP4_432p_LIST[0],LOOP_LOOP_MP4_PATH)
         for sample in SAMPLE_MP4_432p_LIST:
             dest_sample = os.path.join(MP4_ROOT, sample)    # '{}/{}'.format(MP4_ROOT,sample)
             if  os.path.exists(sample):
@@ -70,6 +73,7 @@ BILIBILI_CLMY = None
 
 FFMPEG_MP4_CODEC = '-threads 3 -vcodec libx264 -acodec aac  -b:a 192k'
 FFMPEG_RTMP_CODEC = '-threads 5 -vcodec copy -acodec aac -b:a 192k'
+FFMPEG_AMIX_CODEC = '-threads 16 -vcodec copy -acodec aac -b:a 192k'
 FFMPEG_FRAMERATE = None
 FFMPEG_SUBTITLE = True
 
@@ -279,6 +283,21 @@ def play_test(floder_list=[], artist=None,radioname=RADIO_NAME):
             break
     return ret
 
+@engine.define( 'ffmpeg_loop' )
+def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
+    print('ffmpeg_loop:',floder_list, artist,radioname)
+    if not BILIBILI_CLMY:
+        Setup()
+    make_temp_next_loop_thread = threading.Thread(target=stream.rtmp_loop,args=(RTMP_URL_STR,FFMPEG_RTMP_CODEC,FFMPEG_AMIX_CODEC,10000,FFMPEG_FRAMERATE,))
+    make_temp_next_loop_thread.start()
+    return True
+
+@engine.define( 'ffmpeg_loop_exit' )
+def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
+    print('ffmpeg_loop_exit:',floder_list, artist,radioname)
+    stream.rtmp_loop_exit()
+    return True
+
 @engine.define( 'map_mp4' )
 def map_mp4(floder_list=[], artist=None,radioname=RADIO_NAME):
     cloud_thread = threading.Thread(target=do_map_mp4,args=(MAX_DOWNLOAD,))
@@ -321,14 +340,14 @@ def do_one_minute( **params ):
         if Global_minutes % 20 == 1:
                 print('do_one_minute:',Global_Retry_Times,ffmpeg_status)
                 requests.get( "http://localhost:3000" )
-        is_playlist = ffmpeg_status.get('playlist')
+        is_playlist = ffmpeg_status.get('playlist') or ffmpeg_status.get('looplist')
         if is_playlist:
             return False
         else:
             # is making mp4, must kill for cmd_restart_radio
             cmd_kill_ffmpeg()
             #time.sleep(2)
-    cmd_restart_radio()
+    cmd_restart_radio()        
     return True
 
 def cmd_restart_radio():
@@ -338,6 +357,10 @@ def cmd_restart_radio():
         print('Global_Retry_Times >= ERROR_RETRY')
         return False
     
+    ffmpeg_loop()
+    return True
+    
+    # < v5.5
     playret = 0
     if PLAY_ARTIST:
         playret = play_artist()

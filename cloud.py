@@ -319,8 +319,8 @@ def make_temp_next_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
         Setup()
     make_temp_next_loop_thread = threading.Thread(target=stream.make_temp_next_loop,args=(10000,FFMPEG_AMIX_CODEC,))
     #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    make_temp_next_loop_thread.start()
-    return True
+    
+    return make_temp_next_loop_thread.start()
 
 @engine.define( 'ffmpeg_loop_exit' )
 def ffmpeg_loop_exit(floder_list=[], artist=None,radioname=RADIO_NAME):

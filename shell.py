@@ -6,8 +6,9 @@ import psutil
 import sys
 from queue import Queue
 
-MAX_MSG_NUM = 90
-ignore_msgs = ['mp3float','Last message','frame=','configuration:']
+MAX_MSG_NUM = 100
+#[flv @ 0x55b7d2d96a80] Non-monotonous DTS in output stream 0:1; previous: 739658, current: 420381; changing to 739658. This may result in incorrect timestamps in the output file.
+ignore_msgs = ['mp3float','Last message','frame=','configuration:','[flv @']
 print('shell v5.5.6',MAX_MSG_NUM,ignore_msgs)
 ##################################################
 def OutputShell( cmd, msgout=True ):
@@ -38,7 +39,8 @@ def OutputShell( cmd, msgout=True ):
 					last_msg = str(readbuf_msg, 'utf8')
 					if msgout:
 							if 'frame='!=last_msg[0:6]:
-								print(last_msg,end='')
+								if '[flv @'!=last_msg[0:6]:
+									print(last_msg,end='')
 					else:
 						msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
 				except:

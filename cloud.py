@@ -167,6 +167,7 @@ def Setup(**params):
         print('############## ERROR IN LOAD VARIABLE ##################')
     print_v()
     class_variable.SaveCookiesFromDB()
+    cmd_ls_tmp()
     return True
 
 @engine.define( 'wss_danmu' )
@@ -295,9 +296,7 @@ def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     # make_temp_next_loop_thread.start()
     cmd = stream.rtmp_loop(RTMP_URL_STR,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adelay=10000,framerate=FFMPEG_FRAMERATE)
     ret = -9
-    make_temp_next_loop_thread = threading.Thread(target=stream.make_temp_next_loop,args=(10000,FFMPEG_AMIX_CODEC,))
-    #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    make_temp_next_loop_thread.start()
+    
     if cmd:
         for i in range(999):
             ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
@@ -306,11 +305,21 @@ def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
             cmd_memory()
             time.sleep(2)
             cmd_memory()
+            cmd_ls_tmp()
             if -9 == ret:
                 break
             if 1 == ret:
                 break
     return ret
+    return True
+
+@engine.define( 'make_temp_next_loop' )
+def make_temp_next_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
+    if not BILIBILI_CLMY:
+        Setup()
+    make_temp_next_loop_thread = threading.Thread(target=stream.make_temp_next_loop,args=(10000,FFMPEG_AMIX_CODEC,))
+    #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
+    make_temp_next_loop_thread.start()
     return True
 
 @engine.define( 'ffmpeg_loop_exit' )
@@ -344,6 +353,8 @@ def map_mp4_sample(floder_list=[], artist=None,radioname=RADIO_NAME):
     done_num = stream.ai_to_mp4('aux/coco/192k-CoCo-想你的365天.m4a','img/art_coco1{}.jpg'.format(random.randint(10,94)))
     return done_num
 
+
+
 # 18 */1 7-23 * * ?
 # 统一到一个云函数定时1分钟运行
 # 需要停止restart_radio任务才能kill_ffmpeg，否则又会启动
@@ -367,7 +378,7 @@ def do_one_minute( **params ):
         else:
             # is making mp4, must kill for cmd_restart_radio
             cmd_kill_ffmpeg()
-            time.sleep(3)
+            time.sleep(1)
     cmd_restart_radio()        
     return True
 
@@ -544,7 +555,7 @@ def cmd_heart( **params ):
     (today,tomorrow) = class_variable.get_today_AP()
     ffmpeg_status = stream.ffmpeg_status()
     print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes,ffmpeg_status)
-    
+    cmd_ls_tmp()
     return True
 
 # # 待升级

@@ -117,20 +117,20 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adel
     if not framerate:
         framerate = FFMPEG_FRAMERATE
     str_rtmp = '\"{}\"'.format(str_rtmp)
-    msgout = True
+    msgout = False
     mp4list = mp3list(MP4_ROOT)
     if len(mp4list) == 0:
         # return 实时生成 flv
         cmd = FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
-        msgout = False
     else:
         cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
-    rtmp_thread = threading.Thread(target=shell.OutputShell,args=(cmd,msgout,))
-    rtmp_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    rtmp_thread.start()
+    # rtmp_thread = threading.Thread(target=shell.OutputShell,args=(cmd,msgout,))
+    # rtmp_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
+    # rtmp_thread.start()
     make_temp_next_loop_thread = threading.Thread(target=make_temp_next_loop,args=(adelay,amix_codec,framerate,))
     make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
     make_temp_next_loop_thread.start()
+    return shell.OutputShell(cmd,msgout)
     while not LOOP_EXIT:
         pass
     print('LOOP_EXIT',LOOP_EXIT,datetime.now())
@@ -160,7 +160,7 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
     mp4list = mp3list(MP4_ROOT)
     if len(mp4list) == 0:
         return False
-    time.sleep(1)
+    time.sleep(3)
     amix_thread = threading.Thread(target=amix_next,args=(mp4list[0],[],adelay,codec,framerate,))
     amix_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
     

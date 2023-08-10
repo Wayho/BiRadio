@@ -96,8 +96,8 @@ def load_voice_by_type(type):
     DBClass = leancloud.Object.extend( DB_NAME )
     query = DBClass.query
     #query.limit(1000)
-    query.equal_to('on', True)
-    #query.equal_to('type', type)
+    #query.equal_to('on', True)
+    query.equal_to('type', type)
     return query.find()
 
 def load_voice():

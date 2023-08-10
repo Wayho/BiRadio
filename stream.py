@@ -230,7 +230,7 @@ def help_loop():
     if len(mp4list) == 0:
         shutil.copy(BAK_MP4_PATH,LOOP_LOOP_MP4_PATH)
     else:
-        shutil.copy(mp4list[0],LOOP_TEMP_MP4_PATH)
+        shutil.copy(mp4list[0],LOOP_NEXT_MP4_PATH)
         rename_next_loop(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
     return True
 

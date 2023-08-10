@@ -9,6 +9,7 @@ import shutil
 import threading
 import shell as shell
 import class_subtitle as class_subtitle
+import class_voice as class_voice
 
 # timer = threading.Timer(5, func,(1,))
 # time0 = time.time()
@@ -40,6 +41,7 @@ LOOP_LOOPLIST_PATH = 'looplist.txt'
 LOOP_LOOP_MP4_PATH  = "/tmp/loop.mp4"
 LOOP_NEXT_MP4_PATH  = "/tmp/next.mp4"           #next->loop
 LOOP_TEMP_MP4_PATH  = "/tmp/temp.mp4"       #temp->next
+LOOP_VOICE_M4A_PATH = "aux/voice"
 LOOP_AMIX_M4A_LIST = ['aux/voice/l1000.m4a','aux/voice/l1001.m4a','aux/voice/l1101.m4a','aux/voice/l1105.m4a','aux/voice/l1110.m4a','aux/voice/l2000.m4a','aux/voice/l2001.m4a']     #混音文件路径
 LOOP_SECONDS_UPDATE = 15
 LOOP_CAN_MAKE_NEXT= True      #锁，解锁需要在next->loop,loop开始播放后
@@ -162,14 +164,7 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
     global LOOP_DURATION_TOTAL
     LOOP_CAN_MAKE_NEXT = False
     
-    mix_list = []
-    for file_path in LOOP_AMIX_M4A_LIST:
-        if  os.path.exists(file_path):
-            mix_list.append(file_path)
-    if(len(mix_list)==0):
-        print('No mix audio:',LOOP_TEMP_MP4_PATH)
-        help_loop()
-        return 1
+
     ret = 9
     now = int(time.time())
     before_timeout = 90 #歌曲结束前90必须处理
@@ -181,6 +176,19 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
         while LOOP_TIME_START + LOOP_DURATION_TOTAL< now:
             # 万一now太超前，跳过应该next的歌，直接切到now对应的歌
             LOOP_DURATION_TOTAL += last_loop_duration
+        voice_arr = class_voice.get_amix_voice()
+        if voice_arr:
+            mix_list = []
+            for file_name in voice_arr:
+                file_path = os.path.join(LOOP_VOICE_M4A_PATH, file_name)
+                if  os.path.exists(file_path):
+                    mix_list.append(file_path)
+            if(len(mix_list)==0):
+                print('No mix audio file:',LOOP_TEMP_MP4_PATH)
+                return help_loop()
+        else:
+            print('No mix audio message:',LOOP_TEMP_MP4_PATH)
+            return help_loop()
         mp4list = mp3list(MP4_ROOT)
         mp4 = mp4list[0]
         FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
@@ -224,6 +232,7 @@ def help_loop():
     else:
         shutil.copy(mp4list[0],LOOP_TEMP_MP4_PATH)
         rename_next_loop(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
+    return True
 
 def rtmp_loop_reset():
     global LOOP_MAKE_TEMP_NEXT_LOOP

@@ -88,14 +88,18 @@ def find_voice(itype):
             print(voice.get('m4a'),voice.get('text'))
     random.shuffle(voice_arr)
     return voice_arr
-
-def load_voice():
+    
+def load_voice_db():
     global Global_voice_obj_array
     DBClass = leancloud.Object.extend( DB_NAME )
     query = DBClass.query
     query.limit(1000)
     query.equal_to('on', True)
-    Global_voice_obj_array = query.find()
+    return query.find()
+
+def load_voice():
+    global Global_voice_obj_array
+    Global_voice_obj_array = load_voice_db()
 
 if __name__ == '__main__':
     pass

@@ -187,8 +187,8 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
                 print('No mix audio file:',LOOP_TEMP_MP4_PATH)
                 return help_loop()
         else:
-            print('No mix audio message:',LOOP_TEMP_MP4_PATH)
-            return help_loop()
+            print('No mix audio message:not change loop',LOOP_TEMP_MP4_PATH)
+            return 0# help_loop()
         mp4list = mp3list(MP4_ROOT)
         mp4 = mp4list[0]
         FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
@@ -579,4 +579,4 @@ if __name__ == '__main__':
     except:
         print('No argv or error, sample: python stream.py m/r num')
         print("{\"cmd\":\"python stream.py m  5\"}","mp4")
-        print("{\"cmd\":\"python stream.py r  5\"}","rtmp")
+        print("{\"cmd\":\"python stream.py r  5\"}","rtmp

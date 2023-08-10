@@ -81,25 +81,27 @@ def process_gift():
 
 def find_voice(itype):
     global Global_voice_obj_array
+    find = load_voice_by_type(itype)
     voice_arr = []
-    for voice in Global_voice_obj_array:
-        if voice.get('type')==itype:
+    for voice in find:
+        #if voice.get('type')==itype:
             voice_arr.append(voice)
             print(voice.get('m4a'),voice.get('text'))
     random.shuffle(voice_arr)
     return voice_arr
     
-def load_voice_db():
+def load_voice_by_type(type):
     global Global_voice_obj_array
     DBClass = leancloud.Object.extend( DB_NAME )
     query = DBClass.query
     query.limit(1000)
     query.equal_to('on', True)
+    query.equal_to('type', type)
     return query.find()
 
 def load_voice():
     global Global_voice_obj_array
-    Global_voice_obj_array = load_voice_db()
+    #Global_voice_obj_array = load_voice_db()
 
 if __name__ == '__main__':
     pass

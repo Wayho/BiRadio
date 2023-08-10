@@ -34,9 +34,24 @@ def ShellRun( cmd, stdout=False,  stderr=False, lastmsgout=False):
 				print( 'ShellRun:stdout={} stderr={} lastmsgout={}'.format(stdout,stderr,lastmsgout),cmd[0:400])
 				result = subprocess.Popen(
 					[ cmd ],
-					shell=True
+					shell=True,
+					stdout=subprocess.PIPE,
+					stderr=subprocess.PIPE
 				)
+				# read date from pipe
+				select_rfds = [ result.stdout, result.stderr ]
+				while len( select_rfds ) > 0:
+					(rfds, wfds, efds) = select.select( select_rfds, [ ], [ ] ) #select函数阻塞进程，直到select_rfds中的套接字被触发
+					if result.stdout in rfds:
+						readbuf_msg = result.stdout.readline()      #行缓冲
+						if len( readbuf_msg ) == 0:
+							select_rfds.remove( result.stdout )     #result.stdout需要remove，否则进程不会结束
+					if result.stderr in rfds:
+						readbuf_errmsg = result.stderr.readline()
+						if len( readbuf_errmsg ) == 0:
+							select_rfds.remove( result.stderr )     #result.stderr，否则进程不会结束
 				result.wait() # 等待字进程结束( 等待shell命令结束 )
+				print('ShellRun exit:',result.returncode)
 				return result.returncode
 
 def OutputShell( cmd, msgout=True ):
@@ -83,7 +98,8 @@ def OutputShell( cmd, msgout=True ):
 					last_errmsg = str(readbuf_errmsg, 'utf8')
 					if msgout:
 							if 'frame='!=last_errmsg[0:6]:
-								print(last_errmsg,end='')
+								if '[flv @'!=last_errmsg[0:6]:
+									print(last_errmsg,end='')
 					else:
 						msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)
 				except:

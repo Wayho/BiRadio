@@ -9,10 +9,38 @@ from queue import Queue
 MAX_MSG_NUM = 100
 #[flv @ 0x55b7d2d96a80] Non-monotonous DTS in output stream 0:1; previous: 739658, current: 420381; changing to 739658. This may result in incorrect timestamps in the output file.
 ignore_msgs = ['mp3float','Last message','frame=','configuration:','[flv @']
-print('shell v5.5.6',MAX_MSG_NUM,ignore_msgs)
+print('shell v5.6.0',MAX_MSG_NUM,ignore_msgs)
 ##################################################
+def ShellRun( cmd, stdout=False,  stderr=False, lastmsgout=False):
+	"""
+	新shell，便于优化输出，提高性能
+	:param cmd: cmd string
+	:param stdout: False
+	:param stderr: False
+	:param lastmsgout: False
+	:return: returncode
+	"""
+	if stdout:
+		return OutputShell(cmd,True)	#need
+	else:
+		if stderr:
+			return OutputShell(cmd,True)	#ok
+		else:
+			if lastmsgout:
+				# 仅输出最后100条消息
+				return OutputShell(cmd,False)	#need
+			else:
+				# 什么都不输出
+				print( 'ShellRun:stdout={} stderr={} lastmsgout={}'.format(stdout,stderr,lastmsgout),cmd[0:400])
+				result = subprocess.Popen(
+					[ cmd ],
+					shell=True
+				)
+				result.wait() # 等待字进程结束( 等待shell命令结束 )
+				return result.returncode
+
 def OutputShell( cmd, msgout=True ):
-	# if print last 20 msg
+	# msgout, if False, print last 100 msg
 	msg_queue_obj = Queue(MAX_MSG_NUM)  # 创建一个队列对象
 	print( 'shell:',msgout,cmd[0:400])
 	result = subprocess.Popen(

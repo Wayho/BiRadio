@@ -45,11 +45,11 @@ LOOP_SECONDS_UPDATE = 15
 LOOP_CAN_MAKE_NEXT= True      #锁，解锁需要在next->loop,loop开始播放后
 LOOP_MAKE_TEMP_NEXT_LOOP = False        # no use
 LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
-LOOP_TIME_START = 0
+LOOP_TIME_START = 9691647810
 make_temp_next_loop_thread = None
 
 # ffmpeg -i -loop 0 aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco102.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec aac -b:a 192k -f  flv -listen 1  http://127.0.0.1:8080
-FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -re -stream_loop -1 -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec copy -f  flv {}"
+FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -re -stream_loop -1 -i aux/coco/192k-CoCo-想你的365天.m4a -ss 0 -t 32695 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco101.jpg -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264 -acodec copy -hide_banner -f  flv {}"
 #ffmpeg -re -stream_loop -1 -i list.txt -flush_packets 0 -f m
 #FFMPEG_SAMPLE_RTMP_LIVE = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r 25 -f flv -threads 5 -vcodec copy -acodec aac -b:a 192k {}"
 # s=770x432 mp4=154M thread=0
@@ -59,14 +59,14 @@ FFMPEG_SAMPLE_RTMP_LIVE  = "ffmpeg -re -stream_loop -1 -i aux/coco/192k-CoCo-想
 # ffmpeg  -i aux/coco/李玟_想你的365天.mp3 -ss 0 -t 326.95 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco103.jpg -filter_complex "[1:v][2:v]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]" -map [outv] -map [outa] -vcodec libx264 -acodec aac -b:a 320k -f mp4 overlay_432p_a320k.mp4
 # ffmpeg -i aux/coco/李玟-爱你爱到.m4a -ss 0 -t 261.328 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco132.jpg -filter_complex "[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv]" -map [outv] -map 0:a -r 25 -threads 2 -vcodec libx264 -acodec aac -y -f mp4 cache.mp4
 #ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r=25 -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0[outv];[0:0]concat=n=1:v=0:a=1[outa]\" -map [outv] -map [outa] -vcodec libx264 -acodec aac -y -f mp4 {}"
-ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r={} -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0{}[outv]\" -map [outv] -map 0:a -r {} {} -y -f mp4 {}"
+ffmpeg_mp4 = "ffmpeg -i {} -ss 0 -t {} -f lavfi -i color=c=0x000000:s=770x432:r={} -i {} -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=x=0:y=0{}[outv]\" -map [outv] -map 0:a -r {} {} -hide_banner -y -f mp4 {}"
 # ffmpeg -i aux/coco/192k-CoCo-想你的365天.m4a  -ss 0 -t 326.93 -f lavfi -i color=c=0x000000:s=770x432:r=25 -i img/art_coco130.jpg  -filter_complex \"[2:v]scale=770:432[v2];[1:v][v2]overlay=0:0,subtitles=sample.srt:force_style='Fontsize=24'[outv]\" -map [outv] -map 0:a -r 25 -threads 10 -vcodec libx264   -acodec copy -f mp4 /tmp/mp4/sample_srt.mp4"
 subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 # ffmpeg -re -i sample_432p_a320k.mp4 -f flv -threads 2 -acodec aac -b:a 320k -vcodec copy rtmp
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
-ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -f flv {}  {}"
-FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
-ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -f flv  {}"
+ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -hide_banner -f flv {}  {}"
+FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -hide_banner -y -f flv {}"
+ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -hide_banner -f flv  {}"
 print('stream v5.2.6:mp4',ffmpeg_mp4)
 print('stream v5.4.2:rtmp',ffmpeg_playlist)
 print('stream v5.6.8:ffmpeg_looplist',ffmpeg_looplist)
@@ -144,7 +144,7 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):
         shutil.copy(BAK_MP4_PATH,LOOP_LOOP_MP4_PATH)
     cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
     LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
-    LOOP_TIME_START = time.time()
+    LOOP_TIME_START = int(time.time())
     return cmd
 
 def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
@@ -173,15 +173,17 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
         os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
         return 1
     ret = 9
-    now = time.time()
+    now = int(time.time())
     before_end = 122    #歌曲结束前120才最后处理
     before_timeout = 90 #歌曲结束前90必须处理
     print('make_temp_next_loop:TIME_START={},DURATION_TOTAL={},t={}'.format(LOOP_TIME_START,LOOP_DURATION_TOTAL,now-LOOP_TIME_START))
     probe = ffmpeg.probe(LOOP_LOOP_MP4_PATH)
     format = probe.get('format')
     last_loop_duration = float(format.get('duration'))      #seconds
-    if LOOP_TIME_START + LOOP_DURATION_TOTAL + last_loop_duration -before_timeout < now:       
-        LOOP_DURATION_TOTAL += last_loop_duration
+    if LOOP_TIME_START + LOOP_DURATION_TOTAL + last_loop_duration -before_timeout < now:
+        while LOOP_TIME_START + LOOP_DURATION_TOTAL< now:
+            # 万一now太超前，跳过应该next的歌，直接切到now对应的歌
+            LOOP_DURATION_TOTAL += last_loop_duration
         FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
         cmd = FFMPEG_AMIX.format(mp4,mix_list[random.randint(0,len(mix_list)-1)],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
         #ret = shell.OutputShell(cmd,False)
@@ -455,7 +457,8 @@ def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle
         else:
             print('No subtitle of this audio:',m4a)
     cmd = ffmpeg_mp4.format(m4a,t,framerate,img,sub_para,framerate,codec,CACHE_MP4_PATH)
-    ret = shell.OutputShell(cmd,False)
+    #ret = shell.OutputShell(cmd,False)
+    ret = shell.ShellRun(cmd,False,False,False)
     if 0 == ret:
         mp4_path = os.path.join(MP4_ROOT, name+'.mp4')   #'{}/{}.mp4'.format(MP4_ROOT,name)
         shutil.copy(CACHE_MP4_PATH,mp4_path)

@@ -85,7 +85,7 @@ def find_voice(itype):
     for voice in Global_voice_obj_array:
         if voice.get('type')==itype:
             voice_arr.append(voice)
-    print(voice_arr)
+            print(voice.get('m4a'),voice.get('text'))
     random.shuffle(voice_arr)
     return voice_arr
 

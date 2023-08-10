@@ -9,7 +9,7 @@ from queue import Queue
 MAX_MSG_NUM = 100
 #[flv @ 0x55b7d2d96a80] Non-monotonous DTS in output stream 0:1; previous: 739658, current: 420381; changing to 739658. This may result in incorrect timestamps in the output file.
 ignore_msgs = ['mp3float','Last message','frame=','configuration:','[flv @']
-print('shell v5.6.0',MAX_MSG_NUM,ignore_msgs)
+print('shell v5.6.1',MAX_MSG_NUM,ignore_msgs)
 ##################################################
 def ShellRun( cmd, stdout=False,  stderr=False, lastmsgout=False):
 	"""
@@ -34,7 +34,7 @@ def ShellRun( cmd, stdout=False,  stderr=False, lastmsgout=False):
 				print( 'ShellRun:stdout={} stderr={} lastmsgout={}'.format(stdout,stderr,lastmsgout),cmd[0:400])
 				result = subprocess.Popen(
 					[ cmd ],
-					shell=True,
+					shell=False,
 					stdout=subprocess.PIPE,
 					stderr=subprocess.PIPE
 				)

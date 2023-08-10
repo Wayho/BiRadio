@@ -62,7 +62,7 @@ def OutputShell( cmd, msgout=True ):
 		#[ "ping 127.0.0.1" ],
 		#[ "find /usr" ],
 		[ cmd ],
-		shell=True,
+		shell=False,
 		stdout=subprocess.PIPE,
 		stderr=subprocess.PIPE
 	)

@@ -303,7 +303,7 @@ def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     # make_temp_next_loop_thread.start()
     cmd = stream.rtmp_loop(RTMP_URL_STR,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE)
     #ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
-    ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
+    ret = shell.ShellRun(cmd,False,False,False)
     cmd_memory()
     print('rtmp::return:',ret)
     stream.rtmp_loop_reset()

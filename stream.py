@@ -20,7 +20,7 @@ BAK_MP4_PATH = 's365_432p_201_192k.mp4'
 
 FFMPEG_MP4_CODEC = '-threads 4 -vcodec libx264 -c:a aac -ac 2 -ar 44100 -ab 192k'
 FFMPEG_RTMP_CODEC = '-threads 5 -vcodec libx264 -acodec aac -b:a 192k'
-FFMPEG_AMIX_CODEC = '-threads 16 -vcodec copy -acodec copy'
+FFMPEG_AMIX_CODEC = '-threads 16 -vcodec copy  -acodec aac -b:a 192k'
 FFMPEG_SUBTITLE = True
 FFMPEG_FRAMERATE = 25
 SUBTITLE_PATH = '/tmp/srt'
@@ -40,11 +40,10 @@ LOOP_LOOPLIST_PATH = 'looplist.txt'
 LOOP_LOOP_MP4_PATH  = "/tmp/loop.mp4"
 LOOP_NEXT_MP4_PATH  = "/tmp/next.mp4"           #next->loop
 LOOP_TEMP_MP4_PATH  = "/tmp/temp.mp4"       #temp->next
-LOOP_AMIX_M4A_LIST = ['aux/voice/s192.m4a']     #混音文件路径
+LOOP_AMIX_M4A_LIST = ['aux/voice/l1000.m4a','aux/voice/l1001.m4a','aux/voice/l1101.m4a','aux/voice/l1105.m4a','aux/voice/l1110.m4a','aux/voice/l2000.m4a','aux/voice/l2001.m4a']     #混音文件路径
 LOOP_SECONDS_UPDATE = 15
 LOOP_CAN_MAKE_NEXT= True      #锁，解锁需要在next->loop,loop开始播放后
-LOOP_RTMP_LOOP = False
-LOOP_MAKE_TEMP_NEXT_LOOP = False
+LOOP_MAKE_TEMP_NEXT_LOOP = False        # no use
 LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
 LOOP_TIME_START = 0
 make_temp_next_loop_thread = None
@@ -70,7 +69,7 @@ FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud
 ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -f flv  {}"
 print('stream v5.2.6:mp4',ffmpeg_mp4)
 print('stream v5.4.2:rtmp',ffmpeg_playlist)
-print('stream v5.6.7:ffmpeg_looplist',ffmpeg_looplist)
+print('stream v5.6.8:ffmpeg_looplist',ffmpeg_looplist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -123,7 +122,7 @@ def test_(str_rtmp,total,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,max_m
     str_rtmp = '\"{}\"'.format(str_rtmp)
     return FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
 
-def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adelay=10000,framerate=FFMPEG_FRAMERATE):
+def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):
     """
     返回rtmp looplist 的cmd，并启动替换loop.mp4的线程，适时根据loop.mp4的时长，用新的temp.mp4替换loop.mp4
     替换cache.mp4的线程需要马上开始混音，并生成temp.mp4，保证在loop播完前生成
@@ -133,43 +132,78 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adel
     :param codec:=FFMPEG_RTMP_CODEC
     :return: ffmpeg cmd
     """
-    global LOOP_RTMP_LOOP
-    global LOOP_MAKE_TEMP_NEXT_LOOP
     global LOOP_DURATION_TOTAL
     global LOOP_TIME_START
     global make_temp_next_loop_thread
-    print('try rtmp_loop LOOP_RTMP_LOOP:{}  LOOP_MAKE_TEMP_NEXT_LOOP:{}'.format(LOOP_RTMP_LOOP,LOOP_MAKE_TEMP_NEXT_LOOP))
-    # if LOOP_RTMP_LOOP:
-    #     return None
+    print('try rtmp_loop LOOP_DURATION_TOTAL:{}  LOOP_TIME_START:{}'.format(LOOP_DURATION_TOTAL,LOOP_TIME_START))
     if not framerate:
         framerate = FFMPEG_FRAMERATE
     str_rtmp = '\"{}\"'.format(str_rtmp)
-    msgout = False
     mp4list = mp3list(MP4_ROOT)
-    time.sleep(2)
-    LOOP_RTMP_LOOP = True
     if len(mp4list) == 0:
         shutil.copy(BAK_MP4_PATH,LOOP_LOOP_MP4_PATH)
-        # return 实时生成 flv
-        # cmd = FFMPEG_SAMPLE_RTMP_LIVE.format(str_rtmp)
-        # return shell.OutputShell(cmd,msgout)
     cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
     LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
     LOOP_TIME_START = time.time()
-    # if not LOOP_MAKE_TEMP_NEXT_LOOP:
-    #     LOOP_MAKE_TEMP_NEXT_LOOP = True
-    #     make_temp_next_loop_thread = threading.Thread(target=make_temp_next_loop,args=(adelay,amix_codec,framerate,))
-    #     #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    #     make_temp_next_loop_thread.start()
-    #ret =  shell.OutputShell(cmd,msgout)
-    # LOOP_MAKE_TEMP_NEXT_LOOP = False
-    # LOOP_RTMP_LOOP = False
     return cmd
 
+def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
+#def amix_next(mp4,mix_m4a_list,adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
+    """
+    混音，生成temp.mp4，保证在loop.mp4播完前60s生成
+    :param name:=预先生成的mp4 path
+    :param mix_m4a_list:=混入语音path，no no no 如果空，不混音，直接延时复制
+    :param adelay:=混入语音adelay ms
+    :param framerate:=FFMPEG_FRAMERATE
+    :param codec:=FFMPEG_MP4_CODEC
+    :return: T/F
+    """
+    global LOOP_CAN_MAKE_NEXT
+    global LOOP_DURATION_TOTAL
+    LOOP_CAN_MAKE_NEXT = False
+    mp4list = mp3list(MP4_ROOT)
+    mp4 = mp4list[0]
+    mix_list = []
+    for file_path in LOOP_AMIX_M4A_LIST:
+        if  os.path.exists(file_path):
+            mix_list.append(file_path)
+    if(len(mix_list)==0):
+        print('No mix audio:',LOOP_TEMP_MP4_PATH)
+        shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+        os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
+        return 1
+    ret = 9
+    now = time.time()
+    before_end = 122    #歌曲结束前120才最后处理
+    before_timeout = 90 #歌曲结束前90必须处理
+    print('make_temp_next_loop:TIME_START={},DURATION_TOTAL={},t={}'.format(LOOP_TIME_START,LOOP_DURATION_TOTAL,now-LOOP_TIME_START))
+    probe = ffmpeg.probe(LOOP_LOOP_MP4_PATH)
+    format = probe.get('format')
+    last_loop_duration = float(format.get('duration'))      #seconds
+    if LOOP_TIME_START + LOOP_DURATION_TOTAL + last_loop_duration -before_timeout < now:       
+        LOOP_DURATION_TOTAL += last_loop_duration
+        FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
+        cmd = FFMPEG_AMIX.format(mp4,mix_list[random.randint(0,len(mix_list)-1)],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
+        #ret = shell.OutputShell(cmd,False)
+        ret = shell.ShellRun(cmd,False,False,False)
+        if 0==ret:
+            try:
+                probe = ffmpeg.probe(LOOP_TEMP_MP4_PATH)
+                streams = probe.get('streams')
+                os.rename(LOOP_TEMP_MP4_PATH,LOOP_NEXT_MP4_PATH)
+                os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
+                print(LOOP_TEMP_MP4_PATH,streams)
+                return ret
+            except:
+                print('Error probe:',LOOP_TEMP_MP4_PATH)
+        #失败，补救
+        print('Error shell cmd:',LOOP_TEMP_MP4_PATH)
+        shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+        os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
+    return ret
+
 def rtmp_loop_reset():
-    global LOOP_RTMP_LOOP
     global LOOP_MAKE_TEMP_NEXT_LOOP
-    LOOP_RTMP_LOOP = False
     LOOP_MAKE_TEMP_NEXT_LOOP = False
 
 def make_temp_next_loop_SXH(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
@@ -253,57 +287,7 @@ def make_temp_next_loop_SXH(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPE
         
 
 
-def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
-#def amix_next(mp4,mix_m4a_list,adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
-    """
-    混音，生成temp.mp4，保证在loop.mp4播完前生成
-    :param name:=预先生成的mp4 path
-    :param mix_m4a_list:=混入语音path，no no no 如果空，不混音，直接延时复制
-    :param adelay:=混入语音adelay ms
-    :param framerate:=FFMPEG_FRAMERATE
-    :param codec:=FFMPEG_MP4_CODEC
-    :return: T/F
-    """
-    global LOOP_CAN_MAKE_NEXT
-    global LOOP_DURATION_TOTAL
-    LOOP_CAN_MAKE_NEXT = False
-    mp4list = mp3list(MP4_ROOT)
-    mp4 = mp4list[0]
-    mix_list = []
-    for file_path in LOOP_AMIX_M4A_LIST:
-        if  os.path.exists(file_path):
-            mix_list.append(file_path)
-    if(len(mix_list)==0):
-        print('No mix audio:',LOOP_TEMP_MP4_PATH)
-        shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
-        os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
-        return 1
-    ret = 9
-    now = time.time()
-    print('make_temp_next_loop:TIME_START={},DURATION_TOTAL={},t={}'.format(LOOP_TIME_START,LOOP_DURATION_TOTAL,now-LOOP_TIME_START))
-    if LOOP_TIME_START + LOOP_DURATION_TOTAL < now:
-        probe = ffmpeg.probe(LOOP_LOOP_MP4_PATH)
-        format = probe.get('format')
-        last_loop_duration = float(format.get('duration'))      #seconds
-        LOOP_DURATION_TOTAL += last_loop_duration
-        FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -y -f flv {}"
-        cmd = FFMPEG_AMIX.format(mp4,mix_list[0],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
-        ret = shell.OutputShell(cmd,False)
-        if 0==ret:
-            try:
-                probe = ffmpeg.probe(LOOP_TEMP_MP4_PATH)
-                streams = probe.get('streams')
-                os.rename(LOOP_TEMP_MP4_PATH,LOOP_NEXT_MP4_PATH)
-                os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
-                print(LOOP_TEMP_MP4_PATH,streams)
-                return ret
-            except:
-                print('Error probe:',LOOP_TEMP_MP4_PATH)
-        #失败，补救
-        print('Error shell cmd:',LOOP_TEMP_MP4_PATH)
-        shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
-        os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
-    return ret
+
 
 def rtmp_concat_mp4(str_rtmp,total,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE,max_memory=MAX_MEMORY,floder_list=['']):
     """

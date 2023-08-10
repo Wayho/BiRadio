@@ -39,7 +39,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.6.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.6.5 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -131,6 +131,7 @@ def Setup(**params):
     global Global_Danmu_Retry_Times
     global FFMPEG_MP4_CODEC
     global FFMPEG_RTMP_CODEC
+    global FFMPEG_AMIX_CODEC
     global FFMPEG_FRAMERATE
     global FFMPEG_SUBTITLE
     # config = class_variable.get_config()
@@ -163,13 +164,17 @@ def Setup(**params):
         # v5.0.0
         FFMPEG_MP4_CODEC = variable.get('codec_mp4')
         FFMPEG_RTMP_CODEC = variable.get('codec_rtmp')
+        FFMPEG_AMIX_CODEC = variable.get('codec_amix')
     else:
         print('############## ERROR IN LOAD VARIABLE ##################')
     print_v()
     class_variable.SaveCookiesFromDB()
-    cmd_ls_tmp()
+    cmd_ls_loop_tmp()
     return True
 
+
+# once a day, before work day 10 seconds
+# 50 59 3 * * ?
 @engine.define( 'wss_danmu' )
 # 一次性唤醒，无需Heart
 def start_wss_danmu(**params):
@@ -180,8 +185,10 @@ def start_wss_danmu(**params):
 
 def try_wss_danmu():
     requests.get( "http://localhost:3000" )
+    time.sleep(40)
     if canStart():
-        Setup()
+        if not BILIBILI_CLMY:
+            Setup()
         if not ROOM_ID:
             print('ROOM_ID==None',ROOM_ID)
         else:
@@ -294,24 +301,13 @@ def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
         Setup()
     # make_temp_next_loop_thread = threading.Thread(target=stream.rtmp_loop,args=(RTMP_URL_STR,FFMPEG_RTMP_CODEC,FFMPEG_AMIX_CODEC,10000,FFMPEG_FRAMERATE,))
     # make_temp_next_loop_thread.start()
-    cmd = stream.rtmp_loop(RTMP_URL_STR,codec=FFMPEG_RTMP_CODEC,amix_codec=FFMPEG_AMIX_CODEC,adelay=10000,framerate=FFMPEG_FRAMERATE)
-    ret = -9
-    
-    if cmd:
-        for i in range(999):
-            ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
-            print('rtmp::return:',ret)
-            #stream.rtmp_loop_reset()
-            cmd_memory()
-            time.sleep(2)
-            cmd_memory()
-            cmd_ls_tmp()
-            if -9 == ret:
-                break
-            if 1 == ret:
-                break
+    cmd = stream.rtmp_loop(RTMP_URL_STR,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE)
+    #ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
+    ret = shell.OutputShell(cmd,FFMPEG_MESSAGE_OUT)
+    cmd_memory()
+    print('rtmp::return:',ret)
+    stream.rtmp_loop_reset()
     return ret
-    return True
 
 @engine.define( 'make_temp_next_loop' )
 def make_temp_next_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
@@ -322,10 +318,10 @@ def make_temp_next_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     
     return make_temp_next_loop_thread.start()
 
-@engine.define( 'ffmpeg_loop_exit' )
+@engine.define( 'ffmpeg_loop_reset' )
 def ffmpeg_loop_exit(floder_list=[], artist=None,radioname=RADIO_NAME):
-    print('ffmpeg_loop_exit:',floder_list, artist,radioname)
-    stream.rtmp_loop_exit()
+    print('rtmp_loop_reset:',floder_list, artist,radioname)
+    stream.rtmp_loop_reset()
     return True
 
 @engine.define( 'map_mp4' )
@@ -372,8 +368,10 @@ def do_one_minute( **params ):
         if Global_minutes % 20 == 1:
                 print('do_one_minute:',Global_Retry_Times,ffmpeg_status)
                 requests.get( "http://localhost:3000" )
-        is_playlist = ffmpeg_status.get('playlist') or ffmpeg_status.get('looplist')
-        if is_playlist:
+        if ffmpeg_status.get('looplist'):
+            make_temp_next_loop()
+            return False
+        if ffmpeg_status.get('playlist'):
             return False
         else:
             # is making mp4, must kill for cmd_restart_radio
@@ -389,15 +387,11 @@ def cmd_restart_radio():
         print('Global_Retry_Times >= ERROR_RETRY')
         return False
     
-    ffmpeg_loop()
-    return True
-    
-    # < v5.5
     playret = 0
     if PLAY_ARTIST:
         playret = play_artist()
     else:
-        playret = play_play()
+        playret = ffmpeg_loop()     #play_play()
     if -9 == playret:
         return False
     elif 1== playret:
@@ -555,7 +549,7 @@ def cmd_heart( **params ):
     (today,tomorrow) = class_variable.get_today_AP()
     ffmpeg_status = stream.ffmpeg_status()
     print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes,ffmpeg_status)
-    cmd_ls_tmp()
+    cmd_ls_loop_tmp()
     return True
 
 # # 待升级
@@ -575,42 +569,49 @@ def cmd_update_proxies( **params ):
 # 调试 {"cmd":"ls -l" }
 def cmd_shell( cmd, **params ):
     shell.OutputShell(cmd)
+    cmd_ls_loop_tmp()
     return True
         
 @engine.define( 'ls_mp3' )
 def cmd_ls_mp3( **params):
     shell.OutputShell('ls {} -R -l'.format(MP3_ROOT))
+    cmd_ls_loop_tmp()
     return True
         
 @engine.define( 'ls_mp4' )
 def cmd_ls_mp4( **params):
     shell.OutputShell('ls {} -R -l'.format(MP4_ROOT))
+    cmd_ls_loop_tmp()
     return True
 
 @engine.define( 'ls_srt' )
 def cmd_ls_srt( **params):
     shell.OutputShell('ls {} -R -l'.format(SUBTITLE_ROOT))
+    cmd_ls_loop_tmp()
     return True
 
 @engine.define( 'ls_img' )
 def cmd_ls_img( **params):
     shell.OutputShell('ls img -R -l')
+    cmd_ls_loop_tmp()
     return True
 
-@engine.define( 'ls_tmp' )
-def cmd_ls_tmp( **params):
-    shell.OutputShell('ls /tmp -l')
+@engine.define( 'ls_loop_tmp' )
+def cmd_ls_loop_tmp( **params):
+    shell.OutputShell('ls  -l {}'.format(LOOP_LOOP_MP4_PATH))
     return True
 
 @engine.define( 'ls' )
 def cmd_ls( **params):
     shell.OutputShell('ls -l')
+    cmd_ls_loop_tmp()
     return True
 
 @engine.define( 'ps_aux_p' )
 # 调试 {"cmd":"ls -l" }
 def cmd_ps( **params ):
     shell.OutputShell('ps -aux')
+    cmd_ls_loop_tmp()
     return True
  
 @engine.define( 'ps_aux_ffmpeg' )

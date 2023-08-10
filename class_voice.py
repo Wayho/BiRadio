@@ -83,6 +83,7 @@ def find_voice(itype):
     global Global_voice_obj_array
     find = load_voice_by_type(itype)
     voice_arr = []
+    print('find voice',len(find))
     for voice in find:
         #if voice.get('type')==itype:
             voice_arr.append(voice)
@@ -94,7 +95,7 @@ def load_voice_by_type(type):
     global Global_voice_obj_array
     DBClass = leancloud.Object.extend( DB_NAME )
     query = DBClass.query
-    query.limit(1000)
+    #query.limit(1000)
     query.equal_to('on', True)
     query.equal_to('type', type)
     return query.find()

@@ -30,7 +30,7 @@ __Global_danmu_queue = Queue()  # 创建弹幕队列对象
 __Global_gift_queue = Queue()  # 创建送礼队列对象
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
 
-print('wss_danmu v5.6.1 ROOM_IDS:',ROOM_IDS)
+print('wss_danmu v5.6.2 ROOM_IDS:',ROOM_IDS)
 
 ####################### class_voice #########################################
 def put_like(uid,uname,type,message):
@@ -120,7 +120,7 @@ class MyHandler(blivedm.BaseHandler):
         put_like(command['data']['uid'],command['data']['uname'],MsgType.INTERACT_WORD,None)
         obj = class_viewer.new_viewer(client.room_id,command['data']['uid'],command['data']['uname'])
         if obj:
-            print("INTERACT",ROOM_IDS[0][0:4],obj.get('t_'+str(ROOM_IDS[0])),ROOM_IDS[1][0:4],obj.get('t_'+str(ROOM_IDS[1])),ROOM_IDS[2][0:4],obj.get('t_'+str(ROOM_IDS[2])),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))
+            print("INTERACT",str(ROOM_IDS[0])[0:4],obj.get('t_'+str(ROOM_IDS[0])),str(ROOM_IDS[1])[0:4],obj.get('t_'+str(ROOM_IDS[1])),str(ROOM_IDS[2])[0:4],obj.get('t_'+str(ROOM_IDS[2])),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))
         else:
             print(f"INTERACT_WORD: {command['data']['uname']}")
     _CMD_CALLBACK_DICT['INTERACT_WORD'] = __interact_word_callback  # noqa
@@ -132,7 +132,7 @@ class MyHandler(blivedm.BaseHandler):
         put_like(command['data']['uid'],command['data']['uname'],MsgType.LIKE_INFO_V3_CLICK,None)
         obj = class_viewer.like(command['data']['uid'])
         if obj:
-            print("LIKE_CLICK",ROOM_IDS[0][0:4],obj.get('t_'+str(ROOM_IDS[0])),ROOM_IDS[1][0:4],obj.get('t_'+str(ROOM_IDS[1])),ROOM_IDS[2][0:4],obj.get('t_'+str(ROOM_IDS[2])),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))
+            print("LIKE_CLICK",str(ROOM_IDS[0])[0:4],obj.get('t_'+str(ROOM_IDS[0])),str(ROOM_IDS[1])[0:4],obj.get('t_'+str(ROOM_IDS[1])),str(ROOM_IDS[2])[0:4],obj.get('t_'+str(ROOM_IDS[2])),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))
         else:
             print(f"LIKE_INFO_V3_CLICK: {command['data']['uname']}")
     _CMD_CALLBACK_DICT['LIKE_INFO_V3_CLICK'] = __like_info_v3_click_callback

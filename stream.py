@@ -68,10 +68,10 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -hide_banner -f flv {}  {}"
 FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -hide_banner -y -f flv {}"
-ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -hide_banner -f flv  {}"
+ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -hide_banner -copyts -f flv  {}"
 print('stream v5.2.7:mp4',ffmpeg_mp4)
 print('stream v5.4.3:rtmp',ffmpeg_playlist)
-print('stream v5.6.10:ffmpeg_looplist',ffmpeg_looplist)
+print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -209,11 +209,10 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
     return ret
 
 def rename_next_loop(next,loop):
-    print_video_info(next)
-    print_video_info(loop)
-    #os.rename(next,loop)
-    cmd = 'mv -f {} {}'.format(next,loop)
-    shell.OutputShell(cmd)
+    if print_video_info(next) and  print_video_info(loop):
+        os.rename(next,loop)
+    # cmd = 'mv -f {} {}'.format(next,loop)
+    # shell.OutputShell(cmd)
 
 def print_video_info(file_path):
     if os.path.exists(file_path):
@@ -221,8 +220,10 @@ def print_video_info(file_path):
         format = probe.get('format')
         tags = format.get('tags')
         print('{} title:{} artist:{} duration:{} '.format(file_path,tags.get('title'),tags.get('artist'),format.get('duration')))
+        return True
     else:
-        print('{} not exists'.format(file_path))
+        print(':::::NO FILE:::::{} not exists'.format(file_path))
+        return False
 
 def help_loop():
     """
@@ -579,4 +580,4 @@ if __name__ == '__main__':
     except:
         print('No argv or error, sample: python stream.py m/r num')
         print("{\"cmd\":\"python stream.py m  5\"}","mp4")
-        print("{\"cmd\":\"python stream.py r  5\"}","rtmp
+        print("{\"cmd\":\"python stream.py r  5\"}","rtmp")

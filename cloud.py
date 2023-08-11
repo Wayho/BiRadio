@@ -16,6 +16,7 @@ import class_artist as class_artist
 import down_123_proxies as download
 import class_proxies as class_proxies
 import class_curl as class_curl
+import class_voice as class_voice
 import stream as stream
 import ding_msg as ding_msg
 import wss_danmu as wss_danmu
@@ -30,7 +31,7 @@ MP3_ROOT = 'aux'
 MP4_ROOT = '/tmp/mp4'
 SUBTITLE_ROOT = '/tmp/srt'
 LOOP_LOOP_MP4_PATH  = "/tmp/loop.mp4"
-SAMPLE_MP4_432p_LIST = ['s365_432p_201_192k.mp4','s365_432p_101_192k.mp4','s365_432p_146_192k.mp4','sziji_432p_176_192k.mp4']
+SAMPLE_MP4_432p_LIST = ['s365_432p_201_192k.mp4','s365_432p_101_192k.mp4','szg_432p_171_192k.mp4','sziji_432p_176_192k.mp4']
 BAK_MP4_PATH = 's365_432p_201_192k.mp4'
 
 SITENAME = os.environ.get('SITENAME') or 'none'
@@ -39,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.6.6 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.7.3 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -170,6 +171,7 @@ def Setup(**params):
     print_v()
     class_variable.SaveCookiesFromDB()
     cmd_ls_loop_tmp()
+    class_voice.load_voice()
     return True
 
 

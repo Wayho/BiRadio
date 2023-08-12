@@ -1,2 +1,2 @@
-file '/tmp/loop.mp4'
-file '/tmp/loop.mp4'
+file '/tmp/loop.flv
+file '/tmp/loop.flv

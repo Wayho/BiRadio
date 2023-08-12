@@ -24,6 +24,7 @@ FFMPEG_RTMP_CODEC = '-threads 5 -vcodec libx264 -acodec aac -b:a 192k'
 FFMPEG_AMIX_CODEC = '-threads 16 -vcodec copy  -acodec aac -b:a 192k'
 FFMPEG_SUBTITLE = True
 FFMPEG_FRAMERATE = 25
+FFMPEG_GREP = '| grep \"^frame= 50\"'
 SUBTITLE_PATH = '/tmp/srt'
 
 VIDEO_P = 'hd720'
@@ -140,7 +141,7 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):
     print('try rtmp_loop LOOP_DURATION_TOTAL:{}  LOOP_TIME_START:{}'.format(LOOP_DURATION_TOTAL,LOOP_TIME_START))
     if not framerate:
         framerate = FFMPEG_FRAMERATE
-    str_rtmp = '\"{}\"'.format(str_rtmp)
+    str_rtmp = '\"{}\" {}'.format(str_rtmp,FFMPEG_GREP)
     mp4list = mp3list(MP4_ROOT)
     if len(mp4list) == 0:
         help_loop()

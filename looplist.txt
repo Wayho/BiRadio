@@ -1,2 +1,2 @@
-file '/tmp/loop.flv
-file '/tmp/loop.flv
+file 'pipe2'
+file 'pipe2'

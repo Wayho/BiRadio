@@ -178,6 +178,7 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
             # 万一now太超前，跳过应该next的歌，直接切到now对应的歌
             LOOP_DURATION_TOTAL += last_loop_duration
         voice_arr = class_voice.get_amix_voice()
+        m4a = LOOP_AMIX_M4A_LIST[1]
         if voice_arr:
             mix_list = []
             for file_name in voice_arr:
@@ -186,14 +187,16 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
                     mix_list.append(file_path)
             if(len(mix_list)==0):
                 print('No mix audio file:',LOOP_TEMP_MP4_PATH)
-                return help_loop()
+                #return help_loop()
+            else:
+                m4a = mix_list[0]
         else:
             print('No mix audio message:not change loop',LOOP_TEMP_MP4_PATH)
-            return 0# help_loop()
+            #return 0# help_loop()
         mp4list = mp3list(MP4_ROOT)
         mp4 = mp4list[0]
         FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -copyts -y -f flv {} {}"
-        cmd = FFMPEG_AMIX.format(mp4,mix_list[random.randint(0,len(mix_list)-1)],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH,FFMPEG_GREP)
+        cmd = FFMPEG_AMIX.format(mp4,m4a,adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH,FFMPEG_GREP)
         #ret = shell.OutputShell(cmd,False)
         ret = shell.ShellRun(cmd,False,False,False)
         if 0==ret:

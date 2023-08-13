@@ -24,7 +24,6 @@ FFMPEG_RTMP_CODEC = '-threads 5 -vcodec libx264 -acodec aac -b:a 192k'
 FFMPEG_AMIX_CODEC = '-threads 16 -vcodec copy  -acodec aac -b:a 192k'
 FFMPEG_SUBTITLE = True
 FFMPEG_FRAMERATE = 25
-FFMPEG_GREP = '| grep \"^frame= 50\"'
 SUBTITLE_PATH = '/tmp/srt'
 
 VIDEO_P = 'hd720'
@@ -141,7 +140,7 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):
     print('try rtmp_loop LOOP_DURATION_TOTAL:{}  LOOP_TIME_START:{}'.format(LOOP_DURATION_TOTAL,LOOP_TIME_START))
     if not framerate:
         framerate = FFMPEG_FRAMERATE
-    str_rtmp = '\"{}\" {}'.format(str_rtmp,FFMPEG_GREP)
+    str_rtmp = '\"{}\"'.format(str_rtmp)
     mp4list = mp3list(MP4_ROOT)
     if len(mp4list) == 0:
         help_loop()
@@ -178,7 +177,6 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
             # 万一now太超前，跳过应该next的歌，直接切到now对应的歌
             LOOP_DURATION_TOTAL += last_loop_duration
         voice_arr = class_voice.get_amix_voice()
-        m4a = LOOP_AMIX_M4A_LIST[1]
         if voice_arr:
             mix_list = []
             for file_name in voice_arr:
@@ -187,16 +185,14 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
                     mix_list.append(file_path)
             if(len(mix_list)==0):
                 print('No mix audio file:',LOOP_TEMP_MP4_PATH)
-                #return help_loop()
-            else:
-                m4a = mix_list[0]
+                return help_loop()
         else:
             print('No mix audio message:not change loop',LOOP_TEMP_MP4_PATH)
-            #return 0# help_loop()
+            return 0# help_loop()
         mp4list = mp3list(MP4_ROOT)
         mp4 = mp4list[0]
-        FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -copyts -y -f flv {} {}"
-        cmd = FFMPEG_AMIX.format(mp4,m4a,adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH,FFMPEG_GREP)
+        FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -copyts -y -f flv {}"
+        cmd = FFMPEG_AMIX.format(mp4,mix_list[random.randint(0,len(mix_list)-1)],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
         #ret = shell.OutputShell(cmd,False)
         ret = shell.ShellRun(cmd,False,False,False)
         if 0==ret:

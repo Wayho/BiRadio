@@ -68,7 +68,7 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -hide_banner -f flv {}  {}"
 #FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -hide_banner -copyts -y -f flv {}"
-ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -i looplist.txt {} -r {} -hide_banner -f flv  {}"
+ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0  -flush_packets 0 -i looplist.txt {} -r {} -hide_banner -f flv  {}"
 #ffmpeg -re -stream_loop -1 -f concat -i list.txt -flush_packets 0
 print('stream v5.7.0:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)

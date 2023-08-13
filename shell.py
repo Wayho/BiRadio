@@ -4,6 +4,7 @@ import select
 import os, signal
 import psutil
 import sys
+import time
 from queue import Queue
 
 MAX_MSG_NUM = 300
@@ -86,7 +87,7 @@ def OutputShell( cmd, msgout=True ):
 									print(last_msg,end='')
 					else:
 						if 'frame= 50'==last_msg[0:9]:
-							msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
+							msg_queue_obj = fifo_msg(msg_queue_obj,'QQ'+last_msg)
 						else:
 						        msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
 				except:
@@ -104,12 +105,16 @@ def OutputShell( cmd, msgout=True ):
 								if '[flv @'!=last_errmsg[0:6]:
 									print(last_errmsg,end='')
 					else:
+						if 'frame= 50'==last_msg[0:9]:
+							msg_queue_obj = fifo_msg(msg_queue_obj,'EE'+last_errmsg)
+						else:
 						msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)
 				except:
 					msg_queue_obj = fifo_msg(msg_queue_obj,'OutputShell:error readbuf_errmsg utf8')
 	result.wait() # 等待字进程结束( 等待shell命令结束 )
 	#print result.returncode
 	##(stdoutMsg,stderrMsg) = result .communicate()#非阻塞时读法.
+	time.sleep(1)
 	if not msgout:
 		while not msg_queue_obj.empty():
 			print('last_msg:',msg_queue_obj.get(),end='')

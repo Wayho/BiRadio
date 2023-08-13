@@ -152,7 +152,7 @@ def Shell_fifo_msg( cmd, msgout=True ):
 									pass
 									#print(last_msg,end='')
 					else:
-						if 'frame= 50'==last_msg[0:9]:
+						if 'frame='==last_msg[0:6]:
 							msg_queue_obj = fifo_msg(msg_queue_obj,'QQ'+last_msg)
 						else:
 						        msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
@@ -172,7 +172,7 @@ def Shell_fifo_msg( cmd, msgout=True ):
 									#print(last_errmsg,end='')
 									pass
 					else:
-						if 'frame= 50'==last_errmsg[0:9]:
+						if 'frame='==last_errmsg[0:6]:
 							msg_queue_obj = fifo_msg(msg_queue_obj,'EE'+last_errmsg)
 						else:
 						        msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)

@@ -174,6 +174,7 @@ def Shell_fifo_msg( cmd, msgout=True ):
 					else:
 						if 'frame='==last_errmsg[0:6]:
 							msg_queue_obj = fifo_msg(msg_queue_obj,'EE'+last_errmsg)
+							msg_queue_obj = fifo_msg(msg_queue_obj,'EE'+str(time.time()))
 						else:
 						        msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)
 				except:

@@ -85,7 +85,10 @@ def OutputShell( cmd, msgout=True ):
 								if '[flv @'!=last_msg[0:6]:
 									print(last_msg,end='')
 					else:
-						msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
+						if 'frame= 50'!=last_msg[0:9]:
+							msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
+						else:
+						        msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
 				except:
 					msg_queue_obj = fifo_msg(msg_queue_obj,'OutputShell:error last_msg utf8')
 

@@ -68,10 +68,11 @@ subtitle_para = ",subtitles={}:force_style='Fontsize=24'"
 #ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i playlist.txt -r 25  -f flv -threads 2 -vcodec libx264 -acodec aac {}"
 ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -hide_banner -f flv {}  {}"
 #FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -hide_banner -copyts -y -f flv {}"
-ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -hide_banner -f flv  {}"
+ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -i looplist.txt {} -r {} -hide_banner -f flv  {}"
+#ffmpeg -re -stream_loop -1 -f concat -i list.txt -flush_packets 0
 print('stream v5.7.0:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
-print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
+print('stream v5.6.12:ffmpeg_looplist',ffmpeg_looplist)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -144,7 +145,7 @@ def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):
     mp4list = mp3list(MP4_ROOT)
     if len(mp4list) == 0:
         help_loop()
-    cmd = ffmpeg_looplist.format(framerate,codec,str_rtmp)
+    cmd = ffmpeg_looplist.format(codec,framerate,str_rtmp)
     LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
     LOOP_TIME_START = int(time.time())
     return cmd

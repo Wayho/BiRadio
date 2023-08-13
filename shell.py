@@ -105,7 +105,7 @@ def OutputShell( cmd, msgout=True ):
 								if '[flv @'!=last_errmsg[0:6]:
 									print(last_errmsg,end='')
 					else:
-						if 'frame= 50'==last_msg[0:9]:
+						if 'frame= 50'==last_errmsg[0:9]:
 							msg_queue_obj = fifo_msg(msg_queue_obj,'EE'+last_errmsg)
 						else:
 						        msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)

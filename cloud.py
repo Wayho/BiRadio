@@ -326,6 +326,7 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
         cmd_memory()
         if 0 == ret:
             stream.rename_next_loop()
+        time.sleep(2)
     Global_mp4_playing = False
     return ret
 
@@ -413,7 +414,7 @@ def do_one_minute( **params ):
                 print('do_one_minute:',Global_Retry_Times,ffmpeg_status)
                 requests.get( "http://localhost:3000" )
         if ffmpeg_status.get('playmp4'):
-            make_temp_next()
+            #make_temp_next()
             return False
         if ffmpeg_status.get('looplist'):
             make_temp_next_loop()

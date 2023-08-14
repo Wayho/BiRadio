@@ -312,8 +312,9 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     ret = 0
     Global_mp4_playing = True
     while 0==ret:
+        start = stream.reset_time_start()
         ret = shell.ShellRun(cmd,False,False,True)
-        print('rtmp::return:',ret)
+        print('rtmp::return:{} seconds:{}'.format(ret,int(time.time()-start)))
         cmd_memory()
         if 0 == ret:
             stream.rename_next_loop()

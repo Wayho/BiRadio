@@ -151,9 +151,16 @@ def rtmp_mp4(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):
     if len(mp4list) == 0:
         help_loop()
     cmd = ffmpeg_rtmp_mp4.format(LOOP_LOOP_MP4_PATH,framerate,codec,str_rtmp)
-    LOOP_DURATION_TOTAL = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
-    LOOP_TIME_START = int(time.time())
+    #LOOP_TIME_START = int(time.time()) #need change in cloud
     return cmd
+
+def reset_time_start():
+    """
+    :return: LOOP_TIME_START
+    """
+    global LOOP_TIME_START
+    LOOP_TIME_START = int(time.time()) #need change in cloud
+    return LOOP_TIME_START
 
 def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
 #def amix_next(mp4,mix_m4a_list,adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
@@ -176,7 +183,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
     before_timeout = 90 #歌曲结束前90必须处理
     probe = ffmpeg.probe(LOOP_LOOP_MP4_PATH)
     format = probe.get('format')
-    last_loop_duration = float(format.get('duration'))      #seconds
+    last_loop_duration = int(float(format.get('duration')) )     #seconds
     print('next_mp4:TIME_START={},DURATION_LAST={},t={}'.format(LOOP_TIME_START,last_loop_duration,now-LOOP_TIME_START))
     if LOOP_TIME_START +  last_loop_duration -before_timeout < now:
         mp4list = mp3list(MP4_ROOT)

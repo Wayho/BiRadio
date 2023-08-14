@@ -30,7 +30,7 @@ __Global_danmu_queue = Queue()  # 创建弹幕队列对象
 __Global_gift_queue = Queue()  # 创建送礼队列对象
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
 
-print('wss_danmu v5.6.2 ROOM_IDS:',ROOM_IDS)
+print('wss_danmu v5.6.3 ROOM_IDS:',ROOM_IDS)
 
 ####################### class_voice #########################################
 def put_like(uid,uname,type,message):
@@ -145,7 +145,7 @@ class MyHandler(blivedm.BaseHandler):
 
     async def _on_heartbeat(self, client: blivedm.BLiveClient, message: blivedm.HeartbeatMessage):
         global Global_30s_times
-        if Global_30s_times % 40==0:
+        if Global_30s_times % 20==0:
             print(f'[{client.room_id}] 当前人气值：{message.popularity}')
         Global_30s_times += 1
 

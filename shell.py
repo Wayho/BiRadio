@@ -143,9 +143,6 @@ def Shell_fifo_msg( cmd, msgout=True ):
 									pass
 									#print(last_msg,end='')
 					else:
-						if 'frame='!=last_msg[0:6]:
-							msg_queue_obj = fifo_msg(msg_queue_obj,'Msg:'+last_msg)
-						else:
 							msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
 				except:
 					msg_queue_obj = fifo_msg(msg_queue_obj,'OutputShell:error last_msg utf8')
@@ -161,22 +158,17 @@ def Shell_fifo_msg( cmd, msgout=True ):
 									#print(last_errmsg,end='')
 									pass
 					else:
-						if 'frame='!=last_errmsg[0:6]:
-							msg_queue_obj = fifo_msg(msg_queue_obj,'Err:'+last_errmsg)
-							msg_queue_obj = fifo_msg(msg_queue_obj,'Err:'+str(time.time()))
-						else:
 							msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)
 				except:
 					msg_queue_obj = fifo_msg(msg_queue_obj,'OutputShell:error readbuf_errmsg utf8')
 	result.wait() # 等待字进程结束( 等待shell命令结束 )
 	#print result.returncode
 	##(stdoutMsg,stderrMsg) = result .communicate()#非阻塞时读法.
-	time.sleep(1)
 	#if not msgout:
 	msg_last = []
 	while not msg_queue_obj.empty():
 			msg_last.append(msg_queue_obj.get())
-	for i in range(-3,-1):
+	for i in range(-22,0):
 			print('fifo_msg:',msg_last[len(msg_last)+i],end='')
 	return result.returncode
 

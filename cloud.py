@@ -40,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.8.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.8.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -80,6 +80,7 @@ FFMPEG_RTMP_CODEC = '-threads 5 -vcodec copy -acodec aac -b:a 192k'
 FFMPEG_AMIX_CODEC = '-threads 16 -vcodec copy -acodec aac -b:a 192k'
 FFMPEG_FRAMERATE = None
 FFMPEG_SUBTITLE = True
+FFMPEG_NEXT_SECONDS = 30
 
 RADIO_NAME = 'Live Music | 极其音乐'
 CHANGE_RADIO_NAME = False
@@ -136,6 +137,7 @@ def Setup(**params):
     global FFMPEG_AMIX_CODEC
     global FFMPEG_FRAMERATE
     global FFMPEG_SUBTITLE
+    global FFMPEG_NEXT_SECONDS
     # config = class_variable.get_config()
     # print(config)
     variable = class_variable.get_variable()
@@ -167,6 +169,7 @@ def Setup(**params):
         FFMPEG_MP4_CODEC = variable.get('codec_mp4')
         FFMPEG_RTMP_CODEC = variable.get('codec_rtmp')
         FFMPEG_AMIX_CODEC = variable.get('codec_amix')
+        FFMPEG_NEXT_SECONDS = variable.get('next_seconds')
     else:
         print('############## ERROR IN LOAD VARIABLE ##################')
     print_v()
@@ -312,7 +315,12 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     ret = 0
     Global_mp4_playing = True
     while 0==ret:
+        info = stream.get_audio_info(LOOP_LOOP_MP4_PATH)
+        time_start = info.get('duration')-FFMPEG_NEXT_SECONDS
+        print(time_start,info)
         start = stream.reset_time_start()
+        timer=threading.Timer(time_start,stream.make_temp_next,args=(10000,FFMPEG_AMIX_CODEC,))
+        timer.start()
         ret = shell.ShellRun(cmd,False,False,True)
         print('rtmp::return:{} seconds:{}'.format(ret,int(time.time()-start)))
         cmd_memory()
@@ -323,6 +331,7 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
 
 @engine.define( 'make_temp_next' )
 def make_temp_next(floder_list=[], artist=None,radioname=RADIO_NAME):
+    return
     if not BILIBILI_CLMY:
         Setup()
     make_temp_next_thread = threading.Thread(target=stream.make_temp_next,args=(10000,FFMPEG_AMIX_CODEC,))

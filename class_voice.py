@@ -16,7 +16,7 @@ Global_gift = []
     # GUARD_BUY = 5                           # 有人上舰
     # SUPER_CHAT_MESSAGE = 6  # 醒目留言
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
-Global_danmu_play = ['点','播放','请点','请点']
+Global_danmu_play = ['麻烦播放','麻烦播','麻烦点歌','麻烦点','请播放','请播','请点歌','请点','点歌','点','播放','播']
 
 print('voice v5.8.0 DB_NAME:',DB_NAME)
 # https://peiyin.xunfei.cn/make

@@ -143,7 +143,7 @@ def Shell_fifo_msg( cmd, msgout=True ):
 									pass
 									#print(last_msg,end='')
 					else:
-						if 'frame='==last_msg[0:6]:
+						if 'frame='!=last_msg[0:6]:
 							msg_queue_obj = fifo_msg(msg_queue_obj,'Msg:'+last_msg)
 						else:
 							msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
@@ -161,7 +161,7 @@ def Shell_fifo_msg( cmd, msgout=True ):
 									#print(last_errmsg,end='')
 									pass
 					else:
-						if 'frame='==last_errmsg[0:6]:
+						if 'frame='!=last_errmsg[0:6]:
 							msg_queue_obj = fifo_msg(msg_queue_obj,'Err:'+last_errmsg)
 							msg_queue_obj = fifo_msg(msg_queue_obj,'Err:'+str(time.time()))
 						else:

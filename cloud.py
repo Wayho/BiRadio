@@ -402,9 +402,11 @@ def do_one_minute( **params ):
         if Global_minutes % 20 == 1:
                 print('do_one_minute:',Global_Retry_Times,ffmpeg_status)
                 requests.get( "http://localhost:3000" )
-        if ffmpeg_status.get('looplist'):
-            #make_temp_next_loop()
+        if ffmpeg_status.get('playmp4'):
             make_temp_next()
+            return False
+        if ffmpeg_status.get('looplist'):
+            make_temp_next_loop()
             return False
         if ffmpeg_status.get('playlist'):
             return False

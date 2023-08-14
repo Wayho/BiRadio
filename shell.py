@@ -173,8 +173,11 @@ def Shell_fifo_msg( cmd, msgout=True ):
 	##(stdoutMsg,stderrMsg) = result .communicate()#非阻塞时读法.
 	time.sleep(1)
 	#if not msgout:
+	msg_last = []
 	while not msg_queue_obj.empty():
-			print('fifo_msg:',msg_queue_obj.get(),end='')
+			msg_last.append(msg_queue_obj.get())
+	for i in range(-3,-1):
+			print('fifo_msg:',msg_last[len(msg_last)+i],end='')
 	return result.returncode
 
 ##################################################

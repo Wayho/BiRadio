@@ -2,6 +2,8 @@
 import leancloud
 import random
 import wss_danmu as wss_danmu
+import class_subtitle as class_subtitle
+
 DB_NAME = 'voice'
 
 Global_voice_obj_array = []   #from DB
@@ -14,8 +16,9 @@ Global_gift = []
     # GUARD_BUY = 5                           # 有人上舰
     # SUPER_CHAT_MESSAGE = 6  # 醒目留言
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
+Global_danmu_play = ['点','播放','请点','请点']
 
-print('voice v5.7.0 DB_NAME:',DB_NAME)
+print('voice v5.8.0 DB_NAME:',DB_NAME)
 # https://peiyin.xunfei.cn/make
 # https://peiyin.xunfei.cn/synth?uid=211119012301271462&ts=1691561751&sign=a20ff619b322943058f72f7eaae4ae6f&vid=60140&f=v2&cc=0000&listen=0&sid=211119012301271462&volume=-20&speed=38&content=%5Bte50%5D%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E6%88%91%E7%9A%84%E7%9B%B4%E6%92%AD%E9%97%B4&normal=1
 # 玲姐姐 语速 50    l1001.m4a
@@ -65,19 +68,41 @@ def process_like():
         voice_arr = find_voice(10)
         if voice_arr:
              Global_voice_amix = [voice_arr[0].get('m4a')]
-    return Global_voice_amix
+    return {'mp4':None,'amix':Global_voice_amix}
 
 def process_danmu():
     global Global_voice_amix
     global Global_danmu
+    mp4 = None
     Global_voice_amix = ['l3120.m4a']
-    return Global_voice_amix
+    ret = {}
+    for msg in Global_danmu:
+        danmu = msg.get('message').msg
+        for keyword in Global_danmu_play:
+            if keyword == danmu[0:len(keyword)]:
+                title = danmu[len(keyword):]
+                print(keyword,danmu,title)
+                subtitle = class_subtitle.get_m4a_name(title)
+                if subtitle:
+                    mp4 = subtitle.get('name') + '.mp4'
+                    voice_arr = find_voice(33)
+                    if voice_arr:
+                        Global_voice_amix = [voice_arr[0].get('m4a')]
+                        return {'mp4':mp4,'amix':Global_voice_amix}
+                    else:
+                        return {'mp4':mp4,'amix':[]}
+                else:
+                    Global_voice_amix = 'l3300.m4a'
+                    ret = {'mp4':mp4,'amix':Global_voice_amix}
+    if ret:
+        return ret
+    return {'mp4':mp4,'amix':Global_voice_amix}
 
 def process_gift():
     global Global_voice_amix
     global Global_gift
     Global_voice_amix = ['l4009.m4a']
-    return Global_voice_amix
+    return  {'mp4':None,'amix':Global_voice_amix}
 
 def find_voice(itype):
     global Global_voice_obj_array

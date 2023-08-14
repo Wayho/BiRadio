@@ -186,10 +186,15 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
     last_loop_duration = int(float(format.get('duration')) )     #seconds
     print('next_mp4:TIME_START={},DURATION_LAST={},t={}'.format(LOOP_TIME_START,last_loop_duration,now-LOOP_TIME_START))
     if LOOP_TIME_START +  last_loop_duration -before_timeout < now:
-        mp4list = mp3list(MP4_ROOT)
-        mp4 = mp4list[0]
-        voice_arr = class_voice.get_amix_voice()
-        if voice_arr:
+        mp4 = BAK_MP4_PATH
+        #  voice_obj = {'mp4':None,'amix':Global_voice_amix}
+        voice_obj = class_voice.get_amix_voice()
+        if voice_obj:
+            mp4 = voice_obj.get('mp4')
+            if not mp4:
+                mp4list = mp3list(MP4_ROOT)
+                mp4 = mp4list[0]
+            voice_arr = voice_obj.get('amix')
             mix_list = []
             for file_name in voice_arr:
                 file_path = os.path.join(LOOP_VOICE_M4A_PATH, file_name)
@@ -204,7 +209,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
             return 2
         
         FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -copyts -y -f flv {}"
-        cmd = FFMPEG_AMIX.format(mp4,mix_list[random.randint(0,len(mix_list)-1)],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
+        cmd = FFMPEG_AMIX.format(mp4,mix_list[0],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
         #ret = shell.OutputShell(cmd,False)
         ret = shell.ShellRun(cmd,False,False,False)
         if 0==ret:

@@ -74,7 +74,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.0:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.8.0:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.8.1:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -191,7 +191,9 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
         voice_obj = class_voice.get_amix_voice()
         if voice_obj:
             mp4 = voice_obj.get('mp4')
-            if not mp4:
+            if mp4:
+                mp4 = os.path.join(MP4_ROOT, mp4)
+            else:
                 mp4list = mp3list(MP4_ROOT)
                 mp4 = mp4list[0]
             voice_arr = voice_obj.get('amix')

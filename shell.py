@@ -7,7 +7,7 @@ import sys
 import time
 from queue import Queue
 
-MAX_MSG_NUM = 300
+MAX_MSG_NUM = 100
 #[flv @ 0x55b7d2d96a80] Non-monotonous DTS in output stream 0:1; previous: 739658, current: 420381; changing to 739658. This may result in incorrect timestamps in the output file.
 ignore_msgs = ['mp3float','Last message','frame=','configuration:','[flv @']
 print('shell v5.6.0',MAX_MSG_NUM,ignore_msgs)
@@ -86,10 +86,7 @@ def OutputShell( cmd, msgout=True ):
 								if '[flv @'!=last_msg[0:6]:
 									print(last_msg,end='')
 					else:
-						if 'frame= 50'==last_msg[0:9]:
-							msg_queue_obj = fifo_msg(msg_queue_obj,'QQ'+last_msg)
-						else:
-						        msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
+						msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
 				except:
 					msg_queue_obj = fifo_msg(msg_queue_obj,'OutputShell:error last_msg utf8')
 
@@ -105,16 +102,12 @@ def OutputShell( cmd, msgout=True ):
 								if '[flv @'!=last_errmsg[0:6]:
 									print(last_errmsg,end='')
 					else:
-						if 'frame= 50'==last_errmsg[0:9]:
-							msg_queue_obj = fifo_msg(msg_queue_obj,'EE'+last_errmsg)
-						else:
-						        msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)
+						msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)
 				except:
 					msg_queue_obj = fifo_msg(msg_queue_obj,'OutputShell:error readbuf_errmsg utf8')
 	result.wait() # 等待字进程结束( 等待shell命令结束 )
 	#print result.returncode
 	##(stdoutMsg,stderrMsg) = result .communicate()#非阻塞时读法.
-	time.sleep(1)
 	if not msgout:
 		while not msg_queue_obj.empty():
 			print('last_msg:',msg_queue_obj.get(),end='')
@@ -147,15 +140,13 @@ def Shell_fifo_msg( cmd, msgout=True ):
 				try:
 					last_msg = str(readbuf_msg, 'utf8')
 					if msgout:
-							if 'frame='!=last_msg[0:6]:
-								if '[flv @'!=last_msg[0:6]:
 									pass
 									#print(last_msg,end='')
 					else:
 						if 'frame='==last_msg[0:6]:
-							msg_queue_obj = fifo_msg(msg_queue_obj,'QQ'+last_msg)
+							msg_queue_obj = fifo_msg(msg_queue_obj,'Msg:'+last_msg)
 						else:
-						        msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
+							msg_queue_obj = fifo_msg(msg_queue_obj,last_msg)
 				except:
 					msg_queue_obj = fifo_msg(msg_queue_obj,'OutputShell:error last_msg utf8')
 
@@ -167,16 +158,14 @@ def Shell_fifo_msg( cmd, msgout=True ):
 				try:
 					last_errmsg = str(readbuf_errmsg, 'utf8')
 					if msgout:
-							if 'frame='!=last_errmsg[0:6]:
-								if '[flv @'!=last_errmsg[0:6]:
 									#print(last_errmsg,end='')
 									pass
 					else:
 						if 'frame='==last_errmsg[0:6]:
-							msg_queue_obj = fifo_msg(msg_queue_obj,'EE'+last_errmsg)
-							msg_queue_obj = fifo_msg(msg_queue_obj,'EE'+str(time.time()))
+							msg_queue_obj = fifo_msg(msg_queue_obj,'Err:'+last_errmsg)
+							msg_queue_obj = fifo_msg(msg_queue_obj,'Err:'+str(time.time()))
 						else:
-						        msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)
+							msg_queue_obj = fifo_msg(msg_queue_obj,last_errmsg)
 				except:
 					msg_queue_obj = fifo_msg(msg_queue_obj,'OutputShell:error readbuf_errmsg utf8')
 	result.wait() # 等待字进程结束( 等待shell命令结束 )

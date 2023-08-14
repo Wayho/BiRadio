@@ -40,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.7.3 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.8.0 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -101,6 +101,7 @@ MAX_MEMORY = 90
 # rtmp://live-push.bilivideo.com/live-bvc/?streamname=live_xxx&key=xxx&&schedule=rtmp&pflag=1: Input/output error
 ###########################################################
 RTMP_URL_STR = '"rtmp://"'
+Global_mp4_playing = False
 
 Global_Can_RestartRadio = True
 Global_Danmu_Retry_Times = 99   # 0 on 99 off
@@ -187,7 +188,7 @@ def start_wss_danmu(**params):
 
 def try_wss_danmu():
     requests.get( "http://localhost:3000" )
-    time.sleep(40)
+    time.sleep(30)
     if canStart():
         if not BILIBILI_CLMY:
             Setup()
@@ -296,6 +297,37 @@ def play_test(floder_list=[], artist=None,radioname=RADIO_NAME):
             break
     return ret
 
+@engine.define( 'ffmpeg_mp4_loop' )
+def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
+    global Global_mp4_playing
+    print('ffmpeg_mp4_loop:Global_mp4_playing=',Global_mp4_playing)
+    if Global_mp4_playing:
+        print('ffmpeg_mp4_loop:playing::Global_mp4_playing=',Global_mp4_playing)
+        return 0
+    if not BILIBILI_CLMY:
+        Setup()
+    # make_temp_next_loop_thread = threading.Thread(target=stream.rtmp_loop,args=(RTMP_URL_STR,FFMPEG_RTMP_CODEC,FFMPEG_AMIX_CODEC,10000,FFMPEG_FRAMERATE,))
+    # make_temp_next_loop_thread.start()
+    cmd = stream.rtmp_mp4(RTMP_URL_STR,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE)
+    ret = 0
+    Global_mp4_playing = True
+    while 0==ret:
+        ret = shell.ShellRun(cmd,False,False,True)
+        print('rtmp::return:',ret)
+        cmd_memory()
+        if 0 == ret:
+            stream.rename_next_loop()
+    Global_mp4_playing = False
+    return ret
+
+@engine.define( 'make_temp_next' )
+def make_temp_next(floder_list=[], artist=None,radioname=RADIO_NAME):
+    if not BILIBILI_CLMY:
+        Setup()
+    make_temp_next_thread = threading.Thread(target=stream.make_temp_next,args=(10000,FFMPEG_AMIX_CODEC,))
+    #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
+    return make_temp_next_thread.start()
+
 @engine.define( 'ffmpeg_loop' )
 def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     print('ffmpeg_loop:',floder_list, artist,radioname)
@@ -371,7 +403,8 @@ def do_one_minute( **params ):
                 print('do_one_minute:',Global_Retry_Times,ffmpeg_status)
                 requests.get( "http://localhost:3000" )
         if ffmpeg_status.get('looplist'):
-            make_temp_next_loop()
+            #make_temp_next_loop()
+            make_temp_next()
             return False
         if ffmpeg_status.get('playlist'):
             return False
@@ -393,7 +426,7 @@ def cmd_restart_radio():
     if PLAY_ARTIST:
         playret = play_artist()
     else:
-        playret = ffmpeg_loop()     #play_play()
+        playret = ffmpeg_mp4_loop()     #play_play()
     if -9 == playret:
         return False
     elif 1== playret:

@@ -49,11 +49,12 @@ def update_voice(floder):
     # return array len
     m4a = False
     jpg = False
-    voice_arr = class_voice.get_voice(7)
+    voice_arr = class_voice.find_voice(7)
     for item in voice_arr:
         name = item.get('m4a')
         dest = os.path.join(SOURCE_VOICE_FLODER, name)
         if  os.path.exists(dest):
+            print('exist:',dest)
             continue
         url = GIT_VOICE_FLODER + name
         cmd = 'curl -O ' + url

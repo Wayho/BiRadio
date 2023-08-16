@@ -40,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.8.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.8.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -326,18 +326,9 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
         cmd_memory()
         if 0 == ret:
             stream.rename_next_loop()
-            time.sleep(3)
+            time.sleep(2.3)
     Global_mp4_playing = False
     return ret
-
-@engine.define( 'make_temp_next' )
-def make_temp_next(floder_list=[], artist=None,radioname=RADIO_NAME):
-    return
-    if not BILIBILI_CLMY:
-        Setup()
-    make_temp_next_thread = threading.Thread(target=stream.make_temp_next,args=(10000,FFMPEG_AMIX_CODEC,))
-    #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    return make_temp_next_thread.start()
 
 @engine.define( 'ffmpeg_loop' )
 def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
@@ -414,7 +405,6 @@ def do_one_minute( **params ):
                 print('do_one_minute:',Global_Retry_Times,ffmpeg_status)
                 requests.get( "http://localhost:3000" )
         if ffmpeg_status.get('playmp4'):
-            #make_temp_next()
             return False
         if ffmpeg_status.get('looplist'):
             make_temp_next_loop()

@@ -75,7 +75,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.0:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.8.2:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.8.3:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -210,9 +210,9 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
                 LOOP_NO_AUDIO_MESSAGE_TIMES = 0
                 return 1
         else:
-            print('No mix audio message,LOOP_NO_AUDIO_MESSAGE_TIMES={}:not change loop'.format(LOOP_NO_AUDIO_MESSAGE_TIMES))
+            print('No mix audio message,LOOP_NO_AUDIO_MESSAGE_TIMES={}'.format(LOOP_NO_AUDIO_MESSAGE_TIMES))
             if 0 == LOOP_NO_AUDIO_MESSAGE_TIMES:
-                shutil.copy(mp4,LOOP_NO_AUDIO_MESSAGE_TIMES)
+                shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
             LOOP_NO_AUDIO_MESSAGE_TIMES += 1
             return 2
         

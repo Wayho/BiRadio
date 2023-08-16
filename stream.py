@@ -189,6 +189,8 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
     print('next_mp4:TIME_START={},DURATION_LAST={},t={}'.format(LOOP_TIME_START,last_loop_duration,now-LOOP_TIME_START))
     if LOOP_TIME_START +  last_loop_duration -before_timeout < now:
         mp4 = BAK_MP4_PATH
+        mp4list = mp3list(MP4_ROOT)
+        mp4 = mp4list[0]
         #  voice_obj = {'mp4':None,'amix':Global_voice_amix}
         voice_obj = class_voice.get_amix_voice()
         if voice_obj:

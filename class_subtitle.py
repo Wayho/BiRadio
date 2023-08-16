@@ -8,7 +8,7 @@ import os
 SUBTITLE_ROOT = '/tmp/srt'
 DEBUG = False
 DB_NAME = 'subtitle'
-print('class_subtitle v5.7.0:',DB_NAME)
+print('class_subtitle v5.8.0:',DB_NAME)
 def get_m4a_name(title):
     # return m4a object
     DBClass = leancloud.Object.extend( DB_NAME )
@@ -100,6 +100,18 @@ def time_offset(text_time,offset):
             s_right = seconds_new-minutes*60
             return '{:02d}:{:0>5.2f}'.format(minutes,s_right)
     return text_time
+
+def find_curl():
+    DBClass = leancloud.Object.extend( DB_NAME )
+    query = DBClass.query
+    query.limit(100)
+    query.equal_to('curl', True)
+    find =  query.find()
+    res = []
+    for item in find:
+        m4a = item.get('name') + '.m4a'
+        res.append({'m4a':m4a})
+    return res
 
 if __name__ == '__main__':
     update_subtitle_file('192k-CoCo-想你的365天')

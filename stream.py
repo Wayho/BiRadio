@@ -42,6 +42,7 @@ LOOP_LOOP_MP4_PATH  = "/tmp/loop.mp4"
 LOOP_NEXT_MP4_PATH  = "/tmp/next.mp4"           #next->loop
 LOOP_TEMP_MP4_PATH  = "/tmp/temp.mp4"       #temp->next
 LOOP_VOICE_M4A_PATH = "aux/voice"
+LOOP_NO_AUDIO_MESSAGE_TIMES = 0
 LOOP_AMIX_M4A_LIST = ['aux/voice/l1000.m4a','aux/voice/l1001.m4a','aux/voice/l1101.m4a','aux/voice/l1105.m4a','aux/voice/l1110.m4a','aux/voice/l2000.m4a','aux/voice/l2001.m4a']     #混音文件路径
 LOOP_SECONDS_UPDATE = 15
 LOOP_CAN_MAKE_NEXT= True      #锁，解锁需要在next->loop,loop开始播放后
@@ -74,7 +75,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.0:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.8.1:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.8.2:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -175,6 +176,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
     """
     global LOOP_CAN_MAKE_NEXT
     global LOOP_DURATION_TOTAL
+    global LOOP_NO_AUDIO_MESSAGE_TIMES
     LOOP_CAN_MAKE_NEXT = False
     
 
@@ -205,9 +207,13 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
             if(len(mix_list)==0):
                 print('No mix audio file:',LOOP_TEMP_MP4_PATH)
                 shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+                LOOP_NO_AUDIO_MESSAGE_TIMES = 0
                 return 1
         else:
-            print('No mix audio message:not change loop',LOOP_TEMP_MP4_PATH)
+            print('No mix audio message,LOOP_NO_AUDIO_MESSAGE_TIMES={}:not change loop'.format(LOOP_NO_AUDIO_MESSAGE_TIMES))
+            if 0 == LOOP_NO_AUDIO_MESSAGE_TIMES:
+                shutil.copy(mp4,LOOP_NO_AUDIO_MESSAGE_TIMES)
+            LOOP_NO_AUDIO_MESSAGE_TIMES += 1
             return 2
         
         FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -copyts -y -f flv {}"
@@ -223,6 +229,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
         #失败，补救
         print('Error shell cmd:',cmd)
         shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+        LOOP_NO_AUDIO_MESSAGE_TIMES = 0
     return ret
 
 def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):

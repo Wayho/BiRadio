@@ -591,10 +591,15 @@ def cmd_heart( **params ):
     return True
 
 # # 待升级
-@engine.define( 'curl' )
+@engine.define( 'w_curl' )
 def cmd_curl( **params ):
     print('class_curl.update_code')
     return class_curl.update_code()
+
+@engine.define( 'w_curl_resource' )
+def cmd_curl_resource( **params ):
+    print('class_curl.update_resource')
+    return class_curl.update_resource()
 
 # # 待升级
 #@engine.define( 'update_proxies' )
@@ -610,7 +615,7 @@ def cmd_shell( cmd, **params ):
     cmd_ls_loop_tmp()
     return True
         
-@engine.define( 'ls_mp3' )
+@engine.define( 'ls_audio' )
 def cmd_ls_mp3( **params):
     shell.OutputShell('ls {} -R -l'.format(MP3_ROOT))
     cmd_ls_loop_tmp()

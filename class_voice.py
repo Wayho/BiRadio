@@ -120,6 +120,14 @@ def find_voice(itype):
             print(voice.get('m4a'),voice.get('text'),voice.get('type'))
     random.shuffle(voice_arr)
     return voice_arr
+
+def find_curl():
+    DBClass = leancloud.Object.extend( DB_NAME )
+    query = DBClass.query
+    query.limit(100)
+    query.equal_to('curl', True)
+    return query.find()
+
     
 def load_voice_by_type(type):
     global Global_voice_obj_array

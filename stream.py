@@ -223,6 +223,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
         if 0==ret:
             try:
                 os.rename(LOOP_TEMP_MP4_PATH,LOOP_NEXT_MP4_PATH)
+                LOOP_NO_AUDIO_MESSAGE_TIMES = 0
                 return ret
             except:
                 print('Error probe:',LOOP_TEMP_MP4_PATH)

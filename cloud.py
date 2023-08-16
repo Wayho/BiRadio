@@ -40,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.8.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.8.3 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)

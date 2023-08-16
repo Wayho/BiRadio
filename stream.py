@@ -72,7 +72,7 @@ ffmpeg_playlist = "ffmpeg -re -f concat -safe 0 -i {} -r  {}  -hide_banner -f fl
 ffmpeg_looplist = "ffmpeg -re -stream_loop -1 -f concat -safe 0 -i looplist.txt  -r {} {} -hide_banner -f flv  {}"
 # ffmpeg -re -stream_loop -1 -i szg_432p_171_192k.mp4 -r 25 -threads 2 -acodec aac -b:a 192k -vcodec copy -hide_banner -f flv  -listen 1 http://127.0.0.1:8080
 ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
-print('stream v5.7.0:mp4',ffmpeg_mp4)
+print('stream v5.7.1:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
 print('stream v5.8.3:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
@@ -588,8 +588,8 @@ def ai_to_mp4(m4a,img,codec=FFMPEG_MP4_CODEC,framerate=FFMPEG_FRAMERATE,subtitle
     probe = ffmpeg.probe(m4a)
     format = probe.get('format')
     t = int(float(format.get('duration'))+1)
-    streams = probe.get('streams')
-    print(m4a,streams)
+    #streams = probe.get('streams')
+    #print(m4a,streams)
     sub_para = ''
     if subtitle:
         subtitle_path = os.path.join(SUBTITLE_PATH, name+'.srt')

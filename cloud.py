@@ -75,9 +75,9 @@ send_thread.start()
 BILIBILI_RTMP = "rtmp://"
 BILIBILI_CLMY = None
 
-FFMPEG_MP4_CODEC = '-threads 3 -vcodec libx264 -acodec aac  -b:a 192k'
-FFMPEG_RTMP_CODEC = '-threads 5 -vcodec copy -acodec aac -b:a 192k'
-FFMPEG_AMIX_CODEC = '-threads 16 -vcodec copy -acodec aac -b:a 192k'
+FFMPEG_MP4_CODEC = '-threads 8 -vcodec libx264 -acodec aac  -b:a 192k'
+FFMPEG_RTMP_CODEC = '-threads 3 -vcodec copy -acodec aac -b:a 192k'
+FFMPEG_AMIX_CODEC = '-threads 8 -vcodec copy -acodec aac -b:a 192k'
 FFMPEG_FRAMERATE = None
 FFMPEG_SUBTITLE = True
 FFMPEG_NEXT_SECONDS = 30
@@ -319,7 +319,7 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
         time_start = info.get('duration')-FFMPEG_NEXT_SECONDS
         print(time_start,info)
         start = stream.reset_time_start()
-        timer=threading.Timer(time_start,stream.make_temp_next,args=(10000,FFMPEG_AMIX_CODEC,))
+        timer=threading.Timer(time_start,stream.make_temp_next,args=(15000,FFMPEG_AMIX_CODEC,))
         timer.start()
         ret = shell.ShellRun(cmd,False,False,True)
         print('rtmp::return:{} seconds:{}'.format(ret,int(time.time()-start)))

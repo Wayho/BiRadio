@@ -75,7 +75,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.1:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.8.3:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.9.0:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -188,53 +188,39 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
     last_loop_duration = int(float(format.get('duration')) )     #seconds
     print('next_mp4:TIME_START={},DURATION_LAST={},t={}'.format(LOOP_TIME_START,last_loop_duration,now-LOOP_TIME_START))
     if LOOP_TIME_START +  last_loop_duration -before_timeout < now:
-        mp4 = BAK_MP4_PATH
-        mp4list = mp3list(MP4_ROOT)
-        mp4 = mp4list[0]
-        #  voice_obj = {'mp4':None,'amix':Global_voice_amix}
         voice_obj = class_voice.get_amix_voice()
-        if voice_obj:
-            mp4 = voice_obj.get('mp4')
-            if mp4:
-                mp4 = os.path.join(MP4_ROOT, mp4)
-            else:
-                mp4list = mp3list(MP4_ROOT)
-                mp4 = mp4list[0]
-            voice_arr = voice_obj.get('amix')
-            mix_list = []
-            for file_name in voice_arr:
-                file_path = os.path.join(LOOP_VOICE_M4A_PATH, file_name)
-                if  os.path.exists(file_path):
-                    mix_list.append(file_path)
-            if(len(mix_list)==0):
-                print('No mix audio file:',LOOP_TEMP_MP4_PATH)
-                shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
-                LOOP_NO_AUDIO_MESSAGE_TIMES = 0
-                return 1
+        # 语音文件是一定有的
+        amix = voice_obj.get('amix')
+        print(voice_obj)
+        if voice_obj.get('hasmsg'):
+            LOOP_NO_AUDIO_MESSAGE_TIMES = 0
         else:
             print('No mix audio message,LOOP_NO_AUDIO_MESSAGE_TIMES={}'.format(LOOP_NO_AUDIO_MESSAGE_TIMES))
-            if 0 == LOOP_NO_AUDIO_MESSAGE_TIMES:
-                shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+            if 0 < LOOP_NO_AUDIO_MESSAGE_TIMES:
+                return 2
             LOOP_NO_AUDIO_MESSAGE_TIMES += 1
-            return 2
-        
+        mp4 = voice_obj.get('mp4')
+        if mp4:
+            mp4 = os.path.join(MP4_ROOT, mp4)
+        else:
+            mp4list = mp3list(MP4_ROOT)
+            mp4 = mp4list[0]
         FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -copyts -y -f flv {}"
-        cmd = FFMPEG_AMIX.format(mp4,mix_list[0],adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
+        cmd = FFMPEG_AMIX.format(mp4,amix[0].get('path'),adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
         #ret = shell.OutputShell(cmd,False)
         ret = shell.ShellRun(cmd,False,False,False)
         if 0==ret:
             try:
                 os.rename(LOOP_TEMP_MP4_PATH,LOOP_NEXT_MP4_PATH)
-                LOOP_NO_AUDIO_MESSAGE_TIMES = 0
                 return ret
             except:
                 print('Error probe:',LOOP_TEMP_MP4_PATH)
         #失败，补救
         print('Error shell cmd:',cmd)
         shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
-        LOOP_NO_AUDIO_MESSAGE_TIMES = 0
     return ret
 
+######################################################
 def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):
     """
     返回rtmp looplist 的cmd，并启动替换loop.mp4的线程，适时根据loop.mp4的时长，用新的temp.mp4替换loop.mp4
@@ -274,7 +260,6 @@ def make_temp_next_loop(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FR
     global LOOP_CAN_MAKE_NEXT
     global LOOP_DURATION_TOTAL
     LOOP_CAN_MAKE_NEXT = False
-    
 
     ret = 9
     now = int(time.time())
@@ -351,87 +336,6 @@ def help_loop():
 def rtmp_loop_reset():
     global LOOP_MAKE_TEMP_NEXT_LOOP
     LOOP_MAKE_TEMP_NEXT_LOOP = False
-
-def make_temp_next_loop_SXH(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERATE):
-    """
-    len(MP4_ROOT)==0,退出
-    适时查看混音变量（None or mix file path）
-    mix file path 可由弹幕模块控制
-    如果不混音，直接复制mp4替换loop.mp4
-    如果混音，生成temp.mp4，保证在loop.mp4播完前生成
-    :param name:=预先生成的mp4 path
-    :param mix_m4a:=混入语音path
-    :param adelay:=混入语音adelay ms
-    :param framerate:=FFMPEG_FRAMERATE
-    :param codec:=FFMPEG_MP4_CODEC
-    :return: T/F
-    """
-    global LOOP_AMIX_M4A_LIST
-    global LOOP_CAN_MAKE_NEXT
-    global LOOP_DURATION_TOTAL
-    global LOOP_MAKE_TEMP_NEXT_LOOP
-    print('try make_temp_next_loop',LOOP_MAKE_TEMP_NEXT_LOOP)
-    if LOOP_MAKE_TEMP_NEXT_LOOP:
-        return
-    LOOP_MAKE_TEMP_NEXT_LOOP = True
-    # duration_total = 0      #播放时长统计，用于解锁 LOOP_NEXT_HAS_MADE
-    # TIME_START = time.time()
-    mp4list = mp3list(MP4_ROOT)
-    if len(mp4list) == 0:
-        return False
-    #time.sleep(3)
-    #amix_thread = threading.Thread(target=amix_next,args=(mp4list[0],[],adelay,codec,framerate,))
-    #amix_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    
-    while LOOP_MAKE_TEMP_NEXT_LOOP:
-        now = time.time()       #seconds
-        
-        
-        
-        if LOOP_TIME_START + LOOP_DURATION_TOTAL < now:
-            #等待解锁，amix_next一旦执行，是不允许改写的，直到下次解锁
-            # shutil.copy后，是允许改写的
-            LOOP_CAN_MAKE_NEXT = True
-            probe = ffmpeg.probe(LOOP_LOOP_MP4_PATH)
-            format = probe.get('format')
-            last_loop_duration = float(format.get('duration'))      #seconds
-            time_update_loop = now + last_loop_duration - LOOP_SECONDS_UPDATE
-            LOOP_DURATION_TOTAL += last_loop_duration
-            print('make_temp_next_loop:TIME_START={},DURATION_TOTAL={},t={}'.format(LOOP_TIME_START,LOOP_DURATION_TOTAL,now-LOOP_TIME_START))
-            mp4list = mp3list(MP4_ROOT)
-            # timer = threading.Timer(last_loop_duration - LOOP_SECONDS_UPDATE, amix_next,(mp4list[0],LOOP_AMIX_M4A_LIST,adelay,codec,framerate,))
-            # timer.start()
-        # while now < time_update_loop:
-        #     #等待到更新时间
-        #     if not LOOP_MAKE_TEMP_NEXT_LOOP:
-        #         break
-        #     now = time.time()
-        #     if LOOP_TIME_START + LOOP_DURATION_TOTAL < now:
-        #         #等待解锁，amix_next一旦执行，是不允许改写的，直到下次解锁
-        #         # shutil.copy后，是允许改写的
-        #         LOOP_CAN_MAKE_NEXT = True
-        #         LOOP_DURATION_TOTAL += last_loop_duration
-            
-        #     if LOOP_CAN_MAKE_NEXT:
-        #         if LOOP_AMIX_M4A_LIST:
-        #             if not amix_thread.is_alive():
-        #                 # 不混音中，make
-        #                 mustcopy = False
-        #                 mix_m4a_list = LOOP_AMIX_M4A_LIST
-        #                 #LOOP_AMIX_M4A_LIST = []
-        #                 time.sleep(3)
-        #                 amix_thread = threading.Thread(target=amix_next,args=(mp4list[0],mix_m4a_list,adelay,codec,framerate,))
-        #                 amix_thread.start()
-        #         else:
-        #             # 没混音，等最后复制一次
-        #             mustcopy = True
-        # # 截止时间到了
-        # if  not os.path.exists(LOOP_NEXT_MP4_PATH):
-        #     # 不管怎样，没有目标文件，复制
-        #     shutil.copy(mp4list[0],LOOP_NEXT_MP4_PATH)
-        # os.rename(LOOP_NEXT_MP4_PATH,LOOP_LOOP_MP4_PATH)
-        
-
 
 ######################################################
 

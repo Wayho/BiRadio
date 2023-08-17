@@ -18,9 +18,9 @@ Global_gift = []
     # GUARD_BUY = 5                           # 有人上舰
     # SUPER_CHAT_MESSAGE = 6  # 醒目留言
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
-Global_danmu_play = ['麻烦播放','麻烦播','麻烦点歌','麻烦点','请播放','请播','请点歌','请点','点歌','点','播放','播']
+Global_danmu_play = ['麻烦播放','麻烦播','麻烦点歌','麻烦点','请播放','请播','请点歌','请点','点歌','点','播放','播','想听','听']
 
-print('voice v5.9.0 DB_NAME:',DB_NAME)
+print('voice v5.9.1 DB_NAME:',DB_NAME)
 # https://peiyin.xunfei.cn/make
 # https://peiyin.xunfei.cn/synth?uid=211119012301271462&ts=1691561751&sign=a20ff619b322943058f72f7eaae4ae6f&vid=60140&f=v2&cc=0000&listen=0&sid=211119012301271462&volume=-20&speed=38&content=%5Bte50%5D%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E6%88%91%E7%9A%84%E7%9B%B4%E6%92%AD%E9%97%B4&normal=1
 # 玲姐姐 语速 50    l1001.m4a

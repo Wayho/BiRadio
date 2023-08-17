@@ -121,8 +121,9 @@ def process_gift():
     amix = [{'type':40,'text':'谢谢宝宝的礼物','path':os.path.join(SOURCE_VOICE_FLODER, 'l4009.m4a')}]
     try:
         for msg in Global_gift:
-            gift_id = msg.get('gift_id')
-            voice_arr = find_voice(int(gift_id))
+            print('@@@@@@@@@@@@@@@@@@@@')
+            gift_id = msg.get('message').gift_id
+            voice_arr = find_voice(gift_id)
             if voice_arr:
                 amix = [voice_arr[0]]
     except:

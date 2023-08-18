@@ -194,6 +194,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
         amix = voice_obj.get('amix')
         print(voice_obj)
         amix = process_amix(amix,3)
+        print('process_amix:',amix)
         if voice_obj.get('hasmsg'):
             LOOP_NO_AUDIO_MESSAGE_TIMES = 0
         else:
@@ -249,6 +250,7 @@ def amix_next_mp4(mp4,amix,adelay=10000,framerate=25):
                 main_v,
                 a_mix,
                 LOOP_TEMP_MP4_PATH,
+                loglevel='quiet',
                 threads='8',
                 r=str(framerate),
                 vcodec='copy',

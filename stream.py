@@ -76,7 +76,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.1:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.9.0:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.9.1:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 Global_Amix_Queue = Queue()  # 创建一个队列对象
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
@@ -207,20 +207,63 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
         else:
             mp4list = mp3list(MP4_ROOT)
             mp4 = mp4list[0]
-        FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -copyts -y -f flv {}"
-        cmd = FFMPEG_AMIX.format(mp4,amix[0].get('path'),adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
-        #ret = shell.OutputShell(cmd,False)
-        ret = shell.ShellRun(cmd,False,False,False)
-        if 0==ret:
+        if amix_next_mp4(mp4,amix,adelay=adelay,framerate=framerate):
             try:
                 os.rename(LOOP_TEMP_MP4_PATH,LOOP_NEXT_MP4_PATH)
-                return ret
+                return 0
             except:
-                print('Error probe:',LOOP_TEMP_MP4_PATH)
-        #失败，补救
-        print('Error shell cmd:',cmd)
-        shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+                print('Error probe:',mp4,amix)
+        else:
+            # #失败，补救
+            shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
+        # FFMPEG_AMIX = "ffmpeg -i {} -i {} -filter_complex \"[1:a]adelay=delays={}|{}[aud1];[0:a][aud1]amix=inputs=2[outa]\" -map 0:v -map [outa] -r  {}  {} -copyts -y -f flv {}"
+        # cmd = FFMPEG_AMIX.format(mp4,amix[0].get('path'),adelay,adelay,framerate,codec,LOOP_TEMP_MP4_PATH)
+        # #ret = shell.OutputShell(cmd,False)
+        # ret = shell.ShellRun(cmd,False,False,False)
+        # if 0==ret:
+        #     try:
+        #         os.rename(LOOP_TEMP_MP4_PATH,LOOP_NEXT_MP4_PATH)
+        #         return ret
+        #     except:
+        #         print('Error probe:',LOOP_TEMP_MP4_PATH)
+        # #失败，补救
+        # print('Error shell cmd:',cmd)
+        # shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
     return ret
+
+def amix_next_mp4(mp4,amix,adelay=10000,framerate=25):
+    main = ffmpeg.input(mp4)
+    main_v = main.video
+    main_a = main.audio
+    a_in_arr = []
+    for a_obj in amix:
+        ina = ffmpeg.input(a_obj.get('path'))
+        a_in_arr.append(ina)
+    joined = ffmpeg.concat(*a_in_arr, v=0,a=1).node
+    a_contac = joined[0]
+    a_delay = ffmpeg.filter(a_contac,filter_name='adelay',delays='{}|{}'.format(adelay,adelay))
+    a_mix = ffmpeg.filter([main_a,a_delay],filter_name='amix',inputs='2')
+    try:
+        out, err = (ffmpeg
+            .output(
+                main_v,
+                a_mix,
+                LOOP_TEMP_MP4_PATH,
+                threads='8',
+                r=str(framerate),
+                vcodec='copy',
+                acodec='aac',
+                ac='2',
+                ar='44100',
+                ab='192k',
+                f='flv')
+            .overwrite_output()
+            .run(cmd=["ffmpeg"])#capture_stderr=True)
+        )
+        return True
+    except ffmpeg.Error as error:
+        print('Error ffmpeg:',mp4,amix)
+        return False
 
 def process_amix(amix,times=3):
     """
@@ -234,11 +277,16 @@ def process_amix(amix,times=3):
     if not Global_Amix_Queue.empty():
         a_gift = Global_Amix_Queue.get()
         ret.append(a_gift)
+    gift_num = len(ret)
     for a in amix:
+       if 0 < gift_num:
+           if a.get('type')==ret[0].get('type'):
+               # 礼物回声时，避免重复的语音
+               pass
        ret.append(a)
     for i in range(times):
         for a in amix:
-            if a.get('type')>30000:
+            if a.get('type')>=30000:
                 # gift voice, record in queue
                 Global_Amix_Queue.put(a)
     return ret

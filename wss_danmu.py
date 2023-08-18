@@ -30,17 +30,17 @@ __Global_danmu_queue = Queue()  # 创建弹幕队列对象
 __Global_gift_queue = Queue()  # 创建送礼队列对象
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
 
-print('wss_danmu v5.6.3 ROOM_IDS:',ROOM_IDS)
+print('wss_danmu v5.9.0 ROOM_IDS:',ROOM_IDS)
 
 ####################### class_voice #########################################
-def put_like(uid,uname,type,message):
+def put_like(uid,uname,itype,message):
     global __Global_like_queue
     now = time.time()
     msg = {
         "time":now,
         "uid":uid,
         "uname":uname,
-        "type":type,
+        "type":itype,
         "message":message
     }
     __Global_like_queue.put(msg)
@@ -53,14 +53,14 @@ def get_like_all():
         msg_arr.append(msg)
     return msg_arr
 
-def put_danmu(uid,uname,type,message):
+def put_danmu(uid,uname,itype,message):
     global __Global_danmu_queue
     now = time.time()
     msg = {
         "time":now,
         "uid":uid,
         "uname":uname,
-        "type":type,
+        "type":itype,
         "message":message
     }
     __Global_danmu_queue.put(msg)
@@ -73,14 +73,14 @@ def get_danmu_all():
         msg_arr.append(msg)
     return msg_arr
 
-def put_gift(uid,uname,type,message):
+def put_gift(uid,uname,itype,message):
     global __Global_gift_queue
     now = time.time()
     msg = {
         "time":now,
         "uid":uid,
         "uname":uname,
-        "type":type,
+        "type":itype,
         "message":message
     }
     __Global_gift_queue.put(msg)
@@ -132,9 +132,9 @@ class MyHandler(blivedm.BaseHandler):
         put_like(command['data']['uid'],command['data']['uname'],MsgType.LIKE_INFO_V3_CLICK,None)
         obj = class_viewer.like(command['data']['uid'])
         if obj:
-            print("LIKE_CLICK",str(ROOM_IDS[0])[0:4],obj.get('t_'+str(ROOM_IDS[0])),str(ROOM_IDS[1])[0:4],obj.get('t_'+str(ROOM_IDS[1])),str(ROOM_IDS[2])[0:4],obj.get('t_'+str(ROOM_IDS[2])),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))
+            print("LIKE_CLICK:record:",str(ROOM_IDS[0])[0:4],obj.get('t_'+str(ROOM_IDS[0])),str(ROOM_IDS[1])[0:4],obj.get('t_'+str(ROOM_IDS[1])),str(ROOM_IDS[2])[0:4],obj.get('t_'+str(ROOM_IDS[2])),"gift:",obj.get('gift'),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))
         else:
-            print(f"LIKE_INFO_V3_CLICK: {command['data']['uname']}")
+            print(f"LIKE_INFO_V3_CLICK: not found:{command['data']['uname']}")
     _CMD_CALLBACK_DICT['LIKE_INFO_V3_CLICK'] = __like_info_v3_click_callback
 
     # #watch消息回调
@@ -155,11 +155,18 @@ class MyHandler(blivedm.BaseHandler):
 
     async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
         put_gift(message.uid,message.uname,MsgType.SEND_GIFT,message)
+        print('#'*40,'SEND_GIFT','#'*40)
         print(f'[{client.room_id}] {message.uname} 赠送{message.gift_name}x{message.num}'
               f' （{message.coin_type}瓜子x{message.total_coin}）')
+        obj = class_viewer.gift(message.uid,message.num*message.total_coin)
+        if obj:
+            print("GIFT:record:",str(ROOM_IDS[0])[0:4],obj.get('t_'+str(ROOM_IDS[0])),str(ROOM_IDS[1])[0:4],obj.get('t_'+str(ROOM_IDS[1])),str(ROOM_IDS[2])[0:4],obj.get('t_'+str(ROOM_IDS[2])),"gift:",obj.get('gift'),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))
+        else:
+            print("GIFT: uid not found",message.uid)
 
     async def _on_buy_guard(self, client: blivedm.BLiveClient, message: blivedm.GuardBuyMessage):
         put_gift(message.uid,message.username,MsgType.GUARD_BUY,message)
+        print('#'*40,'GUARD_BUY','#'*40)
         print(f'[{client.room_id}] {message.username} 购买{message.gift_name}')
 
     async def _on_super_chat(self, client: blivedm.BLiveClient, message: blivedm.SuperChatMessage):

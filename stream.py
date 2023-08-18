@@ -5,7 +5,8 @@ import sys
 import random
 import time
 from datetime import datetime
-import shutil 
+import shutil
+from queue import Queue
 import threading
 import shell as shell
 import class_subtitle as class_subtitle
@@ -76,6 +77,7 @@ print('stream v5.7.1:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
 print('stream v5.9.0:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+Global_Amix_Queue = Queue()  # 创建一个队列对象
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
 # # 视频分辨率相同可以使用copy?{"cmd":"ffmpeg -re -f concat -safe 0 -i playlist.txt -f flv -codec copy -listen 1  http://127.0.0.1:8080"}
@@ -178,7 +180,6 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
     global LOOP_DURATION_TOTAL
     global LOOP_NO_AUDIO_MESSAGE_TIMES
     LOOP_CAN_MAKE_NEXT = False
-    
 
     ret = 9
     now = int(time.time())
@@ -192,6 +193,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
         # 语音文件是一定有的
         amix = voice_obj.get('amix')
         print(voice_obj)
+        amix = process_amix(amix,3)
         if voice_obj.get('hasmsg'):
             LOOP_NO_AUDIO_MESSAGE_TIMES = 0
         else:
@@ -220,6 +222,26 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
         shutil.copy(mp4,LOOP_NEXT_MP4_PATH)
     return ret
 
+def process_amix(amix,times=3):
+    """
+    多次记录礼物语音，后面再取出使用，返回本次的语音包
+    :param amix:amix
+    :param times:echo times
+    :return: amix
+    """
+    global Global_Amix_Queue
+    ret = []
+    if not Global_Amix_Queue.empty():
+        a_gift = Global_Amix_Queue.get()
+        ret.append(a_gift)
+    for a in amix:
+       ret.append(a)
+    for i in range(times):
+        for a in amix:
+            if a.get('type')>30000:
+                # gift voice, record in queue
+                Global_Amix_Queue.put(a)
+    return ret
 ######################################################
 def rtmp_loop(str_rtmp,codec=FFMPEG_RTMP_CODEC,framerate=FFMPEG_FRAMERATE):
     """

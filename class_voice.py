@@ -18,13 +18,18 @@ Global_gift = []
     # GUARD_BUY = 5                           # 有人上舰
     # SUPER_CHAT_MESSAGE = 6  # 醒目留言
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}好想听，好喜欢，超想听，超爱，超想
-Global_danmu_play = ['好想听','好想播','好想放','好想','想听','听','好喜欢','喜欢','超想听','超想','超爱','麻烦播放','麻烦播送','麻烦播','麻烦点歌','麻烦点','请播放','请播送','请播','请点歌','请点','点歌','点','播放','播送','播']
-Global_danmu_may = [
-    '能不能点歌','能不能点','能不能播放','能不能播送','能不能播','能不能听','能不能放',
-    '能点歌','能点','能播放','能播送','能播','能听','能放',
-    '可以点歌','可以点','可以播放','可以播送','可以播','可以听','可以放']
+Global_danmu_play = ['好想听','好想播','好想放','好想','想听','听',
+            '好喜欢','喜欢','超想听','超想','超爱',
+            '麻烦播放','麻烦播送','麻烦播','麻烦点歌','麻烦点',
+            '请播放','请播送','请播','请点歌','请点',
+            '点歌','点','播放','播送','播',
+            '能不能点歌','能不能点','能不能播放','能不能播送','能不能播','能不能听','能不能放',
+            '能点歌','能点','能播放','能播送','能播','能听','能放',
+            '可以点歌','可以点','可以播放','可以播送','可以播','可以听','可以放']
+Global_danmu_how = [
+    ]
 
-print('voice v5.9.3 DB_NAME:',DB_NAME)
+print('voice v5.9.5 DB_NAME:',DB_NAME)
 # https://peiyin.xunfei.cn/make
 # https://peiyin.xunfei.cn/synth?uid=211119012301271462&ts=1691561751&sign=a20ff619b322943058f72f7eaae4ae6f&vid=60140&f=v2&cc=0000&listen=0&sid=211119012301271462&volume=-20&speed=38&content=%5Bte50%5D%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E6%88%91%E7%9A%84%E7%9B%B4%E6%92%AD%E9%97%B4&normal=1
 # 玲姐姐 语速 50    l1001.m4a
@@ -98,23 +103,6 @@ def process_danmu():
         for keyword in Global_danmu_play:
             if keyword == danmu[0:len(keyword)]:
                 # 有点歌关键词
-                title = danmu[len(keyword):]
-                print(keyword,danmu,title)
-                subtitle = class_subtitle.get_m4a_name(title)
-                if subtitle:
-                    # 数据库找到歌
-                    mp4 = subtitle.get('name') + '.mp4'
-                    voice_arr = find_voice(33)
-                    if voice_arr:
-                        amix = voice_arr
-                    return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
-                else:
-                    # 消息没处理完，不着急返回，先准备一个返回值备用
-                    amix = [{'type':33,'text':'这首歌没有哦我换首歌送给您！','path':os.path.join(SOURCE_VOICE_FLODER, 'l3300.m4a')}]
-                    ret = {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
-        for keyword in Global_danmu_may:
-            if keyword == danmu[0:len(keyword)]:
-                # 有点歌关键词
                 song_name = danmu[len(keyword):].split('吗')
                 title = song_name[0]
                 print(keyword,danmu,title)
@@ -128,8 +116,19 @@ def process_danmu():
                     return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
                 else:
                     # 消息没处理完，不着急返回，先准备一个返回值备用
-                    amix = [{'type':33,'text':'这首歌没有哦我换首歌送给您！','path':os.path.join(SOURCE_VOICE_FLODER, 'l3300.m4a')}]
+                    amix = [{'type':333,'text':'这首歌没有哦我换首歌送给您！','path':os.path.join(SOURCE_VOICE_FLODER, 'l3300.m4a')}]
                     ret = {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
+        # can't shipei paly,try title
+        title = danmu
+        print(keyword,danmu,title)
+        subtitle = class_subtitle.get_m4a_name(title)
+        if subtitle:
+            # 数据库找到歌
+            mp4 = subtitle.get('name') + '.mp4'
+            voice_arr = find_voice(33)
+            if voice_arr:
+                amix = voice_arr
+            return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
     if not ret:
         # 弹幕没点歌，也说点啥
         voice_arr = find_voice(7)   # 某段歌词语音

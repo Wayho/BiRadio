@@ -244,7 +244,7 @@ def amix_next_mp4(mp4,amix,adelay=10000,framerate=25):
         a_in_arr.append(ina)
     joined = ffmpeg.concat(*a_in_arr, v=0,a=1).node
     a_contac = joined[0]
-    adelay = adelay + random.randint(15,10)*1000
+    adelay = adelay + random.randint(0,15)*1000
     a_delay = ffmpeg.filter(a_contac,filter_name='adelay',delays='{}|{}'.format(adelay,adelay))
     a_mix = ffmpeg.filter([main_a,a_delay],filter_name='amix',inputs='2')
     try:

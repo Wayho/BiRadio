@@ -73,10 +73,11 @@ def get_amix_voice():
             amix.append(am)
     if like.get('hasmsg'):
         hasmsg = True
-        amix.append(am)
+        amix.append(like.get('amix')[0])
     if danmu.get('hasmsg'):
         hasmsg = True
-        amix.append(am)
+        mp4 = danmu.get('mp4')
+        amix.append(danmu.get('amix')[0])
     if not hasmsg:
         # 必须有一个音频
         voice_arr = find_voice(7,gift_id=0)   # 某段歌词语音

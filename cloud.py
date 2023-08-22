@@ -319,7 +319,7 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
         time_start = info.get('duration')-FFMPEG_NEXT_SECONDS
         print(time_start,info)
         start = stream.reset_time_start()
-        timer=threading.Timer(time_start,stream.make_temp_next,args=(5000,FFMPEG_AMIX_CODEC,))
+        timer=threading.Timer(time_start,stream.make_temp_next,args=(15000,FFMPEG_AMIX_CODEC,))
         timer.start()
         ret = shell.ShellRun(cmd,False,False,True)
         print('rtmp::return:{} seconds:{}'.format(ret,int(time.time()-start)))

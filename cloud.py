@@ -40,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.8.6 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.8.7 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -319,7 +319,7 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
         time_start = info.get('duration')-FFMPEG_NEXT_SECONDS
         print(time_start,info)
         start = stream.reset_time_start()
-        timer=threading.Timer(time_start,stream.make_temp_next,args=(15000,FFMPEG_AMIX_CODEC,))
+        timer=threading.Timer(time_start,stream.make_temp_next,args=(5000,FFMPEG_AMIX_CODEC,))
         timer.start()
         ret = shell.ShellRun(cmd,False,False,True)
         print('rtmp::return:{} seconds:{}'.format(ret,int(time.time()-start)))

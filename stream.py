@@ -76,7 +76,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.1:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.9.5:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.9.6:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 Global_Amix_Queue = Queue()  # 创建一个队列对象
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
@@ -244,6 +244,7 @@ def amix_next_mp4(mp4,amix,adelay=10000,framerate=25):
         a_in_arr.append(ina)
     joined = ffmpeg.concat(*a_in_arr, v=0,a=1).node
     a_contac = joined[0]
+    adelay = adelay + random.randint(15)*1000
     a_delay = ffmpeg.filter(a_contac,filter_name='adelay',delays='{}|{}'.format(adelay,adelay))
     a_mix = ffmpeg.filter([main_a,a_delay],filter_name='amix',inputs='2')
     try:

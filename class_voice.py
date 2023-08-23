@@ -2,6 +2,8 @@
 import leancloud
 import os
 import random
+import threading
+import time
 import wss_danmu as wss_danmu
 import class_subtitle as class_subtitle
 
@@ -9,6 +11,7 @@ DB_NAME = 'voice'
 SOURCE_VOICE_FLODER = 'aux/voice'
 AMIX_DEFLAULT = 'l1000.m4a'     #欢迎来到宝宝的直播间
 
+VOICE_LIST = []
 Global_voice_obj_array = []   #from DB
 
 Global_like = []
@@ -29,10 +32,32 @@ Global_danmu_play = ['好想听','好想播','好想放','好想','想听','听'
 Global_danmu_how = [
     ]
 
-print('voice v5.9.9 DB_NAME:',DB_NAME)
+print('voice v5.9.10 DB_NAME:',DB_NAME)
 # https://peiyin.xunfei.cn/make
 # https://peiyin.xunfei.cn/synth?uid=211119012301271462&ts=1691561751&sign=a20ff619b322943058f72f7eaae4ae6f&vid=60140&f=v2&cc=0000&listen=0&sid=211119012301271462&volume=-20&speed=38&content=%5Bte50%5D%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E6%88%91%E7%9A%84%E7%9B%B4%E6%92%AD%E9%97%B4&normal=1
 # 玲姐姐 语速 50    l1001.m4a
+
+def init_voice_list():
+    """
+    # 每次重启
+    """
+    global VOICE_LIST
+    print("init_voice_list:sleep 31 for load from db")
+    time.sleep(31)
+    DBClass = leancloud.Object.extend( DB_NAME )
+    query = DBClass.query
+    query.limit(300)
+    query.equal_to('on', True)
+    query.ascending('m4a')
+    find =  query.find()
+    for voice in find:
+        file_path = os.path.join(SOURCE_VOICE_FLODER, voice.get('m4a'))
+        if  os.path.exists(file_path):
+            VOICE_LIST.append({'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path})
+    #random.shuffle(VOICE_LIST)
+    print('init_voice_list:find={} VOICE_LIST={}'.format(len(find),len(VOICE_LIST)))
+init_thread = threading.Thread(target=init_voice_list,args=())
+init_thread.start()
 
 def get_amix_voice():
     """
@@ -151,6 +176,47 @@ def process_danmu():
                     ret = {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
         # 不能适配关键词，试试直接歌名
         title = danmu
+        print('try song name',danmu,title)
+        subtitle = class_subtitle.get_m4a_name(title)
+        if subtitle:
+            # 数据库找到歌
+            mp4 = subtitle.get('name') + '.mp4'
+            voice_arr = find_voice(33,gift_id=0)
+            if voice_arr:
+                amix = voice_arr
+            return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
+    return ret
+
+def process_danmu_v589():
+    #amix只有一个内容
+    global Global_danmu
+    hasmsg = False
+    mp4 = None
+    amix = [{'type':31,'gift_id':0,'text':'喜欢的话可以点歌，下一首播','path':os.path.join(SOURCE_VOICE_FLODER, 'l3100.m4a')}]
+    ret = {'hasmsg':False,'mp4':None,'amix':[]}
+    for msg in Global_danmu:
+        hasmsg = True
+        danmu = msg.get('message').msg
+        for keyword in Global_danmu_play:
+            if keyword == danmu[0:len(keyword)]:
+                # 有点歌关键词
+                song_name = danmu[len(keyword):].split('吗')
+                title = song_name[0]
+                print(keyword,danmu,title)
+                subtitle = class_subtitle.get_m4a_name(title)
+                if subtitle:
+                    # 数据库找到歌
+                    mp4 = subtitle.get('name') + '.mp4'
+                    voice_arr = find_voice(33,gift_id=0)
+                    if voice_arr:
+                        amix = voice_arr
+                    return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
+                else:
+                    # 消息没处理完，不着急返回，先准备一个返回值备用
+                    amix = [{'type':333,'gift_id':0,'text':'这首歌没有哦我换首歌送给您！','path':os.path.join(SOURCE_VOICE_FLODER, 'l3300.m4a')}]
+                    ret = {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
+        # 不能适配关键词，试试直接歌名
+        title = danmu
         print(keyword,danmu,title)
         subtitle = class_subtitle.get_m4a_name(title)
         if subtitle:
@@ -198,10 +264,26 @@ def is_gift_id_in_amix(gift_id,amix):
 
 def find_voice(itype,gift_id=0):
     """
+    读ram，看看语音文件在不在，返回在的列表，已处理好fullpath
+    :return: voice_arr {'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path}
+    """
+    voice_arr = []
+    for voice in VOICE_LIST:
+        if 4==itype:
+            if voice.get('gift_id')==gift_id:
+                voice_arr.append(voice)
+        else:
+            if voice.get('type')==itype:
+                voice_arr.append(voice)
+    print('find voice len=',len(voice_arr))
+    random.shuffle(voice_arr)
+    return voice_arr
+
+def find_voice_v589(itype,gift_id=0):
+    """
     读数据库，看看语音文件在不在，返回在的列表，已处理好fullpath
     :return: voice_arr {'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path}
     """
-    global Global_voice_obj_array
     find = load_voice_by_type(itype,gift_id)
     voice_arr = []
     print('find voice',len(find))
@@ -222,10 +304,10 @@ def find_curl():
     
 def load_voice_by_type(itype,gift_id):
     # gift type == 4
-    global Global_voice_obj_array
     DBClass = leancloud.Object.extend( DB_NAME )
     query = DBClass.query
-    query.limit(100)
+    query.select(['text', 'm4a', 'type', 'gift_id','-objectId','-createdAt', '-updatedAt'])
+    query.limit(200)
     #query.equal_to('on', True)
     if 4==itype:
         query.equal_to('gift_id', gift_id)
@@ -234,8 +316,7 @@ def load_voice_by_type(itype,gift_id):
     return query.find()
 
 def load_voice():
-    global Global_voice_obj_array
-    #Global_voice_obj_array = load_voice_db()
+    pass
 
 if __name__ == '__main__':
     pass

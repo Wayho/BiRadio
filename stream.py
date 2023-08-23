@@ -76,7 +76,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.1:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.9.9:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.9.10:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 Global_Amix_Queue = Queue()  # 创建一个队列对象
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
@@ -269,7 +269,7 @@ def amix_next_mp4(mp4,amix,adelay=10000,framerate=25):
     except ffmpeg.Error as error:
         print('Error ffmpeg:',mp4,amix)
         ret = False
-    print('amix_next_mp4:seconds=',time.time()-t_start)
+    print('amix_next_mp4:adelay={} seconds={}'.format(adelay,time.time()-t_start))
     return ret
 
 def process_amix(amix,times=3):

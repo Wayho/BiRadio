@@ -32,7 +32,7 @@ Global_danmu_play = ['好想听','好想播','好想放','好想','想听','听'
 Global_danmu_how = [
     ]
 
-print('voice v5.9.11 DB_NAME:',DB_NAME)
+print('voice v5.9.13 DB_NAME:',DB_NAME)
 # https://peiyin.xunfei.cn/make
 # https://peiyin.xunfei.cn/synth?uid=211119012301271462&ts=1691561751&sign=a20ff619b322943058f72f7eaae4ae6f&vid=60140&f=v2&cc=0000&listen=0&sid=211119012301271462&volume=-20&speed=38&content=%5Bte50%5D%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E6%88%91%E7%9A%84%E7%9B%B4%E6%92%AD%E9%97%B4&normal=1
 # 玲姐姐 语速 50    l1001.m4a
@@ -44,20 +44,20 @@ def init_voice_list():
     global VOICE_LIST
     print("init_voice_list:sleep 31 for load from db")
     time.sleep(31)
-    DBClass = leancloud.Object.extend( DB_NAME )
-    query = DBClass.query
-    query.limit(300)
-    query.equal_to('on', True)
-    query.ascending('m4a')
-    find =  query.find()
-    for voice in find:
-        file_path = os.path.join(SOURCE_VOICE_FLODER, voice.get('m4a'))
-        if  os.path.exists(file_path):
-            VOICE_LIST.append({'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path})
-        else:
-            print('File not exist:',voice.get('type'),voice.get('gift_id'),voice.get('text'),file_path)
-    #random.shuffle(VOICE_LIST)
-    print('init_voice_list:find={} VOICE_LIST={}'.format(len(find),len(VOICE_LIST)))
+    total_find = 0
+    skip = 0
+    find =  load_voice(skip,page=100)
+    while(len(find)>0):
+        total_find += len(find)
+        for voice in find:
+            file_path = os.path.join(SOURCE_VOICE_FLODER, voice.get('m4a'))
+            if  os.path.exists(file_path):
+                VOICE_LIST.append({'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path})
+            else:
+                print('File not exist:',voice.get('type'),voice.get('gift_id'),voice.get('text'),file_path)
+        skip += 100
+        find =  load_voice(skip,page=100)
+    print('init_voice_list:find={} VOICE_LIST={}'.format(total_find,len(VOICE_LIST)))
 init_thread = threading.Thread(target=init_voice_list,args=())
 init_thread.start()
 
@@ -319,8 +319,14 @@ def load_voice_by_type(itype,gift_id):
         query.equal_to('type', itype)
     return query.find()
 
-def load_voice():
-    pass
+def load_voice(skip=0,page=100):
+    DBClass = leancloud.Object.extend( DB_NAME )
+    query = DBClass.query
+    query.limit(page)
+    query.skip(skip)
+    query.equal_to('on', True)
+    query.ascending('m4a')
+    return  query.find()
 
 if __name__ == '__main__':
     pass

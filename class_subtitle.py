@@ -17,7 +17,7 @@ DB_NAME = 'subtitle'
 CHAR_SPACE = ' '
 MP4_ROOT = '/tmp/mp4'
 SONG_LIST = []      #用于点歌，按歌名，无空格，小写
-print('class_subtitle v5.8.3:',DB_NAME,SUBTITLE_ROOT,MP4_ROOT)
+print('class_subtitle v5.8.6:',DB_NAME,SUBTITLE_ROOT,MP4_ROOT)
 ############################################################
 def init_song_list():
     """
@@ -39,6 +39,8 @@ def init_song_list():
         if  os.path.exists(file_path):
             title = utils.lower_delete_all_char(item.get('title'),CHAR_SPACE)
             SONG_LIST.append({'title':title, 'name':item.get('name')})
+        else:
+            print('File not exist:',item.get('title'),item.get('name'),file_path)
     print('init_song_list:find={} SONG_LIST={}'.format(len(find),len(SONG_LIST)))
 init_thread = threading.Thread(target=init_song_list,args=())
 init_thread.start()

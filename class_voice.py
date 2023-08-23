@@ -54,9 +54,10 @@ def init_voice_list():
         file_path = os.path.join(SOURCE_VOICE_FLODER, voice.get('m4a'))
         if  os.path.exists(file_path):
             VOICE_LIST.append({'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path})
+        else:
+            print('File not exist:',voice.get('type'),voice.get('gift_id'),voice.get('text'),file_path)
     #random.shuffle(VOICE_LIST)
     print('init_voice_list:find={} VOICE_LIST={}'.format(len(find),len(VOICE_LIST)))
-    print(VOICE_LIST)
 init_thread = threading.Thread(target=init_voice_list,args=())
 init_thread.start()
 

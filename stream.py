@@ -76,7 +76,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.1:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.9.10:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.10.0:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 Global_Amix_Queue = Queue()  # 创建一个队列对象
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
@@ -287,13 +287,13 @@ def process_amix(amix,times=3):
     gift_num = len(ret)
     for a in amix:
        if 0 < gift_num:
-           if a.get('type')==ret[0].get('type'):
+           if a.get('stype')==ret[0].get('stype'):
                # 礼物回声时，避免重复的语音
                pass
        ret.append(a)
     for i in range(times):
         for a in amix:
-            if a.get('type')==4 or a.get('type')==8:
+            if a.get('stype')=="4" or a.get('stype')=="8":
                 # gift voice, record in queue
                 Global_Amix_Queue.put(a)
     return ret

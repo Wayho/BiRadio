@@ -56,6 +56,7 @@ def init_voice_list():
             VOICE_LIST.append({'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path})
     #random.shuffle(VOICE_LIST)
     print('init_voice_list:find={} VOICE_LIST={}'.format(len(find),len(VOICE_LIST)))
+    print(VOICE_LIST)
 init_thread = threading.Thread(target=init_voice_list,args=())
 init_thread.start()
 
@@ -277,7 +278,7 @@ def find_voice(itype,gift_id=0):
         else:
             if voice.get('type')==itype:
                 voice_arr.append(voice)
-    print('find voice len=',len(voice_arr))
+    print('find voice len={} type={} gift_id={}'.format(len(voice_arr),itype,gift_id))
     random.shuffle(voice_arr)
     return voice_arr
 

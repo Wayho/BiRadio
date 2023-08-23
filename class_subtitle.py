@@ -50,6 +50,7 @@ def  get_m4a_name(title):
     title = utils.lower_delete_all_char(title,CHAR_SPACE)
     for song in SONG_LIST:
         list=song.get('title').split('|')
+        print(list,title)
         for tt in list:
             if tt==title:
                 return song

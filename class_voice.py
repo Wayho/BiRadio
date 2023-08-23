@@ -49,15 +49,16 @@ def init_voice_list():
     find =  load_voice(skip,page=100)
     while(len(find)>0):
         total_find += len(find)
+        print("total_find",total_find)
         for voice in find:
             file_path = os.path.join(SOURCE_VOICE_FLODER, voice.get('m4a'))
             if  os.path.exists(file_path):
-                VOICE_LIST.append({'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path})
+                VOICE_LIST.append({'stype':voice.get('stype'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path})
             else:
-                print('File not exist:',voice.get('type'),voice.get('gift_id'),voice.get('text'),file_path)
+                print('File not exist:',voice.get('stype'),voice.get('gift_id'),voice.get('text'),file_path)
         skip += 100
         find =  load_voice(skip,page=100)
-    print('init_voice_list:find={} VOICE_LIST={}'.format(total_find,len(VOICE_LIST)))
+    print('init_voice_list:total find={} VOICE_LIST={}'.format(total_find,len(VOICE_LIST)))
 init_thread = threading.Thread(target=init_voice_list,args=())
 init_thread.start()
 
@@ -107,7 +108,7 @@ def get_amix_voice():
         amix.append(danmu.get('amix')[0])
     if len(amix) <= 1:
         # 必须有一个音频
-        voice_arr = find_voice(7,gift_id=0)   # 某段歌词语音
+        voice_arr = find_voice("7",gift_id=0)   # 某段歌词语音
         if voice_arr:
             if len(amix) == 1:
                 amix = [voice_arr[0],amix[0]]
@@ -115,7 +116,7 @@ def get_amix_voice():
                 amix = [voice_arr[0]]
         else:
             if len(amix) == 0:
-                amix = [{'type':10,'gift_id':0,'text':'欢迎来到宝宝的直播间','path':os.path.join(SOURCE_VOICE_FLODER, AMIX_DEFLAULT)}]           
+                amix = [{'stype':"10",'gift_id':0,'text':'欢迎来到宝宝的直播间','path':os.path.join(SOURCE_VOICE_FLODER, AMIX_DEFLAULT)}]           
     return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
 
 def process_interact():
@@ -127,11 +128,11 @@ def process_interact():
         if msg.get('type') == wss_danmu.MsgType.INTERACT_WORD:
             hasmsg = True
     if hasmsg:
-        voice_arr = find_voice(10,gift_id=0)
+        voice_arr = find_voice("10",gift_id=0)
         if voice_arr:
             amix = [voice_arr[0]]
     if not amix:
-        amix = [{'type':10,'gift_id':0,'text':'欢迎来到宝宝的直播间','path':os.path.join(SOURCE_VOICE_FLODER, AMIX_DEFLAULT)}]
+        amix = [{'stype':"10",'gift_id':0,'text':'欢迎来到宝宝的直播间','path':os.path.join(SOURCE_VOICE_FLODER, AMIX_DEFLAULT)}]
     return  {'hasmsg':hasmsg,'mp4':None,'amix':amix}
 
 def process_like():
@@ -142,11 +143,11 @@ def process_like():
         if msg.get('type') == wss_danmu.MsgType.LIKE_INFO_V3_CLICK:
             hasmsg = True
     if hasmsg:
-        voice_arr = find_voice(20,gift_id=0)
+        voice_arr = find_voice("20",gift_id=0)
         if voice_arr:
             amix = [voice_arr[0]]
     if not amix:
-        amix = [{'type':20,'gift_id':0,'text':'谢谢宝宝的点赞','path':os.path.join(SOURCE_VOICE_FLODER, 'l2002')}]
+        amix = [{'stype':"20",'gift_id':0,'text':'谢谢宝宝的点赞','path':os.path.join(SOURCE_VOICE_FLODER, 'l2002')}]
     return  {'hasmsg':hasmsg,'mp4':None,'amix':amix}
 
 def process_danmu():
@@ -154,7 +155,7 @@ def process_danmu():
     global Global_danmu
     hasmsg = False
     mp4 = None
-    amix = [{'type':31,'gift_id':0,'text':'喜欢的话可以点歌，下一首播','path':os.path.join(SOURCE_VOICE_FLODER, 'l3100.m4a')}]
+    amix = [{'stype':"31",'gift_id':0,'text':'喜欢的话可以点歌，下一首播','path':os.path.join(SOURCE_VOICE_FLODER, 'l3100.m4a')}]
     ret = {'hasmsg':False,'mp4':None,'amix':[]}
     for msg in Global_danmu:
         danmu = msg.get('message').msg
@@ -169,13 +170,13 @@ def process_danmu():
                     # 数据库找到歌
                     mp4 = subtitle.get('name') + '.mp4'
                     hasmsg = True
-                    voice_arr = find_voice(33,gift_id=0)
+                    voice_arr = find_voice("33",gift_id=0)
                     if voice_arr:
                         amix = voice_arr
                     return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
                 else:
                     # 消息没处理完，不着急返回，先准备一个返回值备用
-                    amix = [{'type':333,'gift_id':0,'text':'这首歌没有哦我换首歌送给您！','path':os.path.join(SOURCE_VOICE_FLODER, 'l3300.m4a')}]
+                    amix = [{'stype':"333",'gift_id':0,'text':'这首歌没有哦我换首歌送给您！','path':os.path.join(SOURCE_VOICE_FLODER, 'l3300.m4a')}]
                     ret = {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
         # 不能适配关键词，试试直接歌名
         title = danmu
@@ -185,7 +186,7 @@ def process_danmu():
             # 数据库找到歌
             mp4 = subtitle.get('name') + '.mp4'
             hasmsg = True
-            voice_arr = find_voice(33,gift_id=0)
+            voice_arr = find_voice("33",gift_id=0)
             if voice_arr:
                 amix = voice_arr
             return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
@@ -248,7 +249,7 @@ def process_gift():
             hasmsg = True
             #print('#'*40,'GIFT message={}'.format(msg.get('message')))
             gift_id = msg.get('message').gift_id
-            voice_arr = find_voice(4,gift_id)
+            voice_arr = find_voice("4",gift_id)
             if voice_arr:
                 if not is_gift_id_in_amix(voice_arr[0].get('gift_id'),amix):
                     # 一种礼物留一个语音
@@ -257,7 +258,7 @@ def process_gift():
         print('gift error')
     if not amix:
         # 没有匹配的语音，用默认
-        amix = [{'type':4,'gift_id':30000,'text':'谢谢宝宝的礼物','path':os.path.join(SOURCE_VOICE_FLODER, 'l4009.m4a')}]
+        amix = [{'stype':"4",'gift_id':30000,'text':'谢谢宝宝的礼物','path':os.path.join(SOURCE_VOICE_FLODER, 'l4009.m4a')}]
     return  {'hasmsg':hasmsg,'mp4':None,'amix':amix}
 
 def is_gift_id_in_amix(gift_id,amix):
@@ -266,20 +267,20 @@ def is_gift_id_in_amix(gift_id,amix):
             return True
     return False
 
-def find_voice(itype,gift_id=0):
+def find_voice(stype,gift_id=0):
     """
     读ram，看看语音文件在不在，返回在的列表，已处理好fullpath
     :return: voice_arr {'type':voice.get('type'),'gift_id':voice.get('gift_id'),'text':voice.get('text'),'path':file_path}
     """
     voice_arr = []
     for voice in VOICE_LIST:
-        if 4==itype:
+        if "4"==stype:
             if voice.get('gift_id')==gift_id:
                 voice_arr.append(voice)
         else:
-            if voice.get('type')==itype:
+            if voice.get('stype')==stype:
                 voice_arr.append(voice)
-    print('find voice len={} type={} gift_id={}'.format(len(voice_arr),itype,gift_id))
+    print('find voice len={} stype={} gift_id={}'.format(len(voice_arr),stype,gift_id))
     random.shuffle(voice_arr)
     return voice_arr
 

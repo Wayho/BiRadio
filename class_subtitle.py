@@ -15,8 +15,9 @@ SUBTITLE_ROOT = '/tmp/srt'
 DEBUG = False
 DB_NAME = 'subtitle'
 CHAR_SPACE = ' '
+MP4_ROOT = '/tmp/mp4'
 SONG_LIST = []      #用于点歌，按歌名，无空格，小写
-print('class_subtitle v5.8.2:',DB_NAME)
+print('class_subtitle v5.8.3:',DB_NAME,SUBTITLE_ROOT,MP4_ROOT)
 ############################################################
 def init_song_list():
     """
@@ -34,9 +35,11 @@ def init_song_list():
     query.descending('rank')
     find =  query.find()
     for item in find:
-        title = utils.lower_delete_all_char(item.get('title'),CHAR_SPACE)
-        SONG_LIST.append({'title':title, 'name':item.get('name')})
-    print('init_song_list:SONG_LIST=',len(SONG_LIST))
+        file_path = os.path.join(MP4_ROOT, item.get('name')+'.mp4')
+        if  os.path.exists(file_path):
+            title = utils.lower_delete_all_char(item.get('title'),CHAR_SPACE)
+            SONG_LIST.append({'title':title, 'name':item.get('name')})
+    print('init_song_list:find={} SONG_LIST={}'.format(len(find),len(SONG_LIST)))
 init_thread = threading.Thread(target=init_song_list,args=())
 init_thread.start()
 
@@ -44,7 +47,7 @@ def  get_m4a_name(title):
     """
     for class_voice
     """
-    title = utils.lower_delete_all_char(title)
+    title = utils.lower_delete_all_char(title,CHAR_SPACE)
     for song in SONG_LIST:
         list=song.get('title').split('|')
         for tt in list:

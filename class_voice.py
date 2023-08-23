@@ -12,7 +12,6 @@ SOURCE_VOICE_FLODER = 'aux/voice'
 AMIX_DEFLAULT = 'l1000.m4a'     #欢迎来到宝宝的直播间
 
 VOICE_LIST = []
-Global_voice_obj_array = []   #from DB
 
 Global_like = []
 Global_danmu = []
@@ -26,13 +25,14 @@ Global_danmu_play = ['好想听','好想播','好想放','好想','想听','听'
             '麻烦播放','麻烦播送','麻烦播','麻烦点歌','麻烦点','麻烦',
             '请播放','请播送','请播','请点歌','请点',
             '点歌','点','播放','播送','播',
+            '再来个','再来','再点歌','再点','再播放','再播','再放','再听','再送','来个',
             '能不能点歌','能不能点','能不能播放','能不能播送','能不能播','能不能听','能不能放',
             '能点歌','能点','能播放','能播送','能播','能听','能放',
             '可以点歌','可以点','可以播放','可以播送','可以播','可以听','可以放']
 Global_danmu_how = [
     ]
 
-print('voice v5.9.10 DB_NAME:',DB_NAME)
+print('voice v5.9.11 DB_NAME:',DB_NAME)
 # https://peiyin.xunfei.cn/make
 # https://peiyin.xunfei.cn/synth?uid=211119012301271462&ts=1691561751&sign=a20ff619b322943058f72f7eaae4ae6f&vid=60140&f=v2&cc=0000&listen=0&sid=211119012301271462&volume=-20&speed=38&content=%5Bte50%5D%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E6%88%91%E7%9A%84%E7%9B%B4%E6%92%AD%E9%97%B4&normal=1
 # 玲姐姐 语速 50    l1001.m4a

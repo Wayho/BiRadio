@@ -103,7 +103,7 @@ def get_amix_voice():
         hasmsg = True
         mp4 = danmu.get('mp4')
         amix.append(danmu.get('amix')[0])
-    if not hasmsg:
+    if len(amix) <= 1:
         # 必须有一个音频
         voice_arr = find_voice(7,gift_id=0)   # 某段歌词语音
         if voice_arr:
@@ -112,7 +112,8 @@ def get_amix_voice():
             else:
                 amix = [voice_arr[0]]
         else:
-            amix = [{'type':10,'gift_id':0,'text':'欢迎来到宝宝的直播间','path':os.path.join(SOURCE_VOICE_FLODER, AMIX_DEFLAULT)}]
+            if len(amix) == 0:
+                amix = [{'type':10,'gift_id':0,'text':'欢迎来到宝宝的直播间','path':os.path.join(SOURCE_VOICE_FLODER, AMIX_DEFLAULT)}]           
     return {'hasmsg':hasmsg,'mp4':mp4,'amix':amix}
 
 def process_interact():
@@ -147,14 +148,13 @@ def process_like():
     return  {'hasmsg':hasmsg,'mp4':None,'amix':amix}
 
 def process_danmu():
-    #amix只有一个内容
+    #amix只有0/1内容
     global Global_danmu
     hasmsg = False
     mp4 = None
     amix = [{'type':31,'gift_id':0,'text':'喜欢的话可以点歌，下一首播','path':os.path.join(SOURCE_VOICE_FLODER, 'l3100.m4a')}]
     ret = {'hasmsg':False,'mp4':None,'amix':[]}
     for msg in Global_danmu:
-        hasmsg = True
         danmu = msg.get('message').msg
         for keyword in Global_danmu_play:
             if keyword == danmu[0:len(keyword)]:
@@ -166,6 +166,7 @@ def process_danmu():
                 if subtitle:
                     # 数据库找到歌
                     mp4 = subtitle.get('name') + '.mp4'
+                    hasmsg = True
                     voice_arr = find_voice(33,gift_id=0)
                     if voice_arr:
                         amix = voice_arr
@@ -181,6 +182,7 @@ def process_danmu():
         if subtitle:
             # 数据库找到歌
             mp4 = subtitle.get('name') + '.mp4'
+            hasmsg = True
             voice_arr = find_voice(33,gift_id=0)
             if voice_arr:
                 amix = voice_arr

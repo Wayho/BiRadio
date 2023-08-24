@@ -4,6 +4,7 @@ from leancloud import Engine
 from leancloud import LeanEngineError
 import shell as shell
 import time
+from datetime import datetime
 import os
 import requests
 import random
@@ -39,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.8.9 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.8.10 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -59,16 +60,14 @@ if not os.path.exists(SUBTITLE_ROOT):
 
 # 每次重启、休眠检查
 def cloud_wakeup():
-    print("cloud_wakeup:sleep 15 for check MP4_ROOT")
-    time.sleep(15)
     Setup()
     mp4file = os.listdir(MP4_ROOT)
     if len(SAMPLE_MP4_432p_LIST)>= len(mp4file):
         # 没有音频，提醒
-        print('ding_msg:{} file:'.format(MP4_ROOT),mp4file,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':mp4 is empty'))
-send_thread = threading.Thread(target=cloud_wakeup,args=())
+        print('ding_msg:{} file:'.format(MP4_ROOT),mp4file,ding_msg.dingMe(WEBHOOK_DINGDING,'{}:mp4 is empty {}'.format(SITENAME,datetime.now())))
+print("cloud_wakeup:sleep 15 for check MP4_ROOT")
+send_thread=threading.Timer(15,cloud_wakeup,args=())
 send_thread.start()
-
 
 ################# LOAD CONFIG ##############################
 BILIBILI_RTMP = "rtmp://"
@@ -183,13 +182,12 @@ def Setup(**params):
 # 一次性唤醒，无需Heart
 def start_wss_danmu(**params):
     print('try:start_wss_danmu',ROOM_ID)
-    cloud_thread = threading.Thread(target=try_wss_danmu,args=())
-    cloud_thread.start()
+    requests.get( "http://localhost:3000" )
+    timer=threading.Timer(30,try_wss_danmu,args=())
+    timer.start()
     return True
 
 def try_wss_danmu():
-    requests.get( "http://localhost:3000" )
-    time.sleep(30)
     if canStart():
         if not BILIBILI_CLMY:
             Setup()
@@ -315,7 +313,7 @@ def ffmpeg_mp4_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     while 0==ret:
         info = stream.get_audio_info(LOOP_LOOP_MP4_PATH)
         time_start = info.get('duration')-FFMPEG_NEXT_SECONDS
-        print(time_start,info)
+        print('next@',datetime.fromtimestamp(time.time()+time_start),info)
         start = stream.reset_time_start()
         timer=threading.Timer(time_start,stream.make_temp_next,args=(10000,FFMPEG_AMIX_CODEC,))
         timer.start()
@@ -344,13 +342,8 @@ def ffmpeg_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
     return ret
 
 @engine.define( 'make_temp_next_loop' )
-def make_temp_next_loop(floder_list=[], artist=None,radioname=RADIO_NAME):
-    if not BILIBILI_CLMY:
-        Setup()
-    make_temp_next_loop_thread = threading.Thread(target=stream.make_temp_next_loop,args=(10000,FFMPEG_AMIX_CODEC,))
-    #make_temp_next_loop_thread.setDaemon(True) #线程设置守护，如果主线程结束，子线程也随之结束
-    
-    return make_temp_next_loop_thread.start()
+def make_temp_next_loop(floder_list=[], artist=None,radioname=RADIO_NAME):   
+    return True
 
 @engine.define( 'ffmpeg_loop_reset' )
 def ffmpeg_loop_exit(floder_list=[], artist=None,radioname=RADIO_NAME):
@@ -432,11 +425,11 @@ def cmd_restart_radio():
         return False
     elif 1== playret:
         Global_Retry_Times += 1
-        print('play:',ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':ffmpeg={}:Retry times:{}'.format(playret,Global_Retry_Times)))
+        print('play:',ding_msg.dingMe(WEBHOOK_DINGDING,'{}:ffmpeg={}:Retry times:{} {}'.format(SITENAME,playret,Global_Retry_Times,datetime.now())))
         #startlive.tryStartLive(str(ROOM_ID))
     elif 0 != playret:
         Global_Retry_Times += 1
-        print('play:',ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':ffmpeg={}:Retry times:{}'.format(playret,Global_Retry_Times)))
+        print('play:',ding_msg.dingMe(WEBHOOK_DINGDING,'{}:ffmpeg={}:Retry times:{} {}'.format(SITENAME,playret,Global_Retry_Times,datetime.now())))
     print('*************** END *******************')
     return True
         
@@ -506,7 +499,7 @@ def canStart():
             else:
                 class_variable.set_today_AP('BiLive_py',False)
             print('#'*40,'EMPTY VIDEO,SET TO DEFAULT','#'*40)
-            print('ding_msg:{} file:'.format(MP4_ROOT),tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,SITENAME+':EMPTY VIDEO,SET TO DEFAULT'))
+            print('ding_msg:{} file:'.format(MP4_ROOT),tmpfilenum,ding_msg.dingMe(WEBHOOK_DINGDING,'{}:EMPTY VIDEO,SET TO DEFAULT {}'.format(SITENAME,datetime.now())))
             return False
     #print('Can start live','Today:',today,'Tomorrow:',tomorrow)
     if Global_minutes % 60 == 1:

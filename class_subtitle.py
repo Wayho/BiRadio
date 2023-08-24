@@ -17,15 +17,13 @@ DB_NAME = 'subtitle'
 CHAR_SPACE = ' '
 MP4_ROOT = '/tmp/mp4'
 SONG_LIST = []      #用于点歌，按歌名，无空格，小写
-print('class_subtitle v5.8.6:',DB_NAME,SUBTITLE_ROOT,MP4_ROOT)
+print('class_subtitle v5.8.8:',DB_NAME,SUBTITLE_ROOT,MP4_ROOT)
 ############################################################
 def init_song_list():
     """
     # 每次重启
     """
     global SONG_LIST
-    print("init_song_list:sleep 30 for load from db")
-    time.sleep(30)
     DBClass = leancloud.Object.extend( DB_NAME )
     query = DBClass.query
     #query.select(['title', 'name','-objectId','-createdAt', '-updatedAt'])
@@ -42,14 +40,13 @@ def init_song_list():
         else:
             print('File not exist:',item.get('title'),item.get('name'),file_path)
     print('init_song_list:find={} SONG_LIST={}'.format(len(find),len(SONG_LIST)))
-init_thread = threading.Thread(target=init_song_list,args=())
-init_thread.start()
+timer=threading.Timer(29,init_song_list,args=())
+timer.start()
 
 def  get_m4a_name(title):
     """
     for class_voice
     """
-    title = utils.lower_delete_all_char_and_emoj(title,CHAR_SPACE)
     for song in SONG_LIST:
         list=song.get('title').split('|')
         for tt in list:

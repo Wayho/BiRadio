@@ -61,7 +61,9 @@ TEXT_THANKS_GIFTNAME_AT_UNAME = '谢谢你的{}@{}'
 #cmd=GIFT_STAR_PROCESS, command={'cmd': 'GIFT_STAR_PROCESS', 'data': {'status': 1, 'tip': '干杯已点亮'}, 'is_report': False, 'msg_id': '2156876346707968', 'send_time': 1692667795151}
 #cmd=ROOM_BLOCK_MSG, command={'cmd': 'ROOM_BLOCK_MSG', 'data': {'dmscore': 30, 'operator': 2, 'uid': 1866017744, 'uname': '取名老难了m'}, 'is_report': False, 'msg_id': '2159658628831744', 'send_time': 1692673101933, 'uid': '1866017744', 'uname': '取名老难了m'}
 #cmd=ANCHOR_LOT_END, command={'cmd': 'ANCHOR_LOT_END', 'data': {'id': 4828490}, 'is_report': False, 'msg_id': '2160823380236800', 'send_time': 1692675323520}
-
+#cmd=ANCHOR_LOT_AWARD, command={'cmd': 'ANCHOR_LOT_AWARD', 'data': {'award_dont_popup': 1, 'award_image': '', 'award_name': '告白花束', 'award_num': 1, 'award_price_text': '价值220电池', 'award_type': 1, 'award_users': [{'uid': 99452582, 'uname': 'xuafye', 'face': 'https://i2.hdslb.com/bfs/face/8a53837767e6f5f1c905a67f233043d8b0e184ae.jpg', 'level': 21, 'color': 5805790, 'bag_id': 7024291, 'gift_id': 31157, 'num': 1}], 'id': 4844479, 'lot_status': 2, 'ruid': 333334084, 'url': 'https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1', 'web_url': 'https://live.bilibili.com/p/html/live-lottery/anchor-join.html'}}
+#cmd=POPULARITY_RED_POCKET_NEW, command={'cmd': 'POPULARITY_RED_POCKET_NEW', 'data': {'lot_id': 13975641, 'start_time': 1692856246, 'current_time': 1692856246, 'wait_num': 0, 'uname': '机智的歆瑶瑶', 'uid': 7996864, 'action': '送出', 'num': 1, 'gift_name': '红包', 'gift_id': 13000, 'price': 20, 'name_color': '#E17AFF', 'medal_info': {'target_id': 0, 'special': '', 'icon_id': 0, 'anchor_uname': '', 'anchor_roomid': 0, 'medal_level': 0, 'medal_name': '', 'medal_color': 0, 'medal_color_start': 0, 'medal_color_end': 0, 'medal_color_border': 0, 'is_lighted': 0, 'guard_level': 0}, 'wealth_level': 27}}
+#cmd=POPULARITY_RED_POCKET_START, command={'cmd': 'POPULARITY_RED_POCKET_START', 'data': {'lot_id': 13975641, 'sender_uid': 7996864, 'sender_name': '机智的歆瑶瑶', 'sender_face': 'https://i1.hdslb.com/bfs/face/73a31b9196fc50fcb5c0682742cbcdec07c52e72.jpg', 'join_requirement': 1, 'danmu': '老板大气！点点红包抽礼物', 'current_time': 1692856247, 'start_time': 1692856246, 'end_time': 1692856426, 'last_time': 180, 'remove_time': 1692856441, 'replace_time': 1692856436, 'lot_status': 1, 'h5_url': 'https://live.bilibili.com/p/html/live-app-red-envelope/popularity.html?is_live_half_webview=1&hybrid_half_ui=1,5,100p,100p,000000,0,50,0,0,1;2,5,100p,100p,000000,0,50,0,0,1;3,5,100p,100p,000000,0,50,0,0,1;4,5,100p,100p,000000,0,50,0,0,1;5,5,100p,100p,000000,0,50,0,0,1;6,5,100p,100p,000000,0,50,0,0,1;7,5,100p,100p,000000,0,50,0,0,1;8,5,100p,100p,000000,0,50,0,0,1&hybrid_rotate_d=1&hybrid_biz=popularityRedPacket&lotteryId=13975641', 'user_status': 2, 'awards': [{'gift_id': 31212, 'gift_name': '打call', 'gift_pic': 'https://s1.hdslb.com/bfs/live/461be640f60788c1d159ec8d6c5d5cf1ef3d1830.png', 'num': 2}, {'gift_id': 31214, 'gift_name': '牛哇', 'gift_pic': 'https://s1.hdslb.com/bfs/live/91ac8e35dd93a7196325f1e2052356e71d135afb.png', 'num': 3}, {'gift_id': 31216, 'gift_name': '小花花', 'gift_pic': 'https://s1.hdslb.com/bfs/live/5126973892625f3a43a8290be6b625b5e54261a5.png', 'num': 3}], 'lot_config_id': 3, 'total_price': 1600, 'wait_num': 0}}
 
 
 
@@ -81,7 +83,7 @@ __Global_danmu_queue = Queue()  # 创建弹幕队列对象
 __Global_gift_queue = Queue()  # 创建送礼队列对象
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
 
-print('wss_danmu v5.9.1 ROOM_IDS:',ROOM_IDS,TEXT_THANKS_GIFTNAME_AT_UNAME)
+print('wss_danmu v5.9.2 ROOM_IDS:',ROOM_IDS,TEXT_THANKS_GIFTNAME_AT_UNAME)
 
 ####################### class_voice #########################################
 def put_like(uid,uname,itype,message):
@@ -210,7 +212,7 @@ class MyHandler(blivedm.BaseHandler):
         print(f'[{client.room_id}] {message.uname} 赠送{message.gift_name}x{message.num}'
               f' （{message.coin_type}瓜子x{message.total_coin}）')
         danmu.send(client.room_id,TEXT_THANKS_GIFTNAME_AT_UNAME.format(message.gift_name,message.uname))
-        obj = class_viewer.gift(message.uid,message.num*message.total_coin)
+        obj = class_viewer.gift(message.uid,message.total_coin)
         if obj:
             print("GIFT:record:",str(ROOM_IDS[0])[0:4],obj.get('t_'+str(ROOM_IDS[0])),str(ROOM_IDS[1])[0:4],obj.get('t_'+str(ROOM_IDS[1])),str(ROOM_IDS[2])[0:4],obj.get('t_'+str(ROOM_IDS[2])),"gift:",obj.get('gift'),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))
         else:

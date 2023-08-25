@@ -34,7 +34,7 @@ Global_danmu_play = ['好想听','好想播','好想放','好想','想听','听'
 Global_danmu_how = [
     ]
 
-print('voice v5.11.0 DB_NAME:',DB_NAME)
+print('voice v5.11.1 DB_NAME:',DB_NAME)
 # https://peiyin.xunfei.cn/make
 # https://peiyin.xunfei.cn/synth?uid=211119012301271462&ts=1691561751&sign=a20ff619b322943058f72f7eaae4ae6f&vid=60140&f=v2&cc=0000&listen=0&sid=211119012301271462&volume=-20&speed=38&content=%5Bte50%5D%E6%AC%A2%E8%BF%8E%E6%9D%A5%E5%88%B0%E6%88%91%E7%9A%84%E7%9B%B4%E6%92%AD%E9%97%B4&normal=1
 # 玲姐姐 语速 50    l1001.m4a
@@ -58,6 +58,7 @@ def init_voice_list():
                 print('File not exist:',voice.get('stype'),voice.get('gift_id'),voice.get('text'),file_path)
         skip += 100
         find =  load_voice(skip,page=100)
+        print("etc:",VOICE_LIST[len(VOICE_LIST)-1])
     print('init_voice_list:total find={} VOICE_LIST={}'.format(total_find,len(VOICE_LIST)))
 timer=threading.Timer(31,init_voice_list,args=())
 timer.start()
@@ -203,10 +204,10 @@ def process_gift():
             hasmsg = True
             #print('#'*40,'GIFT message={}'.format(msg.get('message')))
             gift_id = msg.get('message').gift_id
-            voice_arr = find_voice("4",gift_id)
-            if voice_arr:
-                if not is_gift_id_in_amix(voice_arr[0].get('gift_id'),amix):
-                    # 一种礼物留一个语音
+            if not is_gift_id_in_amix(gift_id,amix):
+                # 一种礼物留一个语音
+                voice_arr = find_voice("4",gift_id)
+                if voice_arr:
                     amix.append(voice_arr[0])
     except:
         print('gift error')

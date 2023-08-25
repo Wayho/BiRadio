@@ -136,10 +136,8 @@ def put_gift(uid,uname,itype,message):
     now = time.time()
     # 先把gift取出来，看看新的是否需要加上，再放回去
     msg_list = get_gift_all()
-    if not is_uid_gift_in_list(message,msg_list):
-        for msg in msg_list:
-            # 放回去
-            __Global_gift_queue.put(msg)
+    in_list = is_uid_gift_in_list(message,msg_list)
+    if not in_list:
         msg = {
             "time":now,
             "uid":uid,
@@ -149,8 +147,10 @@ def put_gift(uid,uname,itype,message):
         }
         # 加上新的
         __Global_gift_queue.put(msg)
-        return True
-    return False
+    for msg in msg_list:
+        # 放回去
+        __Global_gift_queue.put(msg)
+    return in_list
 
 def is_uid_gift_in_list(message,msg_list):
     for msg in msg_list:

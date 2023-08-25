@@ -4,6 +4,7 @@ import random
 import time
 import blivedm
 import os
+import random
 from queue import Queue
 import class_viewer as class_viewer
 import danmu as danmu
@@ -26,6 +27,7 @@ ROOM_IDS = [
 ]
 
 TEXT_THANKS_GIFTNAME_AT_UNAME = '谢谢你的{}@{}'
+
 #cmd=LIKE_INFO_V3_NOTICE, command={'cmd': 'LIKE_INFO_V3_NOTICE', 'data': {'content_segments': [{'font_color': '#F494AF', 'text': '本场点赞已累计500，快去号召直播间用户继续为你助力吧~', 'type': 1}], 'danmaku_style': {'background_color': None}, 'terminals': [2, 5]}, 'is_report': False, 'msg_id': '2124967025070080', 'send_time': 1692606932950}
 #cmd=LIKE_INFO_V3_UPDATE, command={'cmd': 'LIKE_INFO_V3_UPDATE', 'data': {'click_count': 504}, 'is_report': False, 'msg_id': '2124967049188354', 'send_time': 1692606932996}
 # [9453708] 醒目留言 ¥30 樱花色零奈：SuperChatMessage(price=30, message='喊那么大声想吓死谁？我七夕有高额存款陪有问题吗？没问题行不行', message_trans='そんなに大声で叫んで誰を怖がらせたいのですか。私は七夕に高額な預金がありますが、問題がありますか。大丈夫ですか', start_time=1692608460, end_time=1692608520, time=59, id=7861813, gift_id=12000, gift_name='醒目留言', uid=669791412, uname='樱花色零奈', face='https://i0.hdslb.com/bfs/face/ce0a8d39eef5cb64d46bd191fb8cb9e8132a6efe.jpg', guard_level=3, user_level=10, background_bottom_color='#2A60B2', background_color='#EDF5FF', background_icon='', background_image='', background_price_color='#7497CD')
@@ -83,7 +85,7 @@ __Global_danmu_queue = Queue()  # 创建弹幕队列对象
 __Global_gift_queue = Queue()  # 创建送礼队列对象
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
 
-print('wss_danmu v5.9.2 ROOM_IDS:',ROOM_IDS,TEXT_THANKS_GIFTNAME_AT_UNAME)
+print('wss_danmu v5.9.3 ROOM_IDS:',ROOM_IDS,TEXT_THANKS_GIFTNAME_AT_UNAME)
 
 ####################### class_voice #########################################
 def put_like(uid,uname,itype,message):
@@ -127,16 +129,35 @@ def get_danmu_all():
     return msg_arr
 
 def put_gift(uid,uname,itype,message):
+    # 附加回弹幕的返回，True=需回弹幕
+    # 同一个人的同一gift_id礼物只在__Global_gift_queue里存一次
+    # 同一个人的不同gift_id礼物可以回不同danmu，避免超20字
     global __Global_gift_queue
     now = time.time()
-    msg = {
-        "time":now,
-        "uid":uid,
-        "uname":uname,
-        "type":itype,
-        "message":message
-    }
-    __Global_gift_queue.put(msg)
+    # 先把gift取出来，看看新的是否需要加上，再放回去
+    msg_list = get_gift_all()
+    if not is_uid_gift_in_list(message,msg_list):
+        for msg in msg_list:
+            # 放回去
+            __Global_gift_queue.put(msg)
+        msg = {
+            "time":now,
+            "uid":uid,
+            "uname":uname,
+            "type":itype,
+            "message":message
+        }
+        # 加上新的
+        __Global_gift_queue.put(msg)
+        return True
+    return False
+
+def is_uid_gift_in_list(message,msg_list):
+    for msg in msg_list:
+        if msg.get('message').uid == message.uid:
+            if msg.get('message').gift_id == message.gift_id:
+                return True
+    return False
 
 def get_gift_all():
     global __Global_gift_queue
@@ -145,8 +166,8 @@ def get_gift_all():
         msg = __Global_gift_queue.get()
         msg_arr.append(msg)
     return msg_arr
-################################################################
 
+################################################################
 async def start_client(room_id):
     #room_id = 23718393 #ROOM_ID#27791346
     # 如果SSL验证失败就把ssl设为False，B站真的有过忘续证书的情况
@@ -207,11 +228,12 @@ class MyHandler(blivedm.BaseHandler):
         print(f'[{client.room_id}] {message.uname}：{message.msg}')
 
     async def _on_gift(self, client: blivedm.BLiveClient, message: blivedm.GiftMessage):
-        put_gift(message.uid,message.uname,MsgType.SEND_GIFT,message)
+        if put_gift(message.uid,message.uname,MsgType.SEND_GIFT,message):
+            text = TEXT_THANKS_GIFTNAME_AT_UNAME.format(message.gift_name,message.uname)
+            danmu.delay_send(client.room_id,text,random.randint(5,8))
         print('#'*20,'SEND_GIFT','#'*20)
         print(f'[{client.room_id}] {message.uname} 赠送{message.gift_name}x{message.num}'
               f' （{message.coin_type}瓜子x{message.total_coin}）')
-        danmu.send(client.room_id,TEXT_THANKS_GIFTNAME_AT_UNAME.format(message.gift_name,message.uname))
         obj = class_viewer.gift(message.uid,message.total_coin)
         if obj:
             print("GIFT:record:",str(ROOM_IDS[0])[0:4],obj.get('t_'+str(ROOM_IDS[0])),str(ROOM_IDS[1])[0:4],obj.get('t_'+str(ROOM_IDS[1])),str(ROOM_IDS[2])[0:4],obj.get('t_'+str(ROOM_IDS[2])),"gift:",obj.get('gift'),"like:",obj.get('like'),obj.get('uid'),obj.get('uname'))

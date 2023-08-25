@@ -2,9 +2,24 @@
 
 import requests
 import time
+import threading
 import class_variable as class_variable
 
-print('danmu v5.9.0:')
+TIME_LAST_DANMU_SEND = time.time()      # 上次弹幕发送时间
+SECONDS_BETWEEN_DANMU = 6                   #弹幕发送时间间隔
+print('danmu v5.9.1:SECONDS_BETWEEN_DANMU=',SECONDS_BETWEEN_DANMU)
+
+def delay_send(room_id,msg,delay=5):
+    # 延时执行发送弹幕
+    # 自行决定避免发送太快
+    global TIME_LAST_DANMU_SEND
+    now = time.time()
+    delta = now-TIME_LAST_DANMU_SEND - SECONDS_BETWEEN_DANMU
+    if delta < 0: 
+        delay = delay - delta
+    TIME_LAST_DANMU_SEND = now+delay
+    timer=threading.Timer(delay,send,args=(room_id,msg,))
+    timer.start()
 ###########################################################
 # https://api.live.bilibili.com/msg/send
 # 请求头

@@ -85,7 +85,7 @@ __Global_danmu_queue = Queue()  # 创建弹幕队列对象
 __Global_gift_queue = Queue()  # 创建送礼队列对象
 #{"time":int,"uid":uid,"uname":uname,"type":MsgType,"message":diff type}
 
-print('wss_danmu v5.9.3 ROOM_IDS:',ROOM_IDS,TEXT_THANKS_GIFTNAME_AT_UNAME)
+print('wss_danmu v5.9.5 ROOM_IDS:',ROOM_IDS,TEXT_THANKS_GIFTNAME_AT_UNAME)
 
 ####################### class_voice #########################################
 def put_like(uid,uname,itype,message):
@@ -136,8 +136,8 @@ def put_gift(uid,uname,itype,message):
     now = time.time()
     # 先把gift取出来，看看新的是否需要加上，再放回去
     msg_list = get_gift_all()
-    in_list = is_uid_gift_in_list(message,msg_list)
-    if not in_list:
+    not_in_list = not is_uid_gift_in_list(message,msg_list)
+    if not_in_list:
         msg = {
             "time":now,
             "uid":uid,
@@ -150,7 +150,7 @@ def put_gift(uid,uname,itype,message):
     for msg in msg_list:
         # 放回去
         __Global_gift_queue.put(msg)
-    return in_list
+    return not_in_list
 
 def is_uid_gift_in_list(message,msg_list):
     for msg in msg_list:

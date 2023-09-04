@@ -40,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.9.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.9.2 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -492,7 +492,7 @@ def canStart():
         # am
         today = [today[0]]
     else:
-        today =  [today][1]
+        today =  [today[1]]
     if not SITENAME in today:
         if Global_minutes % 60 == 1:
             print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)

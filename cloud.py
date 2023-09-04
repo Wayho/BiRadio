@@ -40,7 +40,7 @@ WEBHOOK_DINGDING = 'https://'
 #ROOM_ID = '30338274'        #7rings
 #ROOM_ID = '30356247'        #mustlive
 ROOM_ID = os.environ.get('ROOM_ID') or None
-print('cloud v5.8.10 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
+print('cloud v5.9.1 SITENAME:',SITENAME,'ROOM_ID:',ROOM_ID,'MEMORY:',MEMORY)
 if not os.path.exists(MP4_ROOT):
         print('cloud:mkdir::',MP4_ROOT)
         os.mkdir(MP4_ROOT)
@@ -60,7 +60,9 @@ if not os.path.exists(SUBTITLE_ROOT):
 
 # 每次重启、休眠检查
 def cloud_wakeup():
-    Setup()
+    #requests.get( "http://localhost:3000" )
+    if not BILIBILI_CLMY:
+        Setup()
     mp4file = os.listdir(MP4_ROOT)
     if len(SAMPLE_MP4_432p_LIST)>= len(mp4file):
         # 没有音频，提醒
@@ -485,6 +487,12 @@ def tryStartLive(rtmp=False):
 def canStart():
     global Global_minutes
     (today,tomorrow) = class_variable.get_today_AP()
+    now = datetime.now()
+    if now.hour < 12+ class_variable.HOURS_NEW_DAY:
+        # am
+        today = [today[0]]
+    else:
+        today =  [today][1]
     if not SITENAME in today:
         if Global_minutes % 60 == 1:
             print('This site is',SITENAME,'Today:',today,'Tomorrow:',tomorrow,Global_minutes)

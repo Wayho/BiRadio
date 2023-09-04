@@ -6,8 +6,8 @@ from datetime import datetime,timedelta
 
 COOKIES_PATH = 'cookies.json'
 OBJECT_ID = '63ec4afc14f21573cb450921'
-HOURS_NEW_DAY = 6
-print("class_variable v1.0 HOURS_NEW_DAY=",HOURS_NEW_DAY)
+HOURS_NEW_DAY = 4
+print("class_variable v5.1.2 HOURS_NEW_DAY=",HOURS_NEW_DAY)
 #63ec4afc14f21573cb450921是variable中唯一的一行的objectId
 
 # {
@@ -39,6 +39,12 @@ def get_config():
     config = variable.get('config')
     return config
 
+def get_variable():
+    VClass = leancloud.Object.extend( "variable" )
+    query = VClass.query
+    variable = query.get(OBJECT_ID)
+    return variable
+
 def get_download_enable():
     """
     获取是否允许下载
@@ -64,6 +70,7 @@ def get_timeout():
 def get_today_AP():
     """
     获取星期几哪个台起作用
+    按AM/PM分别返回不同的sitename
     :param :
     :return sitename:今天是哪个台==SITENAME
     """
@@ -75,6 +82,7 @@ def get_today_AP():
     tomorrow = today+1
     if tomorrow > 6:
         tomorrow = 0
+    #return (ap_today,site_ap[tomorrow])
     return (site_ap[today],site_ap[tomorrow])
 
 def set_today_AP(sitename,am=False):
@@ -91,7 +99,8 @@ def set_today_AP(sitename,am=False):
     new_v = VClass.create_without_data(OBJECT_ID)
     today = weekday()
     old = site_list[today]
-    if am:
+    if 'a'==sitename[len(sitename)-2]:
+    #if am:
         ap = [sitename,old[1]]
     else:
         ap = [old[0],sitename]
@@ -114,7 +123,8 @@ def set_tomorrow_AP(sitename,am=False):
     new_v = VClass.create_without_data(OBJECT_ID)
     tomorrow = (weekday() + 1) % 7
     old = site_list[tomorrow]
-    if am:
+    if 'a'==sitename[len(sitename)-2]:
+    #if am:
         ap = [sitename,old[1]]
     else:
         ap = [old[0],sitename]
@@ -206,6 +216,8 @@ def SaveCookiesFromDB():
         print('SaveCookiesFromDB::time_db:',time_db,date_time)
         with open('cookies.json', 'w') as fp:
             json.dump(cookies, fp,indent=2)
+    else:
+        print('!!!!!!! None cookies !!!!!!!!')
     
         
 

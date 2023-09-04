@@ -76,7 +76,7 @@ ffmpeg_rtmp_mp4 = "ffmpeg -re -i {} -r {} {} -hide_banner -f flv  {}"
 print('stream v5.7.1:mp4',ffmpeg_mp4)
 print('stream v5.4.5:rtmp',ffmpeg_playlist)
 print('stream v5.6.11:ffmpeg_looplist',ffmpeg_looplist)
-print('stream v5.10.1:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
+print('stream v5.10.2:ffmpeg_rtmp_mp4',ffmpeg_rtmp_mp4)
 Global_Amix_Queue = Queue()  # 创建一个队列对象
 ##############################################
 # # 以第一个视频分辨率作为全局分辨率
@@ -199,7 +199,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
             LOOP_NO_AUDIO_MESSAGE_TIMES = 0
         else:
             print('No mix audio message,LOOP_NO_AUDIO_MESSAGE_TIMES={}'.format(LOOP_NO_AUDIO_MESSAGE_TIMES))
-            if 6 < LOOP_NO_AUDIO_MESSAGE_TIMES:
+            if 26 < LOOP_NO_AUDIO_MESSAGE_TIMES:
                 return 2
             LOOP_NO_AUDIO_MESSAGE_TIMES += 1
         mp4 = voice_obj.get('mp4')

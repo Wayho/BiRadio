@@ -1,7 +1,7 @@
 # coding=utf-8
 import re
 PUNC = ' \\\~`!#$%^&*()_+-=|\';":/.,?><~·！@#￥%……&*（）——+-=“：’；、。，？》《【】吗哈哦噢喔哇呀啪啦呐哪吧喀咯咖咔呿嘎啥额耶么呢噻{}'  #第一个字符空格，第二字符\\\
-print('utils v5.8.1:',PUNC)
+print('utils v5.8.2:',PUNC)
 
 def lower_delete_all_char(text,char):
     """
@@ -17,12 +17,27 @@ def lower_delete_punctuation_and_emoj(text):
     """
     转小写，删除删除标点括号、语气词,emoj=[XXX]
     """
+    text = delete_at(text)
     textnew = delete_emoj(text)
     while len(text)!=len(textnew):
         text = textnew
         textnew = delete_emoj(text)
     text = text.lower()
     return delete_punctuation(text)
+
+def delete_at(text):
+    """
+    删除@XXX
+    """
+    list=text.split('@')
+    ret = list[0]
+    if ''==ret:
+        if len(list)>1:
+            list2 = list[1].split(' ')
+            if len(list2)>1:
+                return list2[1]
+            ret = list2[0]
+    return ret
 
 def delete_emoj(text,char_s='[',char_e=']'):
     """

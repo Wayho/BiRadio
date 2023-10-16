@@ -199,7 +199,7 @@ def make_temp_next(adelay=10000,codec=FFMPEG_AMIX_CODEC,framerate=FFMPEG_FRAMERA
             LOOP_NO_AUDIO_MESSAGE_TIMES = 0
         else:
             print('No mix audio message,LOOP_NO_AUDIO_MESSAGE_TIMES={}'.format(LOOP_NO_AUDIO_MESSAGE_TIMES))
-            if 56 < LOOP_NO_AUDIO_MESSAGE_TIMES:
+            if 9999 < LOOP_NO_AUDIO_MESSAGE_TIMES:
                 return 2
             LOOP_NO_AUDIO_MESSAGE_TIMES += 1
         mp4 = voice_obj.get('mp4')
